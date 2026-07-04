@@ -13,10 +13,10 @@ This file lists the sequentially ordered tasks for all development phases of the
 - [x] Verify test suites compile and run
 
 ## Phase 2: Fix All Existing Errors
-- [ ] Implement robust network retry interceptors in Flutter Dio client
-- [ ] Wrap UI state providers in Riverpod AsyncValue error catcher boundaries
-- [ ] Render offline fallback templates using local Hive cached profiles
-- [ ] Ensure uvicorn backend handles rate limit headers correctly
+- [x] Implement robust network retry interceptors in Flutter Dio client
+- [x] Wrap UI state providers in Riverpod AsyncValue error catcher boundaries
+- [x] Render offline fallback templates using local Hive cached profiles
+- [x] Ensure uvicorn backend handles rate limit headers correctly
 
 ## Phase 3: Production-Ready Authentication
 - [ ] Update SQL schemas and user domain entities with OAuth, MFA, and Device credentials

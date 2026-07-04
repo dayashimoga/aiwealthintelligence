@@ -77,6 +77,20 @@ def register_exception_handlers(app: FastAPI) -> None:
             },
         )
 
+    from slowapi.errors import RateLimitExceeded
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+        """Handle slowapi rate limit violations, returning a clean 429 response."""
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Rate limit exceeded. Please try again later.",
+                "error_code": "RATE_LIMIT_EXCEEDED",
+                "details": {"limit": getattr(exc, "detail", "Rate limit exceeded")},
+            },
+        )
+
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """Catch-all for unhandled exceptions. Logs full traceback, returns safe response."""
