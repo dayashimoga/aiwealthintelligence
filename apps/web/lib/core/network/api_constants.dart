@@ -26,13 +26,20 @@ class ApiConstants {
       '$portfolios/$portfolioId/holdings';
   static String holding(String portfolioId, String holdingId) =>
       '$portfolios/$portfolioId/holdings/$holdingId';
-  static String importCsv(String portfolioId) =>
-      '$portfolios/$portfolioId/import';
+  static String importCasPdf(String portfolioId) =>
+      '$portfolios/$portfolioId/import/cas-pdf';
+  static String importBrokerReport(String portfolioId) =>
+      '$portfolios/$portfolioId/import/broker';
 
-  // AI
+  // AI & Copilot
   static const String aiChat = '$apiPrefix/ai/chat';
   static String aiRecommendation(String portfolioId, String holdingId) =>
       '$apiPrefix/ai/recommendations/$portfolioId/$holdingId';
+  
+  static const String copilotPrefix = '$apiPrefix/copilot';
+  static String copilotBrief(String portfolioId) => '$copilotPrefix/brief/$portfolioId';
+  static String copilotDoctor(String portfolioId) => '$copilotPrefix/portfolio-doctor/$portfolioId';
+  static String copilotScenario(String portfolioId) => '$copilotPrefix/scenario/$portfolioId';
 
   // Market
   static const String marketNews = '$apiPrefix/market/news';

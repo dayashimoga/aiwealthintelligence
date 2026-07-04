@@ -352,3 +352,167 @@ class AuthTokens {
     expiresIn: json['expires_in'] as int? ?? 1800,
   );
 }
+
+// ============================================================
+// Copilot Models
+// ============================================================
+
+class DailyBrief {
+  const DailyBrief({
+    required this.summary,
+    required this.marketSentiment,
+    this.topGainers = const [],
+    this.topLosers = const [],
+    this.actionableInsights = const [],
+    this.generatedAt,
+  });
+
+  final String summary;
+  final String marketSentiment;
+  final List<Map<String, dynamic>> topGainers;
+  final List<Map<String, dynamic>> topLosers;
+  final List<String> actionableInsights;
+  final DateTime? generatedAt;
+
+  factory DailyBrief.fromJson(Map<String, dynamic> json) => DailyBrief(
+        summary: json['summary'] as String? ?? '',
+        marketSentiment: json['market_sentiment'] as String? ?? 'neutral',
+        topGainers: (json['top_gainers'] as List<dynamic>?)
+                ?.map((e) => Map<String, dynamic>.from(e as Map))
+                .toList() ??
+            [],
+        topLosers: (json['top_losers'] as List<dynamic>?)
+                ?.map((e) => Map<String, dynamic>.from(e as Map))
+                .toList() ??
+            [],
+        actionableInsights: (json['actionable_insights'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        generatedAt: json['generated_at'] != null
+            ? DateTime.parse(json['generated_at'] as String)
+            : null,
+      );
+}
+
+class ScenarioMetrics {
+  const ScenarioMetrics({
+    required this.totalValue,
+    this.xirr,
+    this.diversificationScore = 0.0,
+    this.riskScore = 0.0,
+  });
+
+  final double totalValue;
+  final double? xirr;
+  final double diversificationScore;
+  final double riskScore;
+
+  factory ScenarioMetrics.fromJson(Map<String, dynamic> json) => ScenarioMetrics(
+        totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
+        xirr: (json['xirr'] as num?)?.toDouble(),
+        diversificationScore:
+            (json['diversification_score'] as num?)?.toDouble() ?? 0.0,
+        riskScore: (json['risk_score'] as num?)?.toDouble() ?? 0.0,
+      );
+}
+
+class ScenarioSimulation {
+  const ScenarioSimulation({
+    required this.originalMetrics,
+    required this.simulatedMetrics,
+    required this.impactSummary,
+    this.recommendations = const [],
+  });
+
+  final ScenarioMetrics originalMetrics;
+  final ScenarioMetrics simulatedMetrics;
+  final String impactSummary;
+  final List<String> recommendations;
+
+  factory ScenarioSimulation.fromJson(Map<String, dynamic> json) =>
+      ScenarioSimulation(
+        originalMetrics: ScenarioMetrics.fromJson(
+            json['original_metrics'] as Map<String, dynamic>),
+        simulatedMetrics: ScenarioMetrics.fromJson(
+            json['simulated_metrics'] as Map<String, dynamic>),
+        impactSummary: json['impact_summary'] as String? ?? '',
+        recommendations: (json['recommendations'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+      );
+}
+
+class PortfolioIssue {
+  const PortfolioIssue({
+    required this.severity,
+    required this.title,
+    required this.description,
+    required this.recommendation,
+  });
+
+  final String severity;
+  final String title;
+  final String description;
+  final String recommendation;
+
+  factory PortfolioIssue.fromJson(Map<String, dynamic> json) => PortfolioIssue(
+        severity: json['severity'] as String? ?? 'low',
+        title: json['title'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        recommendation: json['recommendation'] as String? ?? '',
+      );
+}
+
+class PortfolioDoctor {
+  const PortfolioDoctor({
+    required this.healthScore,
+    this.issues = const [],
+    this.diversificationHhi = 0.0,
+    this.sectorConcentrationPct = 0.0,
+    this.cashDragPct = 0.0,
+  });
+
+  final int healthScore;
+  final List<PortfolioIssue> issues;
+  final double diversificationHhi;
+  final double sectorConcentrationPct;
+  final double cashDragPct;
+
+  factory PortfolioDoctor.fromJson(Map<String, dynamic> json) => PortfolioDoctor(
+        healthScore: json['health_score'] as int? ?? 100,
+        issues: (json['issues'] as List<dynamic>?)
+                ?.map((e) => PortfolioIssue.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+        diversificationHhi:
+            (json['diversification_hhi'] as num?)?.toDouble() ?? 0.0,
+        sectorConcentrationPct:
+            (json['sector_concentration_pct'] as num?)?.toDouble() ?? 0.0,
+        cashDragPct: (json['cash_drag_pct'] as num?)?.toDouble() ?? 0.0,
+      );
+}
+
+class ImportResult {
+  const ImportResult({
+    required this.imported,
+    required this.skipped,
+    this.errors = const [],
+  });
+
+  final int imported;
+  final int skipped;
+  final List<String> errors;
+
+  factory ImportResult.fromJson(Map<String, dynamic> json) => ImportResult(
+        imported: json['imported'] as int? ?? 0,
+        skipped: json['skipped'] as int? ?? 0,
+        errors: (json['errors'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+      );
+}
+
+

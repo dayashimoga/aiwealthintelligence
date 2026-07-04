@@ -12,6 +12,10 @@ import '../../features/ai/screens/ai_chat_screen.dart';
 import '../../features/ai/screens/recommendation_screen.dart';
 import '../../features/market/screens/market_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/import/screens/import_screen.dart';
+import '../../features/copilot/screens/copilot_screen.dart';
+import '../../features/copilot/screens/portfolio_doctor_screen.dart';
+import '../../features/copilot/screens/scenario_screen.dart';
 import '../widgets/shell_scaffold.dart';
 
 /// Global router provider.
@@ -68,9 +72,35 @@ final routerProvider = Provider<GoRouter>((ref) {
                       holdingId: state.pathParameters['holdingId']!,
                     ),
                   ),
+                  GoRoute(
+                    path: 'import',
+                    name: 'portfolio-import',
+                    builder: (context, state) => ImportScreen(
+                      portfolioId: state.pathParameters['portfolioId']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'doctor',
+                    name: 'portfolio-doctor',
+                    builder: (context, state) => PortfolioDoctorScreen(
+                      portfolioId: state.pathParameters['portfolioId']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'scenario',
+                    name: 'portfolio-scenario',
+                    builder: (context, state) => ScenarioScreen(
+                      portfolioId: state.pathParameters['portfolioId']!,
+                    ),
+                  ),
                 ],
               ),
             ],
+          ),
+          GoRoute(
+            path: '/copilot',
+            name: 'copilot',
+            builder: (context, state) => const CopilotScreen(),
           ),
           GoRoute(
             path: '/ai-chat',

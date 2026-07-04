@@ -85,7 +85,9 @@ def _user_entity_to_model(entity: User) -> UserModel:
 
 def _portfolio_model_to_entity(model: PortfolioModel) -> Portfolio:
     """Map PortfolioModel to Portfolio entity."""
-    holdings = [_holding_model_to_entity(h) for h in (model.holdings or [])]
+    holdings = []
+    if "holdings" in model.__dict__ and model.holdings is not None:
+        holdings = [_holding_model_to_entity(h) for h in model.holdings]
     return Portfolio(
         id=model.id,
         user_id=model.user_id,

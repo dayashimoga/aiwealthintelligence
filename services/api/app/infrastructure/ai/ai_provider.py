@@ -6,6 +6,7 @@ Implements Strategy pattern for swappable AI backends.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator
@@ -302,6 +303,12 @@ Portfolio Context:
 - This holding is {weight}% of portfolio
 - Sector concentration: {sector_concentration}
 
+Real-time Market Data & Fundamentals:
+{market_data_section}
+
+Recent News & Press Releases:
+{news_section}
+
 Provide your analysis as a JSON object with these keys:
 action, confidence, reasoning, evidence (array), expected_return, risk_level,
 investment_horizon, alternative_suggestions (array), explainability (object with keys:
@@ -314,20 +321,44 @@ async def generate_recommendation(
     holding_data: dict[str, Any],
     portfolio_context: dict[str, Any],
 ) -> dict[str, Any]:
-    """Generate an AI recommendation for a holding.
+    """Generate an AI recommendation for a holding enriched with live market data."""
+    symbol = holding_data.get("symbol", "")
+    asset_type = holding_data.get("asset_type", "stock")
+    
+    # Asynchronously fetch live fundamentals and news
+    from app.infrastructure.market.market_data_service import market_data_service
+    
+    fundamentals_task = market_data_service.get_fundamental_data(symbol, asset_type)
+    news_task = market_data_service.get_ticker_news(symbol)
+    
+    try:
+        fundamentals, news = await asyncio.gather(fundamentals_task, news_task, return_exceptions=True)
+    except Exception:
+        fundamentals, news = {}, []
+        
+    if isinstance(fundamentals, Exception):
+        fundamentals = {}
+    if isinstance(news, Exception):
+        news = []
 
-    Args:
-        provider: AI provider to use.
-        holding_data: Holding information.
-        portfolio_context: Portfolio-level context.
+    # Format fundamentals section
+    market_data_section = "No fundamental metrics available."
+    if fundamentals:
+        market_data_section = "\n".join(
+            f"- {k.replace('_', ' ').title()}: {v}" for k, v in fundamentals.items() if v is not None
+        )
 
-    Returns:
-        Recommendation data dictionary.
-    """
+    # Format news section
+    news_section = "No recent news headlines available."
+    if news:
+        news_section = "\n".join(
+            f"- {n.get('title')} ({n.get('source')}): {n.get('summary') or 'No summary'}" for n in news[:5]
+        )
+
     user_message = RECOMMENDATION_USER_TEMPLATE.format(
-        symbol=holding_data.get("symbol", ""),
+        symbol=symbol,
         name=holding_data.get("name", ""),
-        asset_type=holding_data.get("asset_type", "stock"),
+        asset_type=asset_type,
         exchange=holding_data.get("exchange", "NSE"),
         sector=holding_data.get("sector", "Unknown"),
         industry=holding_data.get("industry", "Unknown"),
@@ -339,6 +370,8 @@ async def generate_recommendation(
         total_holdings=portfolio_context.get("total_holdings", 0),
         weight=portfolio_context.get("weight", 0),
         sector_concentration=portfolio_context.get("sector_concentration", "N/A"),
+        market_data_section=market_data_section,
+        news_section=news_section,
     )
 
     messages = [

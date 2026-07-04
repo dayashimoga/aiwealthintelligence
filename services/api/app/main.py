@@ -14,7 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.infrastructure.database.session import engine, sessionmanager
+from app.infrastructure.repositories.redis_cache import cache_repo
+from app.infrastructure.scheduler.scheduler import start_scheduler, shutdown_scheduler
 from app.presentation.api.v1.router import api_router
+from app.presentation.middleware.error_handler import register_exception_handlers
 from app.presentation.middleware.rate_limiter import limiter
 from app.presentation.middleware.security_headers import SecurityHeadersMiddleware
 from app.shared.observability import setup_observability
@@ -32,6 +35,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     sessionmanager.init(settings.DATABASE_URL)
     logger.info("database_initialized")
 
+    # Initialize cache
+    await cache_repo.connect()
+    logger.info("cache_initialized")
+
+    # Create tables if SQLite or development/testing
+    if settings.is_sqlite or settings.APP_ENV in ("development", "testing"):
+        await sessionmanager.create_all()
+        logger.info("database_tables_created")
+
+    # Setup background scheduler
+    # Avoid starting scheduler during tests to prevent open event loop issues
+    if settings.APP_ENV != "testing":
+        start_scheduler()
+
     # Setup observability
     setup_observability(settings)
     logger.info("observability_initialized")
@@ -39,6 +56,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
     # Shutdown
+    if settings.APP_ENV != "testing":
+        shutdown_scheduler()
+
     if engine is not None:
         await sessionmanager.close()
         logger.info("database_connections_closed")
@@ -51,7 +71,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="WealthAI API",
+        title="WealthAI",
         description="AI Wealth Intelligence Platform - Your AI Financial Copilot",
         version="0.1.0",
         docs_url="/api/docs" if settings.APP_DEBUG else None,
@@ -74,6 +94,9 @@ def create_app() -> FastAPI:
 
     # Rate limiter
     app.state.limiter = limiter
+
+    # Exception handlers
+    register_exception_handlers(app)
 
     # API routes
     app.include_router(api_router, prefix="/api/v1")

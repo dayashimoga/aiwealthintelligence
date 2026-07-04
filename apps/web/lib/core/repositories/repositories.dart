@@ -173,6 +173,46 @@ class PortfolioRepository {
       return Result.failure(_extractError(e));
     }
   }
+
+  Future<Result<ImportResult>> importCasPdf(
+    String portfolioId,
+    List<int> fileBytes,
+    String filename, {
+    String? password,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(fileBytes, filename: filename),
+        if (password != null) 'password': password,
+      });
+      final response = await _dio.post(
+        ApiConstants.importCasPdf(portfolioId),
+        data: formData,
+      );
+      return Result.success(ImportResult.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<ImportResult>> importBrokerReport(
+    String portfolioId,
+    List<int> fileBytes,
+    String filename,
+  ) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(fileBytes, filename: filename),
+      });
+      final response = await _dio.post(
+        ApiConstants.importBrokerReport(portfolioId),
+        data: formData,
+      );
+      return Result.success(ImportResult.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
 }
 
 // ============================================================
@@ -272,6 +312,42 @@ class AIRepository {
       });
       return Result.success(
           ChatMessage.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<DailyBrief>> getCopilotBrief(String portfolioId) async {
+    try {
+      final response = await _dio.get(ApiConstants.copilotBrief(portfolioId));
+      return Result.success(DailyBrief.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<PortfolioDoctor>> getCopilotDoctor(String portfolioId) async {
+    try {
+      final response = await _dio.get(ApiConstants.copilotDoctor(portfolioId));
+      return Result.success(PortfolioDoctor.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<ScenarioSimulation>> simulateScenario(
+    String portfolioId,
+    List<Map<String, dynamic>> actions,
+  ) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.copilotScenario(portfolioId),
+        data: {
+          'portfolio_id': portfolioId,
+          'actions': actions,
+        },
+      );
+      return Result.success(ScenarioSimulation.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }

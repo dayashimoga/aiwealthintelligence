@@ -238,6 +238,7 @@ class PortfolioAnalyticsResponse(BaseModel):
     total_current_value: float
     total_gain_loss: float
     total_gain_loss_pct: float
+    holding_count: int = 0
     xirr: float | None = None
     cagr: float | None = None
     max_drawdown: float | None = None
@@ -331,3 +332,73 @@ class MarketOverviewResponse(BaseModel):
     news: list[MarketNewsResponse]
     sector_rankings: list[SectorRankingResponse]
     updated_at: datetime
+
+
+# ============================================================
+# Copilot
+# ============================================================
+
+
+class DailyBriefResponse(BaseModel):
+    """Daily AI brief response."""
+
+    summary: str
+    market_sentiment: str
+    top_gainers: list[dict[str, Any]] = Field(default_factory=list)
+    top_losers: list[dict[str, Any]] = Field(default_factory=list)
+    actionable_insights: list[str] = Field(default_factory=list)
+    generated_at: datetime
+
+
+class ScenarioSimulationAction(BaseModel):
+    """Action to simulate in a portfolio scenario."""
+
+    symbol: str
+    action: str  # "buy", "sell"
+    quantity: float
+    price: float | None = None
+
+
+class ScenarioSimulationRequest(BaseModel):
+    """Scenario simulation request."""
+
+    portfolio_id: str
+    actions: list[ScenarioSimulationAction]
+
+
+class ScenarioMetrics(BaseModel):
+    """Metrics for original or simulated state in scenario analysis."""
+
+    total_value: float
+    xirr: float | None = None
+    diversification_score: float = 0
+    risk_score: float = 0
+
+
+class ScenarioSimulationResponse(BaseModel):
+    """Scenario simulation response."""
+
+    original_metrics: ScenarioMetrics
+    simulated_metrics: ScenarioMetrics
+    impact_summary: str
+    recommendations: list[str] = Field(default_factory=list)
+
+
+class PortfolioIssue(BaseModel):
+    """An issue identified in portfolio doctor health checks."""
+
+    severity: str  # "high", "medium", "low"
+    title: str
+    description: str
+    recommendation: str
+
+
+class PortfolioDoctorResponse(BaseModel):
+    """Portfolio doctor health check response."""
+
+    health_score: int
+    issues: list[PortfolioIssue]
+    diversification_hhi: float = 0
+    sector_concentration_pct: float = 0
+    cash_drag_pct: float = 0
+

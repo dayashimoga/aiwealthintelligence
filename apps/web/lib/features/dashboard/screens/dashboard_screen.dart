@@ -1,303 +1,464 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
+import '../../../core/models/models.dart';
+import '../../../core/providers/portfolio_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common_widgets.dart';
 
 /// Main dashboard screen showing portfolio overview, analytics, and AI insights.
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  final _currencyFormatter = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final portfoliosAsync = ref.watch(portfoliosProvider);
+    final selectedId = ref.watch(selectedPortfolioIdProvider);
+    final selectedPortfolio = ref.watch(selectedPortfolioProvider);
+    final analyticsAsync = ref.watch(portfolioAnalyticsProvider);
+    final holdingsAsync = ref.watch(holdingsProvider);
+    final doctorAsync = ref.watch(portfolioDoctorProvider);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: isDark ? AppTheme.darkBgGradient : null,
         ),
-        child: CustomScrollView(
-          slivers: [
-            // App Bar
-            SliverAppBar(
-              floating: true,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Good ${_getGreeting()}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(153),
-                    ),
-                  ),
-                  const Text('Dashboard'),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
-
-            // Portfolio Summary Cards
-            SliverPadding(
-              padding: const EdgeInsets.all(AppTheme.spacingMd),
-              sliver: SliverToBoxAdapter(
-                child: ResponsiveGrid(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(portfoliosProvider);
+            ref.invalidate(portfolioAnalyticsProvider);
+            ref.invalidate(holdingsProvider);
+            ref.invalidate(portfolioDoctorProvider);
+          },
+          child: CustomScrollView(
+            slivers: [
+              // App Bar
+              SliverAppBar(
+                floating: true,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    StatCard(
-                      label: 'Total Value',
-                      value: '₹24,50,000',
-                      change: '+₹3,20,000 (15.0%)',
-                      changePositive: true,
-                      icon: Icons.account_balance_wallet,
+                    Text(
+                      'Good ${_getGreeting()}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withAlpha(153),
+                      ),
                     ),
-                    StatCard(
-                      label: 'Today\'s P&L',
-                      value: '+₹12,450',
-                      change: '+0.51%',
-                      changePositive: true,
-                      icon: Icons.trending_up,
-                    ),
-                    StatCard(
-                      label: 'AI Health Score',
-                      value: '78/100',
-                      change: 'Good',
-                      changePositive: true,
-                      icon: Icons.health_and_safety,
-                    ),
-                    StatCard(
-                      label: 'Total XIRR',
-                      value: '18.5%',
-                      change: 'vs 12% Nifty',
-                      changePositive: true,
-                      icon: Icons.show_chart,
-                    ),
+                    const Text('Dashboard'),
                   ],
                 ),
+                actions: [
+                  portfoliosAsync.when(
+                    data: (list) {
+                      if (list.isEmpty) return const SizedBox.shrink();
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedId,
+                            icon: const Icon(Icons.keyboard_arrow_down),
+                            items: list.map((p) {
+                              return DropdownMenuItem<String>(
+                                value: p.id,
+                                child: Text(p.name),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                ref.read(selectedPortfolioIdProvider.notifier).state = val;
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
-            ),
 
-            // Asset Allocation Chart
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
-              sliver: SliverToBoxAdapter(
-                child: GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Asset Allocation',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: AppTheme.spacingMd),
-                      SizedBox(
-                        height: 200,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: PieChart(
-                                PieChartData(
-                                  sectionsSpace: 2,
-                                  centerSpaceRadius: 40,
-                                  sections: [
-                                    PieChartSectionData(
-                                      value: 45,
-                                      title: '45%',
-                                      color: const Color(0xFF6C63FF),
-                                      radius: 60,
-                                      titleStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    PieChartSectionData(
-                                      value: 25,
-                                      title: '25%',
-                                      color: const Color(0xFF00D9A6),
-                                      radius: 55,
-                                      titleStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    PieChartSectionData(
-                                      value: 15,
-                                      title: '15%',
-                                      color: const Color(0xFFFF6B6B),
-                                      radius: 50,
-                                      titleStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    PieChartSectionData(
-                                      value: 10,
-                                      title: '10%',
-                                      color: const Color(0xFFFFAB00),
-                                      radius: 45,
-                                      titleStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    PieChartSectionData(
-                                      value: 5,
-                                      title: '5%',
-                                      color: const Color(0xFF2979FF),
-                                      radius: 40,
-                                      titleStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
+              // Empty State Handling
+              ...portfoliosAsync.when(
+                data: (list) {
+                  if (list.isEmpty) {
+                    return [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppTheme.spacingLg),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.account_balance_wallet_outlined,
+                                size: 80,
+                                color: theme.colorScheme.primary.withAlpha(128),
+                              ),
+                              const SizedBox(height: AppTheme.spacingMd),
+                              Text(
+                                'No Portfolios Found',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: AppTheme.spacingMd),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _legendItem('Stocks', const Color(0xFF6C63FF)),
-                                _legendItem('Mutual Funds', const Color(0xFF00D9A6)),
-                                _legendItem('Gold', const Color(0xFFFF6B6B)),
-                                _legendItem('Bonds', const Color(0xFFFFAB00)),
-                                _legendItem('Cash', const Color(0xFF2979FF)),
-                              ],
+                              const SizedBox(height: AppTheme.spacingSm),
+                              Text(
+                                'Create a portfolio or upload a CAS statement to get started.',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface.withAlpha(153),
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spacingLg),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  // Prompt or navigate to import screen
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text('Create Portfolio'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ];
+                  }
+                  return _buildDashboardContent(
+                    theme,
+                    isDark,
+                    analyticsAsync,
+                    holdingsAsync,
+                    doctorAsync,
+                  );
+                },
+                loading: () => [_buildLoadingSliver(theme)],
+                error: (err, _) => [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.spacingLg),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                            const SizedBox(height: AppTheme.spacingMd),
+                            Text('Failed to load dashboard', style: theme.textTheme.titleMedium),
+                            const SizedBox(height: AppTheme.spacingSm),
+                            Text(err.toString(), textAlign: TextAlign.center),
+                            const SizedBox(height: AppTheme.spacingMd),
+                            ElevatedButton(
+                              onPressed: () => ref.invalidate(portfoliosProvider),
+                              child: const Text('Retry'),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 200.ms),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacingMd)),
-
-            // AI Insights
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
-              sliver: SliverToBoxAdapter(
-                child: GlassCard(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF1A1040), const Color(0xFF0D0D1A)]
-                        : [const Color(0xFFF3E5F5), const Color(0xFFE8EAF6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.primaryGradient,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.auto_awesome,
-                                color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'AI Insights',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppTheme.spacingMd),
-                      _insightTile(
-                        context,
-                        Icons.warning_amber,
-                        AppTheme.warningAmber,
-                        'Sector Concentration',
-                        '42% of portfolio in IT sector. Consider diversifying.',
-                      ),
-                      const Divider(height: 24),
-                      _insightTile(
-                        context,
-                        Icons.swap_horiz,
-                        AppTheme.infoBlue,
-                        'Overlap Detected',
-                        '3 mutual funds have >60% common holdings.',
-                      ),
-                      const Divider(height: 24),
-                      _insightTile(
-                        context,
-                        Icons.trending_up,
-                        AppTheme.profitGreen,
-                        'Opportunity',
-                        'HDFC Bank is near 52-week low. AI rating: Strong Buy.',
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 400.ms),
-              ),
-            ),
-
-            // Top Holdings
-            SliverPadding(
-              padding: const EdgeInsets.all(AppTheme.spacingMd),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Top Holdings',
-                            style: theme.textTheme.titleMedium),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text('View All'),
-                        ),
-                      ],
                     ),
-                    const SizedBox(height: AppTheme.spacingSm),
-                    ..._sampleHoldings.asMap().entries.map(
-                          (entry) => _holdingTile(context, entry.value)
-                              .animate()
-                              .fadeIn(delay: Duration(milliseconds: 500 + entry.key * 100))
-                              .slideX(begin: 0.05),
-                        ),
-                  ],
-                ),
+                  )
+                ],
               ),
-            ),
-
-            // Bottom padding
-            const SliverToBoxAdapter(
-                child: SizedBox(height: AppTheme.spacingXxl)),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Morning ☀️';
-    if (hour < 17) return 'Afternoon 🌤️';
-    return 'Evening 🌙';
+  List<Widget> _buildDashboardContent(
+    ThemeData theme,
+    bool isDark,
+    AsyncValue<PortfolioAnalytics?> analyticsAsync,
+    AsyncValue<List<Holding>> holdingsAsync,
+    AsyncValue<PortfolioDoctor?> doctorAsync,
+  ) {
+    return [
+      // Portfolio Summary Cards
+      SliverPadding(
+        padding: const EdgeInsets.all(AppTheme.spacingMd),
+        sliver: SliverToBoxAdapter(
+          child: analyticsAsync.when(
+            data: (analytics) {
+              if (analytics == null) return const SizedBox.shrink();
+              final gainLossText =
+                  '${analytics.totalGainLoss >= 0 ? '+' : ''}${_currencyFormatter.format(analytics.totalGainLoss)} (${analytics.totalGainLossPct.toStringAsFixed(1)}%)';
+              return ResponsiveGrid(
+                children: [
+                  StatCard(
+                    label: 'Total Value',
+                    value: _currencyFormatter.format(analytics.totalCurrentValue),
+                    change: gainLossText,
+                    changePositive: analytics.totalGainLoss >= 0,
+                    icon: Icons.account_balance_wallet,
+                  ),
+                  StatCard(
+                    label: 'Invested Value',
+                    value: _currencyFormatter.format(analytics.totalInvested),
+                    change: 'Total Invested',
+                    changePositive: true,
+                    icon: Icons.monetization_on,
+                  ),
+                  StatCard(
+                    label: 'AI Health Score',
+                    value: '${analytics.aiHealthScore.toStringAsFixed(0)}/100',
+                    change: analytics.aiHealthScore >= 80 ? 'Good' : 'Needs Review',
+                    changePositive: analytics.aiHealthScore >= 80,
+                    icon: Icons.health_and_safety,
+                  ),
+                  StatCard(
+                    label: 'Holdings count',
+                    value: '${analytics.holdingCount}',
+                    change: 'Active Positions',
+                    changePositive: true,
+                    icon: Icons.show_chart,
+                  ),
+                ],
+              );
+            },
+            loading: () => _buildShimmerGrid(),
+            error: (err, _) => Center(child: Text('Error: $err')),
+          ),
+        ),
+      ),
+
+      // Asset Allocation Chart
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+        sliver: SliverToBoxAdapter(
+          child: analyticsAsync.when(
+            data: (analytics) {
+              if (analytics == null || analytics.assetAllocation.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Asset Allocation',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppTheme.spacingMd),
+                    SizedBox(
+                      height: 200,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: PieChart(
+                              PieChartData(
+                                sectionsSpace: 2,
+                                centerSpaceRadius: 40,
+                                sections: _buildChartSections(analytics.assetAllocation),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacingMd),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _buildChartLegend(analytics.assetAllocation),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(delay: 200.ms);
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
+
+      const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacingMd)),
+
+      // AI Insights from Portfolio Doctor
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+        sliver: SliverToBoxAdapter(
+          child: doctorAsync.when(
+            data: (doctor) {
+              if (doctor == null || doctor.issues.isEmpty) {
+                return GlassCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacingMd),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
+                        const SizedBox(width: 12),
+                        Text(
+                          'No portfolio issues detected! Healthy asset structure.',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return GlassCard(
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [const Color(0xFF1A1040), const Color(0xFF0D0D1A)]
+                      : [const Color(0xFFF3E5F5), const Color(0xFFE8EAF6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'AI Copilot Diagnostics',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacingMd),
+                    ...doctor.issues.take(3).map((issue) {
+                      final isHigh = issue.severity.toLowerCase() == 'high';
+                      return Column(
+                        children: [
+                          _insightTile(
+                            context,
+                            isHigh ? Icons.warning_amber : Icons.info_outline,
+                            isHigh ? AppTheme.warningAmber : AppTheme.infoBlue,
+                            issue.title,
+                            issue.description,
+                          ),
+                          const Divider(height: 24),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ).animate().fadeIn(delay: 400.ms);
+            },
+            loading: () => _buildShimmerInsights(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
+
+      // Top Holdings
+      SliverPadding(
+        padding: const EdgeInsets.all(AppTheme.spacingMd),
+        sliver: SliverToBoxAdapter(
+          child: holdingsAsync.when(
+            data: (holdings) {
+              if (holdings.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Holdings Positions', style: theme.textTheme.titleMedium),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('View All'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacingSm),
+                  ...holdings.take(5).toList().asMap().entries.map(
+                        (entry) => _holdingTile(context, entry.value)
+                            .animate()
+                            .fadeIn(delay: Duration(milliseconds: 500 + entry.key * 100))
+                            .slideX(begin: 0.05),
+                      ),
+                ],
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
+
+      // Bottom padding
+      const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacingXxl)),
+    ];
+  }
+
+  List<PieChartSectionData> _buildChartSections(Map<String, double> allocation) {
+    final colors = [
+      const Color(0xFF6C63FF),
+      const Color(0xFF00D9A6),
+      const Color(0xFFFF6B6B),
+      const Color(0xFFFFAB00),
+      const Color(0xFF2979FF),
+    ];
+    int index = 0;
+    return allocation.entries.map((entry) {
+      final color = colors[index % colors.length];
+      index++;
+      return PieChartSectionData(
+        value: entry.value,
+        title: '${entry.value.toStringAsFixed(0)}%',
+        color: color,
+        radius: 50,
+        titleStyle: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      );
+    }).toList();
+  }
+
+  List<Widget> _buildChartLegend(Map<String, double> allocation) {
+    final colors = [
+      const Color(0xFF6C63FF),
+      const Color(0xFF00D9A6),
+      const Color(0xFFFF6B6B),
+      const Color(0xFFFFAB00),
+      const Color(0xFF2979FF),
+    ];
+    int index = 0;
+    return allocation.entries.map((entry) {
+      final color = colors[index % colors.length];
+      index++;
+      final formattedLabel = entry.key.toUpperCase();
+      return _legendItem(formattedLabel, color);
+    }).toList();
   }
 
   Widget _legendItem(String label, Color color) {
@@ -345,9 +506,12 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 2),
               Text(
                 description,
@@ -362,44 +526,9 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  static final _sampleHoldings = [
-    {
-      'symbol': 'RELIANCE',
-      'name': 'Reliance Industries',
-      'value': '₹2,80,000',
-      'change': '+12.0%',
-      'positive': true,
-      'action': 'hold',
-    },
-    {
-      'symbol': 'TCS',
-      'name': 'Tata Consultancy',
-      'value': '₹1,90,000',
-      'change': '+8.5%',
-      'positive': true,
-      'action': 'buy',
-    },
-    {
-      'symbol': 'HDFCBANK',
-      'name': 'HDFC Bank',
-      'value': '₹1,65,000',
-      'change': '-2.3%',
-      'positive': false,
-      'action': 'strong_buy',
-    },
-    {
-      'symbol': 'INFY',
-      'name': 'Infosys',
-      'value': '₹1,40,000',
-      'change': '+5.7%',
-      'positive': true,
-      'action': 'hold',
-    },
-  ];
-
-  Widget _holdingTile(BuildContext context, Map<String, dynamic> holding) {
+  Widget _holdingTile(BuildContext context, Holding holding) {
     final theme = Theme.of(context);
-    final isPositive = holding['positive'] as bool;
+    final isPositive = holding.gainLossPct >= 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -414,7 +543,7 @@ class DashboardScreen extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              (holding['symbol'] as String).substring(0, 2),
+              holding.symbol.substring(0, 2),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: theme.colorScheme.primary,
@@ -423,13 +552,13 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
         title: Text(
-          holding['symbol'] as String,
+          holding.symbol,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
         subtitle: Text(
-          holding['name'] as String,
+          holding.name,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurface.withAlpha(128),
           ),
@@ -439,7 +568,7 @@ class DashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              holding['value'] as String,
+              _currencyFormatter.format(holding.currentValue),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -448,10 +577,10 @@ class DashboardScreen extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                RecommendationChip(action: holding['action'] as String),
+                RecommendationChip(action: holding.gainLossPct > 10 ? 'hold' : 'buy'),
                 const SizedBox(width: 6),
                 Text(
-                  holding['change'] as String,
+                  '${isPositive ? '+' : ''}${holding.gainLossPct.toStringAsFixed(1)}%',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isPositive ? AppTheme.profitGreen : AppTheme.lossRed,
                     fontWeight: FontWeight.w600,
@@ -463,5 +592,55 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildLoadingSliver(ThemeData theme) {
+    return SliverFillRemaining(
+      child: Center(
+        child: CircularProgressIndicator(
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerGrid() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade800,
+      highlightColor: Colors.grey.shade700,
+      child: ResponsiveGrid(
+        children: List.generate(
+          4,
+          (index) => Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerInsights() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade800,
+      highlightColor: Colors.grey.shade700,
+      child: Container(
+        height: 150,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Morning ☀️';
+    if (hour < 17) return 'Afternoon 🌤️';
+    return 'Evening 🌙';
   }
 }

@@ -17,7 +17,9 @@ from app.infrastructure.database.session import get_db_session
 from app.infrastructure.repositories.sqlalchemy_repos import (
     SQLAlchemyHoldingRepository,
     SQLAlchemyPortfolioRepository,
+    SQLAlchemyTransactionRepository,
 )
+from app.infrastructure.analytics.portfolio_analytics_engine import PortfolioAnalyticsEngine
 from app.presentation.middleware.auth_dependency import get_current_user_id
 from app.presentation.schemas.api_schemas import (
     CreateHoldingRequest,
@@ -25,6 +27,7 @@ from app.presentation.schemas.api_schemas import (
     HoldingListResponse,
     HoldingResponse,
     ImportResponse,
+    PortfolioAnalyticsResponse,
     PortfolioListResponse,
     PortfolioResponse,
     UpdateHoldingRequest,
@@ -278,6 +281,131 @@ async def delete_holding(
 # ============================================================
 
 
+from app.infrastructure.importers.cas_pdf_parser import CASPDFParser
+from app.infrastructure.importers.broker_report_parser import BrokerReportParser
+from fastapi import Form
+
+
+@router.post("/{portfolio_id}/import/cas-pdf", response_model=ImportResponse)
+async def import_cas_pdf(
+    portfolio_id: str,
+    user_id: Annotated[str, Depends(get_current_user_id)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    file: UploadFile = File(...),
+    password: str | None = Form(None),
+) -> ImportResponse:
+    """Import holdings from an NSDL/CDSL CAS or CAMS Mutual Fund CAS PDF statement.
+
+    Supports optional password decryption.
+    """
+    # Verify portfolio ownership
+    portfolio_repo = SQLAlchemyPortfolioRepository(session)
+    portfolio = await portfolio_repo.get_by_id(portfolio_id, user_id)
+    if portfolio is None:
+        raise NotFoundError("Portfolio", portfolio_id)
+
+    if not file.filename or not file.filename.endswith(".pdf"):
+        raise ValidationError("File must be a PDF file")
+
+    content = await file.read()
+    try:
+        parser = CASPDFParser(content, password=password)
+        holdings_data = parser.parse()
+    except Exception as e:
+        raise ValidationError(f"Failed parsing PDF: {e}") from e
+
+    holdings_to_create: list[Holding] = []
+    for h in holdings_data:
+        holdings_to_create.append(
+            Holding(
+                id=str(uuid.uuid4()),
+                portfolio_id=portfolio_id,
+                symbol=h["symbol"],
+                name=h["name"],
+                asset_type=h["asset_type"],
+                exchange=h["exchange"],
+                quantity=h["quantity"],
+                average_buy_price=h["average_buy_price"],
+                current_price=h["current_price"],
+                isin=h["isin"],
+            )
+        )
+
+    imported_count = 0
+    if holdings_to_create:
+        holding_repo = SQLAlchemyHoldingRepository(session)
+        await holding_repo.bulk_create(holdings_to_create)
+        await session.commit()
+        imported_count = len(holdings_to_create)
+
+    logger.info("cas_pdf_imported", portfolio_id=portfolio_id, count=imported_count)
+    return ImportResponse(
+        imported=imported_count,
+        skipped=0,
+        errors=[],
+    )
+
+
+@router.post("/{portfolio_id}/import/broker", response_model=ImportResponse)
+async def import_broker_report(
+    portfolio_id: str,
+    user_id: Annotated[str, Depends(get_current_user_id)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    file: UploadFile = File(...),
+) -> ImportResponse:
+    """Import holdings from a Broker report (Excel or CSV).
+
+    Supports Zerodha Kite, Groww, Upstox, etc.
+    """
+    # Verify portfolio ownership
+    portfolio_repo = SQLAlchemyPortfolioRepository(session)
+    portfolio = await portfolio_repo.get_by_id(portfolio_id, user_id)
+    if portfolio is None:
+        raise NotFoundError("Portfolio", portfolio_id)
+
+    filename = file.filename or ""
+    if not (filename.endswith(".csv") or filename.endswith(".xlsx") or filename.endswith(".xls")):
+        raise ValidationError("File must be a CSV or Excel file")
+
+    content = await file.read()
+    try:
+        parser = BrokerReportParser(content, filename)
+        holdings_data = parser.parse()
+    except Exception as e:
+        raise ValidationError(f"Failed parsing broker report: {e}") from e
+
+    holdings_to_create: list[Holding] = []
+    for h in holdings_data:
+        holdings_to_create.append(
+            Holding(
+                id=str(uuid.uuid4()),
+                portfolio_id=portfolio_id,
+                symbol=h["symbol"],
+                name=h["name"],
+                asset_type=h["asset_type"],
+                exchange=h["exchange"],
+                quantity=h["quantity"],
+                average_buy_price=h["average_buy_price"],
+                current_price=h["current_price"],
+                isin=h["isin"],
+            )
+        )
+
+    imported_count = 0
+    if holdings_to_create:
+        holding_repo = SQLAlchemyHoldingRepository(session)
+        await holding_repo.bulk_create(holdings_to_create)
+        await session.commit()
+        imported_count = len(holdings_to_create)
+
+    logger.info("broker_report_imported", portfolio_id=portfolio_id, count=imported_count)
+    return ImportResponse(
+        imported=imported_count,
+        skipped=0,
+        errors=[],
+    )
+
+
 @router.post("/{portfolio_id}/import", response_model=ImportResponse)
 async def import_csv(
     portfolio_id: str,
@@ -386,12 +514,12 @@ async def import_csv(
 # ============================================================
 
 
-@router.get("/{portfolio_id}/analytics")
+@router.get("/{portfolio_id}/analytics", response_model=PortfolioAnalyticsResponse)
 async def get_portfolio_analytics(
     portfolio_id: str,
     user_id: Annotated[str, Depends(get_current_user_id)],
     session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> dict:
+) -> PortfolioAnalyticsResponse:
     """Get comprehensive portfolio analytics including allocations and performance metrics."""
     portfolio_repo = SQLAlchemyPortfolioRepository(session)
     portfolio = await portfolio_repo.get_by_id(portfolio_id, user_id)
@@ -401,61 +529,32 @@ async def get_portfolio_analytics(
     holding_repo = SQLAlchemyHoldingRepository(session)
     holdings = await holding_repo.list_by_portfolio(portfolio_id)
 
-    # Calculate analytics
-    total_invested = sum(float(h.invested_value) for h in holdings)
-    total_current = sum(float(h.current_value) for h in holdings)
-    total_gain_loss = total_current - total_invested
-    total_gain_loss_pct = (total_gain_loss / total_invested * 100) if total_invested > 0 else 0
+    tx_repo = SQLAlchemyTransactionRepository(session)
+    transactions = await tx_repo.list_by_portfolio(portfolio_id)
 
-    # Asset allocation
-    asset_allocation: dict[str, float] = {}
-    sector_allocation: dict[str, float] = {}
-    country_allocation: dict[str, float] = {}
+    engine = PortfolioAnalyticsEngine()
+    metrics = engine.calculate_metrics(holdings, transactions)
 
-    for h in holdings:
-        current_val = float(h.current_value)
-        asset_type = h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value
-        asset_allocation[asset_type] = asset_allocation.get(asset_type, 0) + current_val
-
-        if h.sector:
-            sector_allocation[h.sector] = sector_allocation.get(h.sector, 0) + current_val
-
-        country_allocation[h.country] = country_allocation.get(h.country, 0) + current_val
-
-    # Convert to percentages
-    if total_current > 0:
-        asset_allocation = {k: round(v / total_current * 100, 2) for k, v in asset_allocation.items()}
-        sector_allocation = {k: round(v / total_current * 100, 2) for k, v in sector_allocation.items()}
-        country_allocation = {k: round(v / total_current * 100, 2) for k, v in country_allocation.items()}
-
-    # Diversification score (0-100, based on number of holdings and allocation spread)
-    n_holdings = len(holdings)
-    if n_holdings == 0:
-        diversification_score = 0.0
-    else:
-        # Simple Herfindahl-Hirschman Index based diversification
-        weights = [float(h.current_value) / total_current for h in holdings] if total_current > 0 else []
-        hhi = sum(w ** 2 for w in weights) if weights else 1.0
-        diversification_score = round((1 - hhi) * 100, 1)
-
-    # Risk score (simplified - based on concentration)
-    max_weight = max(weights, default=0) if total_current > 0 else 0
-    risk_score = round(max_weight * 100, 1)
-
-    return {
-        "portfolio_id": portfolio_id,
-        "total_invested": round(total_invested, 2),
-        "total_current_value": round(total_current, 2),
-        "total_gain_loss": round(total_gain_loss, 2),
-        "total_gain_loss_pct": round(total_gain_loss_pct, 2),
-        "holding_count": n_holdings,
-        "diversification_score": diversification_score,
-        "risk_score": risk_score,
-        "ai_health_score": round(diversification_score * 0.7 + (100 - risk_score) * 0.3, 1),
-        "asset_allocation": asset_allocation,
-        "sector_allocation": sector_allocation,
-        "country_allocation": country_allocation,
-    }
+    return PortfolioAnalyticsResponse(
+        portfolio_id=portfolio_id,
+        total_invested=metrics["total_invested"],
+        total_current_value=metrics["total_current_value"],
+        total_gain_loss=metrics["total_gain_loss"],
+        total_gain_loss_pct=metrics["total_gain_loss_pct"],
+        holding_count=len(holdings),
+        xirr=metrics["xirr"],
+        cagr=metrics.get("cagr"),
+        max_drawdown=None,
+        sharpe_ratio=None,
+        diversification_score=metrics["diversification_score"],
+        risk_score=metrics["risk_score"],
+        ai_health_score=metrics["ai_health_score"],
+        dividend_income=0.0,  # We can calculate this from transactions later
+        asset_allocation=metrics["asset_allocation"],
+        sector_allocation=metrics["sector_allocation"],
+        country_allocation=metrics["country_allocation"],
+        calculated_at=metrics["calculated_at"],
+    )
 
 
 # ============================================================

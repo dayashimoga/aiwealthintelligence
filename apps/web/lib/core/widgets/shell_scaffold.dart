@@ -28,7 +28,7 @@ class ShellScaffold extends StatelessWidget {
       icon: Icons.auto_awesome_outlined,
       selectedIcon: Icons.auto_awesome,
       label: 'AI Copilot',
-      path: '/ai-chat',
+      path: '/copilot',
     ),
     _NavDestination(
       icon: Icons.trending_up_outlined,
