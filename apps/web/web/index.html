@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="WealthAI - AI Wealth Intelligence Platform. Your AI Financial Copilot for portfolio management, investment recommendations, and market intelligence.">
+  <meta name="theme-color" content="#6C63FF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WealthAI">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="WealthAI - AI Financial Copilot">
+  <meta property="og:description" content="AI-first portfolio intelligence platform with recommendations, risk analysis, and natural language chat.">
+  <meta property="og:type" content="website">
+
+  <title>WealthAI - AI Financial Copilot</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0D0D14;
+      overflow: hidden;
+    }
+
+    /* Loading spinner */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Inter', sans-serif;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 100%);
+    }
+
+    .loading-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #6C63FF, #4ECDC4);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .loading-logo svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 16px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(108, 99, 255, 0.1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading-container">
+    <div class="loading-logo">
+      <svg viewBox="0 0 24 24" fill="white">
+        <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+      </svg>
+    </div>
+    <div class="loading-text">Loading WealthAI...</div>
+  </div>
+
+  <script>
+    // Remove loading screen when Flutter is ready
+    window.addEventListener('flutter-first-frame', function () {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.style.transition = 'opacity 0.3s';
+        loading.style.opacity = '0';
+        setTimeout(() => loading.remove(), 300);
+      }
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

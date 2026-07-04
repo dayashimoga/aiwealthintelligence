@@ -1,0 +1,333 @@
+"""Pydantic schemas for API request/response validation.
+
+These schemas provide serialization, deserialization, and validation
+for all API endpoints. They are separate from domain entities.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from decimal import Decimal
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
+# ============================================================
+# Common
+# ============================================================
+
+
+class HealthResponse(BaseModel):
+    """Health check response."""
+
+    status: str = "healthy"
+    version: str = "0.1.0"
+    environment: str = "development"
+    timestamp: datetime
+
+
+class ErrorResponse(BaseModel):
+    """Standard error response."""
+
+    error: str
+    error_code: str
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+class PaginatedResponse(BaseModel):
+    """Base paginated response."""
+
+    total: int = 0
+    skip: int = 0
+    limit: int = 50
+    items: list[Any] = Field(default_factory=list)
+
+
+# ============================================================
+# Auth
+# ============================================================
+
+
+class RegisterRequest(BaseModel):
+    """User registration request."""
+
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    full_name: str = Field(min_length=1, max_length=255)
+
+
+class LoginRequest(BaseModel):
+    """User login request."""
+
+    email: EmailStr
+    password: str
+
+
+class TokenResponse(BaseModel):
+    """JWT token response."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+class RefreshTokenRequest(BaseModel):
+    """Token refresh request."""
+
+    refresh_token: str
+
+
+class UserResponse(BaseModel):
+    """User profile response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    full_name: str
+    role: str
+    is_verified: bool
+    avatar_url: str = ""
+    created_at: datetime
+
+
+# ============================================================
+# Portfolio
+# ============================================================
+
+
+class CreatePortfolioRequest(BaseModel):
+    """Create portfolio request."""
+
+    name: str = Field(min_length=1, max_length=255, default="My Portfolio")
+    description: str = Field(max_length=1000, default="")
+    currency: str = Field(default="INR", pattern="^[A-Z]{3}$")
+
+
+class UpdatePortfolioRequest(BaseModel):
+    """Update portfolio request."""
+
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = Field(None, max_length=1000)
+
+
+class PortfolioResponse(BaseModel):
+    """Portfolio response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    description: str
+    currency: str
+    is_default: bool
+    import_source: str
+    holding_count: int = 0
+    total_invested: float = 0
+    total_current_value: float = 0
+    total_gain_loss: float = 0
+    total_gain_loss_pct: float = 0
+    created_at: datetime
+    updated_at: datetime
+
+
+class PortfolioListResponse(BaseModel):
+    """List of portfolios response."""
+
+    portfolios: list[PortfolioResponse]
+    total: int
+
+
+# ============================================================
+# Holding
+# ============================================================
+
+
+class CreateHoldingRequest(BaseModel):
+    """Create holding request."""
+
+    symbol: str = Field(min_length=1, max_length=50)
+    name: str = Field(min_length=1, max_length=255)
+    asset_type: str = Field(default="stock")
+    exchange: str = Field(default="NSE")
+    quantity: Decimal = Field(gt=0)
+    average_buy_price: Decimal = Field(ge=0)
+    current_price: Decimal = Field(ge=0, default=Decimal("0"))
+    sector: str = Field(max_length=100, default="")
+    industry: str = Field(max_length=100, default="")
+    country: str = Field(max_length=100, default="India")
+    isin: str = Field(max_length=20, default="")
+    notes: str = Field(max_length=1000, default="")
+    buy_date: datetime | None = None
+
+
+class UpdateHoldingRequest(BaseModel):
+    """Update holding request."""
+
+    quantity: Decimal | None = Field(None, gt=0)
+    average_buy_price: Decimal | None = Field(None, ge=0)
+    current_price: Decimal | None = Field(None, ge=0)
+    sector: str | None = None
+    industry: str | None = None
+    notes: str | None = None
+
+
+class HoldingResponse(BaseModel):
+    """Holding response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    portfolio_id: str
+    symbol: str
+    name: str
+    asset_type: str
+    exchange: str
+    currency: str
+    quantity: float
+    average_buy_price: float
+    current_price: float
+    invested_value: float
+    current_value: float
+    gain_loss: float
+    gain_loss_pct: float
+    sector: str
+    industry: str
+    country: str
+    isin: str
+    notes: str
+    buy_date: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class HoldingListResponse(BaseModel):
+    """List of holdings response."""
+
+    holdings: list[HoldingResponse]
+    total: int
+
+
+class CSVImportRequest(BaseModel):
+    """CSV import metadata."""
+
+    portfolio_id: str
+    mapping: dict[str, str] = Field(default_factory=dict)
+
+
+class ImportResponse(BaseModel):
+    """Import result response."""
+
+    imported: int
+    skipped: int
+    errors: list[str]
+
+
+# ============================================================
+# Analytics
+# ============================================================
+
+
+class PortfolioAnalyticsResponse(BaseModel):
+    """Portfolio analytics response."""
+
+    portfolio_id: str
+    total_invested: float
+    total_current_value: float
+    total_gain_loss: float
+    total_gain_loss_pct: float
+    xirr: float | None = None
+    cagr: float | None = None
+    max_drawdown: float | None = None
+    sharpe_ratio: float | None = None
+    diversification_score: float = 0
+    risk_score: float = 0
+    ai_health_score: float = 0
+    dividend_income: float = 0
+    asset_allocation: dict[str, float] = Field(default_factory=dict)
+    sector_allocation: dict[str, float] = Field(default_factory=dict)
+    country_allocation: dict[str, float] = Field(default_factory=dict)
+    calculated_at: datetime
+
+
+# ============================================================
+# AI Recommendation
+# ============================================================
+
+
+class AIRecommendationResponse(BaseModel):
+    """AI recommendation response."""
+
+    id: str
+    holding_id: str
+    symbol: str
+    action: str
+    confidence: float
+    reasoning: str
+    evidence: list[str]
+    expected_return: float
+    risk_level: str
+    investment_horizon: str
+    alternative_suggestions: list[str]
+    explainability: dict[str, str] = Field(default_factory=dict)
+    generated_at: datetime
+
+
+class AIChatRequest(BaseModel):
+    """AI chat request."""
+
+    message: str = Field(min_length=1, max_length=2000)
+    portfolio_id: str | None = None
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+class AIChatResponse(BaseModel):
+    """AI chat response."""
+
+    message: str
+    suggestions: list[str] = Field(default_factory=list)
+    referenced_holdings: list[str] = Field(default_factory=list)
+    confidence: float = 0
+
+
+# ============================================================
+# Market
+# ============================================================
+
+
+class MarketNewsResponse(BaseModel):
+    """Market news response."""
+
+    id: str
+    title: str
+    summary: str
+    source: str
+    url: str
+    sentiment: str
+    relevance_score: float
+    sectors: list[str]
+    symbols: list[str]
+    published_at: datetime
+
+
+class SectorRankingResponse(BaseModel):
+    """Sector ranking response."""
+
+    sector: str
+    performance_1d: float = 0
+    performance_1w: float = 0
+    performance_1m: float = 0
+    performance_3m: float = 0
+    performance_1y: float = 0
+    top_gainers: list[str] = Field(default_factory=list)
+    top_losers: list[str] = Field(default_factory=list)
+
+
+class MarketOverviewResponse(BaseModel):
+    """Market overview response."""
+
+    news: list[MarketNewsResponse]
+    sector_rankings: list[SectorRankingResponse]
+    updated_at: datetime

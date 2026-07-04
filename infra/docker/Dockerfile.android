@@ -1,0 +1,44 @@
+FROM ubuntu:22.04
+
+# Avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    unzip \
+    zip \
+    xz-utils \
+    libglu1-mesa \
+    openjdk-17-jdk-headless \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up Android SDK environment
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools
+
+# Install Android SDK Command-line Tools
+RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip && \
+    unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    mv ${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
+    rm /tmp/cmdline-tools.zip
+
+# Accept Licenses & Install platforms / build tools
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+# Set up Flutter SDK environment
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH=${PATH}:${FLUTTER_HOME}/bin
+
+# Download specific Flutter version (3.24.0)
+RUN git clone --depth 1 --branch 3.24.0 https://github.com/flutter/flutter.git ${FLUTTER_HOME}
+
+# Run basic pre-download and setup
+RUN flutter doctor
+
+WORKDIR /app
