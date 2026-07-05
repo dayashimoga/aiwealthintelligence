@@ -63,6 +63,13 @@ class UserModel(TimestampMixin, Base):
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     avatar_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     preferences: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    google_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    apple_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    totp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    backup_codes: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    is_onboarded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    passkeys: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    trusted_devices: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     last_login_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -76,6 +83,7 @@ class UserModel(TimestampMixin, Base):
     )
 
     __table_args__ = (Index("ix_users_email_active", "email", "is_active"),)
+
 
 
 class PortfolioModel(TimestampMixin, Base):

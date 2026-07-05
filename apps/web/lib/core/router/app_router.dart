@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/auth/screens/onboarding_wizard.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/portfolio/screens/portfolio_detail_screen.dart';
 import '../../features/portfolio/screens/portfolio_list_screen.dart';
@@ -16,6 +17,7 @@ import '../../features/import/screens/import_screen.dart';
 import '../../features/copilot/screens/copilot_screen.dart';
 import '../../features/copilot/screens/portfolio_doctor_screen.dart';
 import '../../features/copilot/screens/scenario_screen.dart';
+import '../../features/copilot/screens/advanced_analysis_screen.dart';
 import '../widgets/shell_scaffold.dart';
 
 /// Global router provider.
@@ -34,6 +36,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingWizardScreen(),
       ),
 
       // Main app routes with shell scaffold
@@ -90,6 +97,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'scenario',
                     name: 'portfolio-scenario',
                     builder: (context, state) => ScenarioScreen(
+                      portfolioId: state.pathParameters['portfolioId']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'advanced-analysis',
+                    name: 'portfolio-advanced-analysis',
+                    builder: (context, state) => AdvancedAnalysisScreen(
                       portfolioId: state.pathParameters['portfolioId']!,
                     ),
                   ),

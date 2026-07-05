@@ -169,3 +169,21 @@ class TestProfile:
             headers={"Authorization": "Bearer invalid-token"},
         )
         assert response.status_code == 401
+
+    async def test_delete_account_success(
+        self, client: AsyncClient, auth_headers: dict[str, str]
+    ) -> None:
+        """Authenticated user can delete their account."""
+        response = await client.delete("/api/v1/auth/account", headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "Account deleted successfully"
+
+        # Subsequent profile checks should fail
+        me_resp = await client.get("/api/v1/auth/me", headers=auth_headers)
+        assert me_resp.status_code == 401
+
+    async def test_delete_account_no_auth(self, client: AsyncClient) -> None:
+        """Unauthenticated delete account request returns 401."""
+        response = await client.delete("/api/v1/auth/account")
+        assert response.status_code == 401

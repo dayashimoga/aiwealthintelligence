@@ -46,6 +46,14 @@ class UserRepository(ABC):
         """Soft-delete a user."""
 
     @abstractmethod
+    async def get_by_google_id(self, google_id: str) -> User | None:
+        """Get user by Google OAuth ID."""
+
+    @abstractmethod
+    async def get_by_apple_id(self, apple_id: str) -> User | None:
+        """Get user by Apple OAuth ID."""
+
+    @abstractmethod
     async def list_users(
         self, skip: int = 0, limit: int = 50, filters: dict[str, Any] | None = None
     ) -> list[User]:

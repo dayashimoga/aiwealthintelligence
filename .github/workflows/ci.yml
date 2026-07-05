@@ -101,8 +101,14 @@ jobs:
         run: flutter test --coverage
         continue-on-error: true
 
-      - name: Build Web
-        run: flutter build web --release --web-renderer canvaskit
+      - name: Build Web (Production Check)
+        run: flutter build web --release --web-renderer canvaskit --dart-define=FLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/
+
+      - name: Verify Android compile
+        run: flutter build apk --debug
+
+      - name: Verify Android bundle compile
+        run: flutter build appbundle --debug
 
       - name: Upload web build
         uses: actions/upload-artifact@v4

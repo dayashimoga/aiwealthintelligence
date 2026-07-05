@@ -99,6 +99,7 @@ async def get_recommendation(
         evidence=result.get("evidence", []),
         expected_return=float(result.get("expected_return", 0)),
         risk_level=result.get("risk_level", "moderate"),
+        risk_description=result.get("risk_description", "No detailed risk analysis compiled."),
         investment_horizon=result.get("investment_horizon", "6-12 months"),
         alternative_suggestions=result.get("alternative_suggestions", []),
         explainability=result.get("explainability", {}),

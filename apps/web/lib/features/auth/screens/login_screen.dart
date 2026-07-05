@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/repositories/repositories.dart';
 
 /// Login screen with glassmorphism design.
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -31,12 +33,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Simulate login - replace with actual API call
-    await Future.delayed(const Duration(seconds: 1));
+    final res = await ref.read(authRepositoryProvider).login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/dashboard');
+      res.when(
+        success: (tokens) async {
+          final profileRes = await ref.read(authRepositoryProvider).getProfile();
+          profileRes.when(
+            success: (user) {
+              if (user.isOnboarded) {
+                context.go('/dashboard');
+              } else {
+                context.go('/onboarding');
+              }
+            },
+            failure: (err, _) {
+              context.go('/onboarding');
+            },
+          );
+        },
+        failure: (error, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        },
+      );
     }
   }
 

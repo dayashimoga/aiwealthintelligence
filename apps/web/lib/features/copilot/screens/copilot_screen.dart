@@ -164,6 +164,29 @@ class CopilotScreen extends ConsumerWidget {
                         },
                       ),
                     ).animate().fadeIn(delay: 200.ms),
+
+                    const SizedBox(height: AppTheme.spacingSm),
+
+                    // Advanced Wealth Analysis Card
+                    Card(
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(AppTheme.spacingMd),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withAlpha(20),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.analytics, color: Colors.purpleAccent, size: 28),
+                        ),
+                        title: const Text('Advanced Wealth Analysis', style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text('Analyze stress tests, tax offset savings, behavioral biases, and wealth goals.'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          context.push('/portfolios/$selectedId/advanced-analysis');
+                        },
+                      ),
+                    ).animate().fadeIn(delay: 300.ms),
                   ],
                 ),
               ),

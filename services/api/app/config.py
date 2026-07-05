@@ -61,6 +61,23 @@ class Settings(BaseSettings):
     CLOUDFLARE_ACCOUNT_ID: str = ""
     CLOUDFLARE_API_TOKEN: str = ""
 
+    # SMTP Configuration
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = "noreply@wealthai.com"
+    SMTP_USE_TLS: bool = True
+
+    # Third Party Authentication
+    GOOGLE_CLIENT_ID: str = ""
+    APPLE_CLIENT_ID: str = ""
+
+    # Setu Account Aggregator
+    SETU_AA_CLIENT_ID: str = ""
+    SETU_AA_CLIENT_SECRET: str = ""
+    SETU_AA_BASE_URL: str = "https://fiiu-api.setu.co"
+
     # Market Data
     MARKET_DATA_PROVIDER: Literal["yahoo", "alpha_vantage", "polygon"] = "yahoo"
 

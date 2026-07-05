@@ -60,6 +60,13 @@ def _user_model_to_entity(model: UserModel) -> User:
         mfa_enabled=model.mfa_enabled,
         avatar_url=model.avatar_url,
         preferences=model.preferences or {},
+        google_id=model.google_id,
+        apple_id=model.apple_id,
+        totp_secret=model.totp_secret,
+        backup_codes=model.backup_codes or [],
+        is_onboarded=model.is_onboarded,
+        passkeys=model.passkeys or [],
+        trusted_devices=model.trusted_devices or [],
         created_at=model.created_at,
         updated_at=model.updated_at,
         last_login_at=model.last_login_at,
@@ -79,6 +86,13 @@ def _user_entity_to_model(entity: User) -> UserModel:
         mfa_enabled=entity.mfa_enabled,
         avatar_url=entity.avatar_url,
         preferences=entity.preferences,
+        google_id=entity.google_id,
+        apple_id=entity.apple_id,
+        totp_secret=entity.totp_secret,
+        backup_codes=entity.backup_codes,
+        is_onboarded=entity.is_onboarded,
+        passkeys=entity.passkeys,
+        trusted_devices=entity.trusted_devices,
         last_login_at=entity.last_login_at,
     )
 
@@ -192,6 +206,22 @@ class SQLAlchemyUserRepository(UserRepository):
         model = result.scalar_one_or_none()
         return _user_model_to_entity(model) if model else None
 
+    async def get_by_google_id(self, google_id: str) -> User | None:
+        stmt = select(UserModel).where(
+            UserModel.google_id == google_id, UserModel.is_active.is_(True)
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return _user_model_to_entity(model) if model else None
+
+    async def get_by_apple_id(self, apple_id: str) -> User | None:
+        stmt = select(UserModel).where(
+            UserModel.apple_id == apple_id, UserModel.is_active.is_(True)
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return _user_model_to_entity(model) if model else None
+
     async def update(self, user: User) -> User:
         model = await self._session.get(UserModel, user.id)
         if model is None:
@@ -205,6 +235,13 @@ class SQLAlchemyUserRepository(UserRepository):
         model.mfa_enabled = user.mfa_enabled
         model.avatar_url = user.avatar_url
         model.preferences = user.preferences
+        model.google_id = user.google_id
+        model.apple_id = user.apple_id
+        model.totp_secret = user.totp_secret
+        model.backup_codes = user.backup_codes
+        model.is_onboarded = user.is_onboarded
+        model.passkeys = user.passkeys
+        model.trusted_devices = user.trusted_devices
         model.last_login_at = user.last_login_at
         await self._session.flush()
         return _user_model_to_entity(model)
@@ -214,6 +251,8 @@ class SQLAlchemyUserRepository(UserRepository):
         if model is None:
             return False
         model.is_active = False
+        if not model.email.startswith("deleted_"):
+            model.email = f"deleted_{uuid.uuid4().hex[:8]}_{model.email}"
         await self._session.flush()
         return True
 

@@ -49,6 +49,22 @@ async def sync_holding_prices() -> None:
                     )
                     await session.execute(update_stmt)
                     updated_count += 1
+
+            # Populate missing sector and industry details if empty
+            missing_stmt = select(HoldingModel).where(
+                (HoldingModel.sector == "") | (HoldingModel.industry == "")
+            )
+            missing_result = await session.execute(missing_stmt)
+            missing_holdings = missing_result.scalars().all()
+            
+            if missing_holdings:
+                logger.info("scheduler_populating_missing_metadata", count=len(missing_holdings))
+                for h in missing_holdings:
+                    metadata = await market_data_service.get_fundamental_data(h.symbol, h.asset_type)
+                    if metadata:
+                        h.sector = metadata.get("sector") or "Other"
+                        h.industry = metadata.get("industry") or "Other"
+                        h.updated_at = datetime.now(timezone.utc)
             
             await session.commit()
             logger.info("scheduler_job_completed", job="sync_holding_prices", updated=updated_count)

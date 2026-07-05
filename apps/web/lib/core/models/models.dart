@@ -10,8 +10,12 @@ class User {
     required this.fullName,
     required this.role,
     this.isVerified = false,
+    this.mfaEnabled = false,
+    this.isOnboarded = false,
     this.avatarUrl = '',
     this.createdAt,
+    this.passkeys = const [],
+    this.trustedDevices = const [],
   });
 
   final String id;
@@ -19,20 +23,33 @@ class User {
   final String fullName;
   final String role;
   final bool isVerified;
+  final bool mfaEnabled;
+  final bool isOnboarded;
   final String avatarUrl;
   final DateTime? createdAt;
+  final List<Passkey> passkeys;
+  final List<Device> trustedDevices;
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id'] as String,
-    email: json['email'] as String,
-    fullName: json['full_name'] as String,
-    role: json['role'] as String,
-    isVerified: json['is_verified'] as bool? ?? false,
-    avatarUrl: json['avatar_url'] as String? ?? '',
-    createdAt: json['created_at'] != null
-        ? DateTime.parse(json['created_at'] as String)
-        : null,
-  );
+  factory User.fromJson(Map<String, dynamic> json) {
+    final rawPasskeys = json['passkeys'] as List<dynamic>? ?? [];
+    final rawDevices = json['trusted_devices'] as List<dynamic>? ?? [];
+
+    return User(
+      id: json['id'] as String,
+      email: json['email'] as String,
+      fullName: json['full_name'] as String,
+      role: json['role'] as String,
+      isVerified: json['is_verified'] as bool? ?? false,
+      mfaEnabled: json['mfa_enabled'] as bool? ?? false,
+      isOnboarded: json['is_onboarded'] as bool? ?? false,
+      avatarUrl: json['avatar_url'] as String? ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      passkeys: rawPasskeys.map((p) => Passkey.fromJson(p as Map<String, dynamic>)).toList(),
+      trustedDevices: rawDevices.map((d) => Device.fromJson(d as Map<String, dynamic>)).toList(),
+    );
+  }
 }
 
 class Portfolio {
@@ -257,6 +274,7 @@ class AIRecommendation {
     this.evidence = const [],
     this.expectedReturn = 0,
     this.riskLevel = 'moderate',
+    this.riskDescription = '',
     this.investmentHorizon = '',
     this.alternativeSuggestions = const [],
     this.explainability = const {},
@@ -272,6 +290,7 @@ class AIRecommendation {
   final List<String> evidence;
   final double expectedReturn;
   final String riskLevel;
+  final String riskDescription;
   final String investmentHorizon;
   final List<String> alternativeSuggestions;
   final Map<String, dynamic> explainability;
@@ -291,6 +310,7 @@ class AIRecommendation {
             [],
         expectedReturn: (json['expected_return'] as num?)?.toDouble() ?? 0,
         riskLevel: json['risk_level'] as String? ?? 'moderate',
+        riskDescription: json['risk_description'] as String? ?? '',
         investmentHorizon: json['investment_horizon'] as String? ?? '',
         alternativeSuggestions:
             (json['alternative_suggestions'] as List<dynamic>?)
@@ -513,6 +533,286 @@ class ImportResult {
                 .toList() ??
             [],
       );
+}
+
+class Device {
+  const Device({
+    required this.deviceId,
+    required this.name,
+    required this.registeredAt,
+  });
+
+  final String deviceId;
+  final String name;
+  final DateTime registeredAt;
+
+  factory Device.fromJson(Map<String, dynamic> json) => Device(
+        deviceId: json['device_id'] as String,
+        name: json['name'] as String,
+        registeredAt: DateTime.parse(json['registered_at'] as String),
+      );
+}
+
+class Passkey {
+  const Passkey({
+    required this.credentialId,
+    required this.createdAt,
+  });
+
+  final String credentialId;
+  final String createdAt;
+
+  factory Passkey.fromJson(Map<String, dynamic> json) => Passkey(
+        credentialId: json['credential_id'] as String? ?? '',
+        createdAt: json['created_at'] as String? ?? '',
+      );
+}
+
+class MarketNews {
+  const MarketNews({
+    required this.id,
+    required this.title,
+    required this.summary,
+    required this.source,
+    required this.url,
+    required this.sentiment,
+    this.relevanceScore = 0.0,
+    this.sectors = const [],
+    this.symbols = const [],
+    this.publishedAt,
+  });
+
+  final String id;
+  final String title;
+  final String summary;
+  final String source;
+  final String url;
+  final String sentiment;
+  final double relevanceScore;
+  final List<String> sectors;
+  final List<String> symbols;
+  final DateTime? publishedAt;
+
+  factory MarketNews.fromJson(Map<String, dynamic> json) => MarketNews(
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        summary: json['summary'] as String? ?? '',
+        source: json['source'] as String? ?? '',
+        url: json['url'] as String? ?? '',
+        sentiment: json['sentiment'] as String? ?? 'neutral',
+        relevanceScore: (json['relevance_score'] as num?)?.toDouble() ?? 0.0,
+        sectors: (json['sectors'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+        symbols: (json['symbols'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+        publishedAt: json['published_at'] != null ? DateTime.parse(json['published_at'] as String) : null,
+      );
+}
+
+class SectorRanking {
+  const SectorRanking({
+    required this.sector,
+    this.performance1d = 0.0,
+    this.performance1w = 0.0,
+    this.performance1m = 0.0,
+    this.performance3m = 0.0,
+    this.performance1y = 0.0,
+  });
+
+  final String sector;
+  final double performance1d;
+  final double performance1w;
+  final double performance1m;
+  final double performance3m;
+  final double performance1y;
+
+  factory SectorRanking.fromJson(Map<String, dynamic> json) => SectorRanking(
+        sector: json['sector'] as String? ?? '',
+        performance1d: (json['performance_1d'] as num?)?.toDouble() ?? 0.0,
+        performance1w: (json['performance_1w'] as num?)?.toDouble() ?? 0.0,
+        performance1m: (json['performance_1m'] as num?)?.toDouble() ?? 0.0,
+        performance3m: (json['performance_3m'] as num?)?.toDouble() ?? 0.0,
+        performance1y: (json['performance_1y'] as num?)?.toDouble() ?? 0.0,
+      );
+}
+
+class MarketOverview {
+  const MarketOverview({
+    required this.news,
+    required this.sectorRankings,
+    required this.macroIndicators,
+    required this.indexPerformance,
+    this.updatedAt,
+  });
+
+  final List<MarketNews> news;
+  final List<SectorRanking> sectorRankings;
+  final Map<String, double> macroIndicators;
+  final Map<String, dynamic> indexPerformance;
+  final DateTime? updatedAt;
+
+  factory MarketOverview.fromJson(Map<String, dynamic> json) {
+    final rawNews = json['news'] as List<dynamic>? ?? [];
+    final rawSectors = json['sector_rankings'] as List<dynamic>? ?? [];
+    
+    final macroMap = <String, double>{};
+    if (json['macro_indicators'] != null) {
+      (json['macro_indicators'] as Map<String, dynamic>).forEach((k, v) {
+        macroMap[k] = (v as num).toDouble();
+      });
+    }
+
+    return MarketOverview(
+      news: rawNews.map((n) => MarketNews.fromJson(n as Map<String, dynamic>)).toList(),
+      sectorRankings: rawSectors.map((s) => SectorRanking.fromJson(s as Map<String, dynamic>)).toList(),
+      macroIndicators: macroMap,
+      indexPerformance: json['index_performance'] as Map<String, dynamic>? ?? {},
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+    );
+  }
+}
+
+class StressScenarioResult {
+  const StressScenarioResult({
+    required this.scenarioName,
+    required this.scenarioDescription,
+    required this.estimatedNewValue,
+    required this.changeValue,
+    required this.changePercentage,
+    required this.impactLevel,
+  });
+
+  final String scenarioName;
+  final String scenarioDescription;
+  final double estimatedNewValue;
+  final double changeValue;
+  final double changePercentage;
+  final String impactLevel;
+
+  factory StressScenarioResult.fromJson(Map<String, dynamic> json) => StressScenarioResult(
+        scenarioName: json['scenario_name'] as String? ?? '',
+        scenarioDescription: json['scenario_description'] as String? ?? '',
+        estimatedNewValue: (json['estimated_new_value'] as num?)?.toDouble() ?? 0.0,
+        changeValue: (json['change_value'] as num?)?.toDouble() ?? 0.0,
+        changePercentage: (json['change_percentage'] as num?)?.toDouble() ?? 0.0,
+        impactLevel: json['impact_level'] as String? ?? 'neutral',
+      );
+}
+
+class TaxHarvestingOpportunity {
+  const TaxHarvestingOpportunity({
+    required this.symbol,
+    required this.name,
+    required this.quantity,
+    required this.currentPrice,
+    required this.averageBuyPrice,
+    required this.unrealizedLoss,
+    required this.potentialTaxSavings,
+    required this.holdingPeriodDays,
+    required this.assetType,
+  });
+
+  final String symbol;
+  final String name;
+  final double quantity;
+  final double currentPrice;
+  final double averageBuyPrice;
+  final double unrealizedLoss;
+  final double potentialTaxSavings;
+  final int holdingPeriodDays;
+  final String assetType;
+
+  factory TaxHarvestingOpportunity.fromJson(Map<String, dynamic> json) => TaxHarvestingOpportunity(
+        symbol: json['symbol'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
+        currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0.0,
+        averageBuyPrice: (json['average_buy_price'] as num?)?.toDouble() ?? 0.0,
+        unrealizedLoss: (json['unrealized_loss'] as num?)?.toDouble() ?? 0.0,
+        potentialTaxSavings: (json['potential_tax_savings'] as num?)?.toDouble() ?? 0.0,
+        holdingPeriodDays: json['holding_period_days'] as int? ?? 0,
+        assetType: json['asset_type'] as String? ?? 'stock',
+      );
+}
+
+class BehavioralBias {
+  const BehavioralBias({
+    required this.biasName,
+    required this.severity,
+    required this.description,
+    required this.remedy,
+  });
+
+  final String biasName;
+  final String severity;
+  final String description;
+  final String remedy;
+
+  factory BehavioralBias.fromJson(Map<String, dynamic> json) => BehavioralBias(
+        biasName: json['bias_name'] as String? ?? '',
+        severity: json['severity'] as String? ?? 'low',
+        description: json['description'] as String? ?? '',
+        remedy: json['remedy'] as String? ?? '',
+      );
+}
+
+class GoalProgress {
+  const GoalProgress({
+    required this.goalName,
+    required this.targetAmount,
+    required this.currentAmount,
+    required this.progressPercentage,
+    required this.status,
+  });
+
+  final String goalName;
+  final double targetAmount;
+  final double currentAmount;
+  final double progressPercentage;
+  final String status;
+
+  factory GoalProgress.fromJson(Map<String, dynamic> json) => GoalProgress(
+        goalName: json['goal_name'] as String? ?? '',
+        targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0.0,
+        currentAmount: (json['current_amount'] as num?)?.toDouble() ?? 0.0,
+        progressPercentage: (json['progress_percentage'] as num?)?.toDouble() ?? 0.0,
+        status: json['status'] as String? ?? 'on_track',
+      );
+}
+
+class AdvancedAnalysis {
+  const AdvancedAnalysis({
+    required this.portfolioId,
+    required this.stressTest,
+    required this.taxHarvesting,
+    required this.totalPotentialTaxSavings,
+    required this.behavioralBiases,
+    required this.goals,
+    required this.calculatedAt,
+  });
+
+  final String portfolioId;
+  final List<StressScenarioResult> stressTest;
+  final List<TaxHarvestingOpportunity> taxHarvesting;
+  final double totalPotentialTaxSavings;
+  final List<BehavioralBias> behavioralBiases;
+  final List<GoalProgress> goals;
+  final DateTime? calculatedAt;
+
+  factory AdvancedAnalysis.fromJson(Map<String, dynamic> json) {
+    final rawStress = json['stress_test'] as List<dynamic>? ?? [];
+    final rawTax = json['tax_harvesting'] as List<dynamic>? ?? [];
+    final rawBiases = json['behavioral_biases'] as List<dynamic>? ?? [];
+    final rawGoals = json['goals'] as List<dynamic>? ?? [];
+
+    return AdvancedAnalysis(
+      portfolioId: json['portfolio_id'] as String? ?? '',
+      stressTest: rawStress.map((s) => StressScenarioResult.fromJson(s as Map<String, dynamic>)).toList(),
+      taxHarvesting: rawTax.map((t) => TaxHarvestingOpportunity.fromJson(t as Map<String, dynamic>)).toList(),
+      totalPotentialTaxSavings: (json['total_potential_tax_savings'] as num?)?.toDouble() ?? 0.0,
+      behavioralBiases: rawBiases.map((b) => BehavioralBias.fromJson(b as Map<String, dynamic>)).toList(),
+      goals: rawGoals.map((g) => GoalProgress.fromJson(g as Map<String, dynamic>)).toList(),
+      calculatedAt: json['calculated_at'] != null ? DateTime.parse(json['calculated_at'] as String) : null,
+    );
+  }
 }
 
 

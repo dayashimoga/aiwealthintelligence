@@ -237,17 +237,28 @@ class YFinanceMarketDataService:
         return res
 
     async def get_macro_indicators(self) -> dict[str, Any]:
-        """Fetch macro indicators (inflation, repo rate, US/India 10Y Yields)."""
+        """Fetch macro indicators (inflation, repo rate, US/India 10Y Yields) from World Bank and yfinance."""
+        from app.infrastructure.market.price_cache import cache_repo
+        import httpx
+
+        cache_key = "market:macro_indicators"
+        cached = await cache_repo.get(cache_key)
+        if cached:
+            return cached
+
         indicators = {
-            "INDIA_10Y_BOND": "^IN10Y",  # Try India 10Y if yfinance has it, or US 10Y Yield ^TNX as fallback
+            "INDIA_10Y_BOND": "^IN10Y",
             "US_10Y_BOND": "^TNX",
         }
         res = {
-            "inflation_rate": 4.8,  # Dynamic fallback/hardcode standard rates
+            "inflation_rate": 4.8,
+            "gdp_growth": 6.2,
             "repo_rate": 6.5,
             "india_10y_yield": 7.0,
             "us_10y_yield": 4.2,
         }
+
+        # 1. Fetch bond yields from yfinance
         for key, sym in indicators.items():
             try:
                 ticker = yf.Ticker(sym)
@@ -260,6 +271,43 @@ class YFinanceMarketDataService:
                         res["us_10y_yield"] = round(float(val), 2)
             except Exception:
                 pass
+
+        # 2. Fetch Inflation and GDP growth from World Bank free APIs
+        async with httpx.AsyncClient() as client:
+            # India CPI Inflation
+            try:
+                inf_res = await client.get(
+                    "http://api.worldbank.org/v2/country/IN/indicator/FP.CPI.TOTL.ZG?format=json",
+                    timeout=5.0
+                )
+                if inf_res.status_code == 200:
+                    data = inf_res.json()
+                    if len(data) > 1 and isinstance(data[1], list):
+                        for obs in data[1]:
+                            if obs.get("value") is not None:
+                                res["inflation_rate"] = round(float(obs["value"]), 2)
+                                break
+            except Exception as e:
+                logger.warning("worldbank_inflation_fetch_failed", error=str(e))
+
+            # India GDP Growth
+            try:
+                gdp_res = await client.get(
+                    "http://api.worldbank.org/v2/country/IN/indicator/NY.GDP.MKTP.KD.ZG?format=json",
+                    timeout=5.0
+                )
+                if gdp_res.status_code == 200:
+                    data = gdp_res.json()
+                    if len(data) > 1 and isinstance(data[1], list):
+                        for obs in data[1]:
+                            if obs.get("value") is not None:
+                                res["gdp_growth"] = round(float(obs["value"]), 2)
+                                break
+            except Exception as e:
+                logger.warning("worldbank_gdp_fetch_failed", error=str(e))
+
+        # Cache in redis for 24 hours (86400 seconds)
+        await cache_repo.set(cache_key, res, ttl=86400)
         return res
 
 

@@ -36,25 +36,31 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  Android Builder image built successfully." -ForegroundColor Green
 
 # Step 2: Run the build inside the container
-Write-Host "[2/3] Building Android APK inside Docker..." -ForegroundColor Yellow
+Write-Host "[2/3] Building Android APK and App Bundle (AAB) inside Docker..." -ForegroundColor Yellow
 
 # We mount the entire project root to /app so that relative assets/files and packages work correctly.
-# The output APK will naturally compile into the local mounted path: apps/web/build/app/outputs/flutter-apk/
-docker run --rm -v "${ProjectRoot}:/app" wealthai-android-builder bash -c "cd /app/apps/web && if [ ! -d android ]; then echo 'Android folder missing. Initializing Android platform...'; flutter create --platforms=android .; fi && flutter pub get && flutter build apk --release"
+# The outputs will naturally compile into local mounted paths:
+#   APK: apps/web/build/app/outputs/flutter-apk/
+#   AAB: apps/web/build/app/outputs/bundle/release/
+docker run --rm -v "${ProjectRoot}:/app" wealthai-android-builder bash -c "cd /app/apps/web && if [ ! -d android ]; then echo 'Android folder missing. Initializing Android platform...'; flutter create --platforms=android .; fi && flutter pub get && flutter build apk --release && flutter build appbundle --release"
 
 $buildExitCode = $LASTEXITCODE
 
 # Step 3: Check build result
-Write-Host "[3/3] Verifying APK Build..." -ForegroundColor Yellow
+Write-Host "[3/3] Verifying Android Builds..." -ForegroundColor Yellow
 
 $apkPath = "$ProjectRoot\apps\web\build\app\outputs\flutter-apk\app-release.apk"
+$aabPath = "$ProjectRoot\apps\web\build\app\outputs\bundle\release\app-release.aab"
 
-if ($buildExitCode -eq 0 -and (Test-Path $apkPath)) {
-    $size = (Get-Item $apkPath).Length / 1MB
+if ($buildExitCode -eq 0 -and (Test-Path $apkPath) -and (Test-Path $aabPath)) {
+    $apkSize = (Get-Item $apkPath).Length / 1MB
+    $aabSize = (Get-Item $aabPath).Length / 1MB
     Write-Host "`n========================================" -ForegroundColor Cyan
     Write-Host "  BUILD SUCCESSFUL" -ForegroundColor Green
     Write-Host "  APK Location: $apkPath" -ForegroundColor White
-    Write-Host "  File Size:    $([math]::Round($size, 1)) MB" -ForegroundColor White
+    Write-Host "  APK Size:     $([math]::Round($apkSize, 1)) MB" -ForegroundColor White
+    Write-Host "  AAB Location: $aabPath" -ForegroundColor White
+    Write-Host "  AAB Size:     $([math]::Round($aabSize, 1)) MB" -ForegroundColor White
     Write-Host "========================================`n" -ForegroundColor Cyan
 } else {
     Write-Host "ERROR: Android build failed inside container (Exit Code: $buildExitCode)." -ForegroundColor Red

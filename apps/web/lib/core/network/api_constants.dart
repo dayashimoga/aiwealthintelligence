@@ -15,6 +15,20 @@ class ApiConstants {
   static const String login = '$apiPrefix/auth/login';
   static const String refresh = '$apiPrefix/auth/refresh';
   static const String profile = '$apiPrefix/auth/me';
+  static const String oauthLogin = '$apiPrefix/auth/oauth-login';
+  static const String otpSend = '$apiPrefix/auth/otp/send';
+  static const String otpVerify = '$apiPrefix/auth/otp/verify';
+  static const String totpSetup = '$apiPrefix/auth/mfa/totp/setup';
+  static const String totpEnable = '$apiPrefix/auth/mfa/totp/enable';
+  static const String totpDisable = '$apiPrefix/auth/mfa/totp/disable';
+  static const String devices = '$apiPrefix/auth/devices';
+  static String device(String deviceId) => '$apiPrefix/auth/devices/$deviceId';
+  static const String onboardingComplete = '$apiPrefix/auth/onboarding/complete';
+  static const String passkeyRegisterOptions = '$apiPrefix/auth/passkeys/register/options';
+  static const String passkeyRegisterVerify = '$apiPrefix/auth/passkeys/register/verify';
+  static const String passkeyLoginOptions = '$apiPrefix/auth/passkeys/login/options';
+  static const String passkeyLoginVerify = '$apiPrefix/auth/passkeys/login/verify';
+  static const String deleteAccount = '$apiPrefix/auth/account';
 
   // Portfolios
   static const String portfolios = '$apiPrefix/portfolios';
@@ -30,6 +44,10 @@ class ApiConstants {
       '$portfolios/$portfolioId/import/cas-pdf';
   static String importBrokerReport(String portfolioId) =>
       '$portfolios/$portfolioId/import/broker';
+  static String initiateConsent(String portfolioId) =>
+      '$portfolios/$portfolioId/consent';
+  static String getConsentStatus(String portfolioId, String consentHandle) =>
+      '$portfolios/$portfolioId/consent/status/$consentHandle';
 
   // AI & Copilot
   static const String aiChat = '$apiPrefix/ai/chat';
@@ -40,6 +58,7 @@ class ApiConstants {
   static String copilotBrief(String portfolioId) => '$copilotPrefix/brief/$portfolioId';
   static String copilotDoctor(String portfolioId) => '$copilotPrefix/portfolio-doctor/$portfolioId';
   static String copilotScenario(String portfolioId) => '$copilotPrefix/scenario/$portfolioId';
+  static String copilotAdvanced(String portfolioId) => '$copilotPrefix/advanced/$portfolioId';
 
   // Market
   static const String marketNews = '$apiPrefix/market/news';

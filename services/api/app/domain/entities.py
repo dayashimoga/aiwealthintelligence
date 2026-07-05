@@ -147,6 +147,13 @@ class User:
     mfa_enabled: bool = False
     avatar_url: str = ""
     preferences: dict[str, Any] = field(default_factory=dict)
+    google_id: str | None = None
+    apple_id: str | None = None
+    totp_secret: str | None = None
+    backup_codes: list[str] = field(default_factory=list)
+    is_onboarded: bool = False
+    passkeys: list[dict[str, Any]] = field(default_factory=list)
+    trusted_devices: list[dict[str, Any]] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     last_login_at: datetime | None = None
@@ -160,6 +167,7 @@ class User:
         """Update last login timestamp."""
         self.last_login_at = datetime.now(timezone.utc)
         self.updated_at = datetime.now(timezone.utc)
+
 
 
 @dataclass

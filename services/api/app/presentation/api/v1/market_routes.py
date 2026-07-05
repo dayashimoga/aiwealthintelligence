@@ -155,11 +155,17 @@ async def get_market_overview() -> MarketOverviewResponse:
     Combines news, sector rankings, and market indicators
     into a single dashboard-ready response.
     """
+    from app.infrastructure.market.market_data_service import market_data_service
+
     news = await get_market_news(limit=5)
     sectors = await get_sector_rankings()
+    macro = await market_data_service.get_macro_indicators()
+    indices = await market_data_service.get_index_performance()
     
     return MarketOverviewResponse(
         news=news,
         sector_rankings=sectors,
+        macro_indicators=macro,
+        index_performance=indices,
         updated_at=datetime.now(timezone.utc),
     )
