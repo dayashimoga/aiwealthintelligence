@@ -301,3 +301,75 @@ class AuditLogModel(Base):
         nullable=False,
         index=True,
     )
+
+
+class NotificationModel(TimestampMixin, Base):
+    """In-app notification for smart alerts and reports."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    category: Mapped[str] = mapped_column(
+        Enum(
+            "price_alert", "rebalance", "dividend", "report",
+            "tax", "goal", "security", "system",
+            name="notification_category",
+        ),
+        nullable=False,
+        default="system",
+    )
+    priority: Mapped[str] = mapped_column(
+        Enum("low", "medium", "high", "critical", name="notification_priority"),
+        nullable=False,
+        default="medium",
+    )
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    extra_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_notifications_user_read", "user_id", "is_read"),
+        Index("ix_notifications_category", "category"),
+    )
+
+
+class GoalModel(TimestampMixin, Base):
+    """Financial goal tracking for goal/retirement planning."""
+
+    __tablename__ = "goals"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    goal_type: Mapped[str] = mapped_column(
+        Enum(
+            "retirement", "emergency_fund", "house", "education",
+            "wedding", "vacation", "car", "wealth_building", "custom",
+            name="goal_type",
+        ),
+        nullable=False,
+        default="custom",
+    )
+    target_amount: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
+    current_amount: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
+    monthly_contribution: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
+    target_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expected_return_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=12.0)
+    inflation_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=6.0)
+    linked_portfolio_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+    __table_args__ = (Index("ix_goals_user_active", "user_id", "is_active"),)
+

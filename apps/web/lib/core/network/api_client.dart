@@ -1,3 +1,5 @@
+import 'dart:developer' show log;
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -24,7 +26,7 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(LogInterceptor(
     requestBody: true,
     responseBody: true,
-    logPrint: (obj) => print('[API] $obj'),
+    logPrint: (obj) => log('[API] $obj', name: 'DioHttp'),
   ));
 
   return dio;
@@ -158,7 +160,7 @@ class RetryInterceptor extends Interceptor {
       final retries = (options.extra['retries'] as int? ?? 0);
       if (retries < maxRetries) {
         options.extra['retries'] = retries + 1;
-        print('[API] Retrying request: ${options.path} (Attempt ${retries + 1} of $maxRetries)');
+        log('[API] Retrying request: ${options.path} (Attempt ${retries + 1} of $maxRetries)', name: 'RetryInterceptor');
         await Future.delayed(Duration(milliseconds: delayMs * (retries + 1)));
         try {
           final response = await dio.fetch(options);

@@ -606,6 +606,230 @@ class MarketRepository {
 }
 
 // ============================================================
+// Notification Repository
+// ============================================================
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepository(ref.read(dioProvider));
+});
+
+class NotificationRepository {
+  NotificationRepository(this._dio);
+  final Dio _dio;
+
+  Future<Result<List<AppNotification>>> listNotifications({
+    bool unreadOnly = false,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await _dio.get(ApiConstants.notifications, queryParameters: {
+        'unread_only': unreadOnly,
+        'limit': limit,
+      });
+      final data = response.data as Map<String, dynamic>;
+      final rawList = data['notifications'] as List<dynamic>? ?? [];
+      final notifications = rawList
+          .map((n) => AppNotification.fromJson(n as Map<String, dynamic>))
+          .toList();
+      return Result.success(notifications);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<int>> getUnreadCount() async {
+    try {
+      final response = await _dio.get(ApiConstants.notificationsCount);
+      final data = response.data as Map<String, dynamic>;
+      return Result.success(data['unread_count'] as int? ?? 0);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<bool>> markRead(String notificationId) async {
+    try {
+      await _dio.post(ApiConstants.notificationRead(notificationId));
+      return const Result.success(true);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<int>> markAllRead() async {
+    try {
+      final response = await _dio.post(ApiConstants.notificationsReadAll);
+      final data = response.data as Map<String, dynamic>;
+      return Result.success(data['marked_read'] as int? ?? 0);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+}
+
+// ============================================================
+// Goal Repository
+// ============================================================
+
+final goalRepositoryProvider = Provider<GoalRepository>((ref) {
+  return GoalRepository(ref.read(dioProvider));
+});
+
+class GoalRepository {
+  GoalRepository(this._dio);
+  final Dio _dio;
+
+  Future<Result<List<FinancialGoal>>> listGoals({bool activeOnly = true}) async {
+    try {
+      final response = await _dio.get(ApiConstants.goals, queryParameters: {
+        'active_only': activeOnly,
+      });
+      final data = response.data as Map<String, dynamic>;
+      final rawList = data['goals'] as List<dynamic>? ?? [];
+      final goals = rawList
+          .map((g) => FinancialGoal.fromJson(g as Map<String, dynamic>))
+          .toList();
+      return Result.success(goals);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<FinancialGoal>> createGoal(Map<String, dynamic> goalData) async {
+    try {
+      final response = await _dio.post(ApiConstants.goals, data: goalData);
+      return Result.success(
+        FinancialGoal.fromJson(response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<FinancialGoal>> updateGoal(String goalId, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(ApiConstants.goal(goalId), data: data);
+      return Result.success(
+        FinancialGoal.fromJson(response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<void>> deleteGoal(String goalId) async {
+    try {
+      await _dio.delete(ApiConstants.goal(goalId));
+      return const Result.success(null);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+}
+
+// ============================================================
+// Watchlist Repository
+// ============================================================
+
+final watchlistRepositoryProvider = Provider<WatchlistRepository>((ref) {
+  return WatchlistRepository(ref.read(dioProvider));
+});
+
+class WatchlistRepository {
+  WatchlistRepository(this._dio);
+  final Dio _dio;
+
+  Future<Result<List<WatchlistItem>>> listWatchlists() async {
+    try {
+      final response = await _dio.get(ApiConstants.watchlists);
+      final data = response.data as Map<String, dynamic>;
+      final rawList = data['watchlists'] as List<dynamic>? ?? [];
+      final watchlists = rawList
+          .map((w) => WatchlistItem.fromJson(w as Map<String, dynamic>))
+          .toList();
+      return Result.success(watchlists);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<WatchlistItem>> createWatchlist({
+    required String name,
+    List<String> symbols = const [],
+  }) async {
+    try {
+      final response = await _dio.post(ApiConstants.watchlists, data: {
+        'name': name,
+        'symbols': symbols,
+      });
+      return Result.success(
+        WatchlistItem.fromJson(response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<Map<String, dynamic>>> addSymbol(String watchlistId, {
+    required String symbol,
+    double? alertAbove,
+    double? alertBelow,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.watchlistSymbols(watchlistId),
+        data: {
+          'symbol': symbol,
+          if (alertAbove != null) 'alert_above': alertAbove,
+          if (alertBelow != null) 'alert_below': alertBelow,
+        },
+      );
+      return Result.success(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<List<WatchlistIntelligenceItem>>> getIntelligence(
+    String watchlistId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.watchlistIntelligence(watchlistId),
+      );
+      final data = response.data as Map<String, dynamic>;
+      final rawList = data['intelligence'] as List<dynamic>? ?? [];
+      final items = rawList
+          .map((i) => WatchlistIntelligenceItem.fromJson(i as Map<String, dynamic>))
+          .toList();
+      return Result.success(items);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<void>> removeSymbol(String watchlistId, String symbol) async {
+    try {
+      await _dio.delete(
+        ApiConstants.watchlistRemoveSymbol(watchlistId, symbol),
+      );
+      return const Result.success(null);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+
+  Future<Result<void>> deleteWatchlist(String watchlistId) async {
+    try {
+      await _dio.delete(ApiConstants.watchlist(watchlistId));
+      return const Result.success(null);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e));
+    }
+  }
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -625,3 +849,4 @@ String _extractError(DioException e) {
   }
   return e.message ?? 'An unexpected error occurred';
 }
+

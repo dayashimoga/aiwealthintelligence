@@ -816,3 +816,195 @@ class AdvancedAnalysis {
 }
 
 
+class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.title,
+    required this.body,
+    this.category = 'system',
+    this.priority = 'medium',
+    this.isRead = false,
+    this.metadata = const {},
+    this.createdAt,
+  });
+
+  final String id;
+  final String title;
+  final String body;
+  final String category;
+  final String priority;
+  final bool isRead;
+  final Map<String, dynamic> metadata;
+  final DateTime? createdAt;
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
+    id: json['id'] as String,
+    title: json['title'] as String,
+    body: json['body'] as String? ?? '',
+    category: json['category'] as String? ?? 'system',
+    priority: json['priority'] as String? ?? 'medium',
+    isRead: json['is_read'] as bool? ?? false,
+    metadata: json['metadata'] is Map
+        ? Map<String, dynamic>.from(json['metadata'] as Map)
+        : const {},
+    createdAt: json['created_at'] != null
+        ? DateTime.parse(json['created_at'] as String)
+        : null,
+  );
+}
+
+
+class FinancialGoal {
+  const FinancialGoal({
+    required this.id,
+    required this.name,
+    this.goalType = 'custom',
+    this.targetAmount = 0,
+    this.currentAmount = 0,
+    this.monthlyContribution = 0,
+    this.targetDate,
+    this.expectedReturnRate = 12.0,
+    this.inflationRate = 6.0,
+    this.linkedPortfolioId,
+    this.isActive = true,
+    this.notes = '',
+    this.progressPct = 0,
+    this.monthsRemaining,
+    this.requiredMonthlySip = 0,
+    this.shortfall = 0,
+    this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final String goalType;
+  final double targetAmount;
+  final double currentAmount;
+  final double monthlyContribution;
+  final DateTime? targetDate;
+  final double expectedReturnRate;
+  final double inflationRate;
+  final String? linkedPortfolioId;
+  final bool isActive;
+  final String notes;
+  final double progressPct;
+  final int? monthsRemaining;
+  final double requiredMonthlySip;
+  final double shortfall;
+  final DateTime? createdAt;
+
+  factory FinancialGoal.fromJson(Map<String, dynamic> json) => FinancialGoal(
+    id: json['id'] as String,
+    name: json['name'] as String,
+    goalType: json['goal_type'] as String? ?? 'custom',
+    targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0,
+    currentAmount: (json['current_amount'] as num?)?.toDouble() ?? 0,
+    monthlyContribution: (json['monthly_contribution'] as num?)?.toDouble() ?? 0,
+    targetDate: json['target_date'] != null
+        ? DateTime.parse(json['target_date'] as String)
+        : null,
+    expectedReturnRate: (json['expected_return_rate'] as num?)?.toDouble() ?? 12.0,
+    inflationRate: (json['inflation_rate'] as num?)?.toDouble() ?? 6.0,
+    linkedPortfolioId: json['linked_portfolio_id'] as String?,
+    isActive: json['is_active'] as bool? ?? true,
+    notes: json['notes'] as String? ?? '',
+    progressPct: (json['progress_pct'] as num?)?.toDouble() ?? 0,
+    monthsRemaining: json['months_remaining'] as int?,
+    requiredMonthlySip: (json['required_monthly_sip'] as num?)?.toDouble() ?? 0,
+    shortfall: (json['shortfall'] as num?)?.toDouble() ?? 0,
+    createdAt: json['created_at'] != null
+        ? DateTime.parse(json['created_at'] as String)
+        : null,
+  );
+}
+
+
+class WatchlistItem {
+  const WatchlistItem({
+    required this.id,
+    required this.name,
+    this.symbols = const [],
+    this.alerts = const [],
+    this.symbolCount = 0,
+    this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final List<String> symbols;
+  final List<Map<String, dynamic>> alerts;
+  final int symbolCount;
+  final DateTime? createdAt;
+
+  factory WatchlistItem.fromJson(Map<String, dynamic> json) {
+    final rawSymbols = json['symbols'] as List<dynamic>? ?? [];
+    final rawAlerts = json['alerts'] as List<dynamic>? ?? [];
+
+    return WatchlistItem(
+      id: json['id'] as String,
+      name: json['name'] as String? ?? 'Watchlist',
+      symbols: rawSymbols.map((s) => s.toString()).toList(),
+      alerts: rawAlerts
+          .map((a) => Map<String, dynamic>.from(a as Map))
+          .toList(),
+      symbolCount: json['symbol_count'] as int? ?? rawSymbols.length,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+    );
+  }
+}
+
+
+class WatchlistIntelligenceItem {
+  const WatchlistIntelligenceItem({
+    required this.symbol,
+    this.currentPrice = 0,
+    this.peRatio,
+    this.marketCap,
+    this.fiftyTwoWeekHigh,
+    this.fiftyTwoWeekLow,
+    this.sector = '',
+    this.analystTarget,
+    this.analystRecommendation,
+    this.recentNews = const [],
+    this.triggeredAlerts = const [],
+    this.error,
+  });
+
+  final String symbol;
+  final double currentPrice;
+  final double? peRatio;
+  final double? marketCap;
+  final double? fiftyTwoWeekHigh;
+  final double? fiftyTwoWeekLow;
+  final String sector;
+  final double? analystTarget;
+  final String? analystRecommendation;
+  final List<Map<String, String>> recentNews;
+  final List<String> triggeredAlerts;
+  final String? error;
+
+  factory WatchlistIntelligenceItem.fromJson(Map<String, dynamic> json) {
+    final rawNews = json['recent_news'] as List<dynamic>? ?? [];
+    final rawAlerts = json['triggered_alerts'] as List<dynamic>? ?? [];
+
+    return WatchlistIntelligenceItem(
+      symbol: json['symbol'] as String,
+      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
+      peRatio: (json['pe_ratio'] as num?)?.toDouble(),
+      marketCap: (json['market_cap'] as num?)?.toDouble(),
+      fiftyTwoWeekHigh: (json['fifty_two_week_high'] as num?)?.toDouble(),
+      fiftyTwoWeekLow: (json['fifty_two_week_low'] as num?)?.toDouble(),
+      sector: json['sector'] as String? ?? '',
+      analystTarget: (json['analyst_target'] as num?)?.toDouble(),
+      analystRecommendation: json['analyst_recommendation'] as String?,
+      recentNews: rawNews
+          .map((n) => Map<String, String>.from(
+              (n as Map).map((k, v) => MapEntry(k.toString(), v.toString()))))
+          .toList(),
+      triggeredAlerts: rawAlerts.map((a) => a.toString()).toList(),
+      error: json['error'] as String?,
+    );
+  }
+}

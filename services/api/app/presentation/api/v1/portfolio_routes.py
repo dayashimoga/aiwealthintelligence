@@ -535,6 +535,13 @@ async def get_portfolio_analytics(
     engine = PortfolioAnalyticsEngine()
     metrics = engine.calculate_metrics(holdings, transactions)
 
+    # Calculate real dividend income from transactions
+    dividend_income = 0.0
+    for tx in transactions:
+        tx_type = tx.transaction_type.value if hasattr(tx.transaction_type, "value") else str(tx.transaction_type)
+        if tx_type == "dividend":
+            dividend_income += float(tx.quantity) * float(tx.price)
+
     return PortfolioAnalyticsResponse(
         portfolio_id=portfolio_id,
         total_invested=metrics["total_invested"],
@@ -544,15 +551,16 @@ async def get_portfolio_analytics(
         holding_count=len(holdings),
         xirr=metrics["xirr"],
         cagr=metrics.get("cagr"),
-        max_drawdown=None,
-        sharpe_ratio=None,
+        max_drawdown=metrics.get("max_drawdown"),
+        sharpe_ratio=metrics.get("sharpe_ratio"),
         diversification_score=metrics["diversification_score"],
         risk_score=metrics["risk_score"],
         ai_health_score=metrics["ai_health_score"],
-        dividend_income=0.0,  # We can calculate this from transactions later
+        dividend_income=round(dividend_income, 2),
         asset_allocation=metrics["asset_allocation"],
         sector_allocation=metrics["sector_allocation"],
         country_allocation=metrics["country_allocation"],
+        tax_estimate=metrics.get("tax_estimate"),
         calculated_at=metrics["calculated_at"],
     )
 

@@ -255,3 +255,181 @@ class AdvancedAnalyticsEngine:
             })
 
         return results
+
+    def analyze_sector_rotation(self, holdings: list[Holding]) -> list[dict[str, Any]]:
+        """Analyze sector allocation and suggest rotation opportunities.
+
+        Uses economic cycle phases to suggest sector weight adjustments.
+        """
+        total_val = sum(float(h.current_value) for h in holdings)
+        if total_val <= 0:
+            return []
+
+        sector_weights: dict[str, float] = {}
+        for h in holdings:
+            sector = h.sector or "Other"
+            sector_weights[sector] = sector_weights.get(sector, 0.0) + float(h.current_value)
+
+        # Convert to percentages
+        sector_pcts = {k: round((v / total_val) * 100, 2) for k, v in sector_weights.items()}
+
+        # Recommended weights for balanced Indian portfolio (mid-cycle)
+        recommended = {
+            "Information Technology": 18.0,
+            "Financial Services": 20.0,
+            "Consumer Goods": 12.0,
+            "Healthcare": 10.0,
+            "Energy": 8.0,
+            "Industrials": 8.0,
+            "Materials": 6.0,
+            "Utilities": 4.0,
+            "Real Estate": 4.0,
+            "Communication": 5.0,
+            "Other": 5.0,
+        }
+
+        suggestions = []
+        for sector, current_pct in sector_pcts.items():
+            target_pct = recommended.get(sector, 5.0)
+            diff = current_pct - target_pct
+            action = "hold"
+            if diff > 5:
+                action = "reduce"
+            elif diff < -5:
+                action = "increase"
+
+            suggestions.append({
+                "sector": sector,
+                "current_weight_pct": current_pct,
+                "recommended_weight_pct": target_pct,
+                "deviation_pct": round(diff, 2),
+                "action": action,
+            })
+
+        # Sort by absolute deviation (largest first)
+        suggestions.sort(key=lambda x: abs(x["deviation_pct"]), reverse=True)
+        return suggestions
+
+    def calculate_dividend_plan(self, holdings: list[Holding]) -> dict[str, Any]:
+        """Analyze dividend income potential from current holdings.
+
+        Estimates annual dividend income and identifies top dividend payers.
+        """
+        dividend_holdings = []
+        total_annual_dividend = 0.0
+
+        for h in holdings:
+            qty = float(h.quantity)
+            current_price = float(h.current_price)
+            asset_type = h.asset_type.value if hasattr(h.asset_type, "value") else str(h.asset_type)
+
+            # Estimate dividend based on asset type averages
+            if asset_type == "stock":
+                # Average Indian stock dividend yield ~1.5%
+                est_yield = 0.015
+            elif asset_type == "mutual_fund":
+                est_yield = 0.0  # Growth MFs don't pay dividends
+            elif asset_type in ("bond", "fixed_deposit"):
+                est_yield = 0.065  # ~6.5% coupon
+            elif asset_type == "gold":
+                est_yield = 0.0  # Gold doesn't pay dividends
+            else:
+                est_yield = 0.005
+
+            annual_div = qty * current_price * est_yield
+            if annual_div > 0:
+                total_annual_dividend += annual_div
+                dividend_holdings.append({
+                    "symbol": h.symbol,
+                    "name": h.name,
+                    "asset_type": asset_type,
+                    "estimated_yield_pct": round(est_yield * 100, 2),
+                    "annual_dividend": round(annual_div, 2),
+                    "current_value": round(qty * current_price, 2),
+                })
+
+        # Sort by annual dividend (highest first)
+        dividend_holdings.sort(key=lambda x: x["annual_dividend"], reverse=True)
+
+        monthly_income = total_annual_dividend / 12 if total_annual_dividend > 0 else 0.0
+
+        return {
+            "total_annual_dividend": round(total_annual_dividend, 2),
+            "monthly_income": round(monthly_income, 2),
+            "top_dividend_holdings": dividend_holdings[:10],
+            "total_dividend_holdings": len(dividend_holdings),
+        }
+
+    def find_opportunity_radar(self, holdings: list[Holding]) -> list[dict[str, Any]]:
+        """Identify investment opportunities based on portfolio gaps and fundamentals.
+
+        Analyzes current portfolio for missing asset classes, sectors, and
+        suggests areas for potential investment.
+        """
+        total_val = sum(float(h.current_value) for h in holdings)
+        if total_val <= 0:
+            return []
+
+        # Current allocations
+        asset_alloc: dict[str, float] = {}
+        sector_alloc: dict[str, float] = {}
+        for h in holdings:
+            asset_type = h.asset_type.value if hasattr(h.asset_type, "value") else str(h.asset_type)
+            asset_alloc[asset_type] = asset_alloc.get(asset_type, 0.0) + float(h.current_value)
+            sector = h.sector or "Other"
+            sector_alloc[sector] = sector_alloc.get(sector, 0.0) + float(h.current_value)
+
+        asset_pcts = {k: (v / total_val) * 100 for k, v in asset_alloc.items()}
+
+        opportunities = []
+
+        # Check for missing asset classes
+        essential_assets = {
+            "gold": {"min_pct": 5.0, "reason": "Portfolio hedge against inflation and market crashes"},
+            "bond": {"min_pct": 10.0, "reason": "Stable income and capital preservation"},
+            "mutual_fund": {"min_pct": 15.0, "reason": "Diversified professional management"},
+            "etf": {"min_pct": 5.0, "reason": "Low-cost diversified market exposure"},
+        }
+
+        for asset, info in essential_assets.items():
+            current = asset_pcts.get(asset, 0.0)
+            if current < info["min_pct"]:
+                opportunities.append({
+                    "type": "missing_asset_class",
+                    "asset_class": asset,
+                    "current_allocation_pct": round(current, 2),
+                    "recommended_min_pct": info["min_pct"],
+                    "reason": info["reason"],
+                    "priority": "high" if current == 0 else "medium",
+                })
+
+        # Check for over-concentration
+        for asset, pct in asset_pcts.items():
+            if pct > 60:
+                opportunities.append({
+                    "type": "over_concentration",
+                    "asset_class": asset,
+                    "current_allocation_pct": round(pct, 2),
+                    "recommended_max_pct": 50.0,
+                    "reason": f"Over {pct:.0f}% in {asset} creates unnecessary risk. Diversify.",
+                    "priority": "high",
+                })
+
+        # Check if international exposure exists
+        has_international = any(h.country and h.country.lower() != "india" for h in holdings)
+        if not has_international:
+            opportunities.append({
+                "type": "geographic_gap",
+                "asset_class": "international",
+                "current_allocation_pct": 0.0,
+                "recommended_min_pct": 10.0,
+                "reason": "No international exposure. Consider US/global ETFs for geographic diversification.",
+                "priority": "medium",
+            })
+
+        # Sort by priority
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        opportunities.sort(key=lambda x: priority_order.get(x.get("priority", "low"), 2))
+
+        return opportunities
+

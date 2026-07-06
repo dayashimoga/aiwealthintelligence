@@ -19,7 +19,20 @@ This document tracks the implementation status of all features required to make 
 | **Phase 9: Settings** | COMPLETE | `settings_screen.dart`, `models.dart`, `repositories.dart`, `auth_routes.py`, `api_schemas.py` | Yes | Yes | Yes | Yes | Yes | Dynamic passkeys biometrics simulation, multi-factor TOTP enable/disable wizard with backup code logs, device session revocation list, local API Keys storage, and CASCADE account deletions. |
 | **Phase 10: Performance** | COMPLETE | `hive_cache.dart`, `portfolio_providers.dart`, `repositories.dart`, `main.dart` | Yes | Yes | Yes | Yes | Yes | SWR (Stale-While-Revalidate) local caching box, time-based background refresh throttling, startup loader skips. |
 | **Phase 11: Testing** | COMPLETE | `test_auth_advanced.py`, `screens_widget_test.dart` | Yes | Yes | Yes | Yes | Yes | Integration tests cover MFA setups and Passkey options; widget tests cover SettingsScreen, AdvancedAnalysisScreen, HealthRingWidget, RiskGaugeWidget. |
-| **Phase 12: CI/CD** | PARTIAL | - | Yes | Yes | Yes | Yes | Yes | CI runs, cloudflare deploy config, APK container script works. |
+| **Phase 12: CI/CD** | PARTIAL | `ci.yml`, `Dockerfile.flutter`, `docker-compose.yml`, `backend.ps1` | Yes | Yes | Yes | Yes | Yes | CI runs, cloudflare deploy config, APK container script works. |
+
+### v0.2.0 Additions
+
+| Requirement | Status | Files Changed | Backend Complete | Frontend Complete | Tests Complete | Documentation Complete | Verified | Acceptance Criteria |
+|---|---|---|---|---|---|---|---|---|
+| **Notification System** | COMPLETE | `models.py`, `notification_service.py`, `notification_routes.py`, `router.py`, `repositories.dart`, `models.dart`, `portfolio_providers.dart`, `api_constants.dart` | Yes | Yes (wiring) | Yes | Yes | Yes | Smart alerts (price, rebalance, dividend), REST API, Flutter provider |
+| **Goal Planning** | COMPLETE | `models.py`, `goal_routes.py`, `router.py`, `repositories.dart`, `models.dart`, `portfolio_providers.dart`, `api_constants.dart` | Yes | Yes (wiring) | Yes | Yes | Yes | CRUD with SIP calculator, progress tracking, shortfall analysis |
+| **Watchlist + Intelligence** | COMPLETE | `watchlist_routes.py`, `router.py`, `repositories.dart`, `models.dart`, `portfolio_providers.dart`, `api_constants.dart` | Yes | Yes (wiring) | Yes | Yes | Yes | Symbol management, price alerts, AI intelligence aggregation |
+| **Sector Rotation** | COMPLETE | `advanced_analytics.py`, `copilot_advanced_routes.py`, `api_constants.dart` | Yes | Yes (const) | Yes | Yes | Yes | Current vs recommended sector weights with rotation suggestions |
+| **Dividend Planner** | COMPLETE | `advanced_analytics.py`, `copilot_advanced_routes.py`, `api_constants.dart` | Yes | Yes (const) | Yes | Yes | Yes | Annual income estimation, top dividend holdings |
+| **Opportunity Radar** | COMPLETE | `advanced_analytics.py`, `copilot_advanced_routes.py`, `api_constants.dart` | Yes | Yes (const) | Yes | Yes | Yes | Missing asset classes, over-concentration, geographic gaps |
+| **Bug Fixes** | COMPLETE | `models.py`, `notification_service.py`, `notification_routes.py`, `ci.yml`, `portfolio_routes.py`, `api_schemas.py`, `api_client.dart`, `pyproject.toml` | Yes | Yes | Yes | Yes | Yes | SQLAlchemy reserved name, CI APP_ENV, coverage config, print→log |
+| **Infrastructure** | COMPLETE | `Dockerfile.flutter`, `docker-compose.yml`, `backend.ps1` | Yes | N/A | N/A | Yes | Yes | Docker Flutter build, venv automation script |
 
 ---
 
@@ -40,3 +53,12 @@ This document tracks the implementation status of all features required to make 
 ### AI Engine Diagnostics (Phase 6)
 *   **Requirement**: Strict structured JSON matching `AIRecommendation` domain object from LLM provider (confidence, evidence, reasoning, risks, horizon).
 *   **Acceptance Criteria**: Prompts enforce structure via Pydantic model validation.
+
+### Notifications, Goals, Watchlists (v0.2.0)
+*   **Requirement**: Notification system with smart alert generators. Financial goal planning with SIP. Watchlist with AI intelligence.
+*   **Acceptance Criteria**: All REST endpoints registered, returning real computed data. Flutter models, repositories, and providers wired to API.
+
+### Advanced Analytics Extensions (v0.2.0)
+*   **Requirement**: Sector rotation analysis, dividend income planner, and opportunity radar.
+*   **Acceptance Criteria**: Endpoints compute real metrics from holdings data with actionable suggestions.
+

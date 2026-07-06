@@ -233,3 +233,44 @@ final aiRecommendationProvider = FutureProvider.family<AIRecommendation?, String
     failure: (err, _) => throw Exception(err),
   );
 });
+
+/// Notifications provider.
+final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async {
+  final repo = ref.watch(notificationRepositoryProvider);
+  final result = await repo.listNotifications();
+  return result.when(
+    success: (data) => data,
+    failure: (err, _) => throw Exception(err),
+  );
+});
+
+/// Unread notification count provider.
+final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
+  final repo = ref.watch(notificationRepositoryProvider);
+  final result = await repo.getUnreadCount();
+  return result.when(
+    success: (data) => data,
+    failure: (err, _) => 0,
+  );
+});
+
+/// Financial goals provider.
+final goalsProvider = FutureProvider<List<FinancialGoal>>((ref) async {
+  final repo = ref.watch(goalRepositoryProvider);
+  final result = await repo.listGoals();
+  return result.when(
+    success: (data) => data,
+    failure: (err, _) => throw Exception(err),
+  );
+});
+
+/// Watchlists provider.
+final watchlistsProvider = FutureProvider<List<WatchlistItem>>((ref) async {
+  final repo = ref.watch(watchlistRepositoryProvider);
+  final result = await repo.listWatchlists();
+  return result.when(
+    success: (data) => data,
+    failure: (err, _) => throw Exception(err),
+  );
+});
+

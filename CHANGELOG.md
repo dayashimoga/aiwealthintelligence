@@ -44,3 +44,38 @@ This document tracks all version history and updates completed during the develo
 - Confirmed integration test coverage for OAuth, email OTP, TOTP MFA workflows, device listings/revocations, and passkey registration/verification.
 - Added client widget tests in `screens_widget_test.dart` asserting visual layout parameters of `HealthRingWidget`, `RiskGaugeWidget`, `SettingsScreen`, and `AdvancedAnalysisScreen`.
 - Configured viewport and device pixel ratio overrides inside the Flutter test suite ensuring complete offscreen widget compilation.
+
+## [0.2.0] - 2026-07-06
+### Fixed
+- Fixed SQLAlchemy reserved name conflict: `NotificationModel.metadata` → `extra_data` that prevented app startup.
+- Fixed CI pipeline `APP_ENV` validation error: `testing` → `development` (Settings only accepts development/staging/production).
+- Fixed coverage config removing overbroad omit patterns that were hiding untested production code.
+- Fixed Flutter `print()` calls → `dart:developer log()` in `api_client.dart` for clean observability.
+- Fixed `PortfolioAnalyticsResponse` to pass real dividend income from transactions instead of hardcoded `0.0`.
+- Fixed analytics endpoint to use real `sharpe_ratio` and `max_drawdown` from engine instead of `None`.
+- Removed `continue-on-error: true` from critical CI steps (Flutter analyze, test) that were masking failures.
+
+### Added — Backend
+- **Notification System**: `NotificationModel` + `NotificationService` with smart alert generators (price alerts, rebalance drift, dividend ex-date). Full REST API with list, mark-read, mark-all-read, unread-count endpoints.
+- **Goal Planning API**: Full CRUD for financial goals with automated SIP calculator, progress tracking, shortfall analysis, and months-remaining computation using future value of annuity formulas.
+- **Watchlist API**: Full CRUD with symbol management, price alerts, and AI intelligence endpoint aggregating live prices, fundamentals, analyst estimates, and recent news per symbol.
+- **Sector Rotation Endpoint**: `/copilot/sector-rotation/{portfolioId}` analyzing current vs recommended sector weights with actionable rotation suggestions.
+- **Dividend Planner Endpoint**: `/copilot/dividend-planner/{portfolioId}` estimating annual dividend income and identifying top dividend-paying holdings.
+- **Opportunity Radar Endpoint**: `/copilot/opportunity-radar/{portfolioId}` detecting missing asset classes, over-concentration, and geographic diversification gaps.
+- **Tax Estimate**: Added `tax_estimate` field to `PortfolioAnalyticsResponse` schema passing through real STCG/LTCG calculations.
+- Registered all new routes in the API router (notifications, goals, watchlists, copilot extensions).
+
+### Added — Frontend (Flutter)
+- **Data Models**: `AppNotification`, `FinancialGoal`, `WatchlistItem`, `WatchlistIntelligenceItem` with full JSON deserialization.
+- **Repositories**: `NotificationRepository`, `GoalRepository`, `WatchlistRepository` with complete API integration.
+- **Riverpod Providers**: `notificationsProvider`, `unreadNotificationCountProvider`, `goalsProvider`, `watchlistsProvider`.
+- **API Constants**: Added endpoints for notifications, goals, watchlists, sector rotation, dividend planner, and opportunity radar.
+
+### Added — Infrastructure
+- **Dockerfile.flutter**: Docker image for building Flutter web/Android/iOS without local Flutter installation.
+- **docker-compose.yml**: Added Flutter builder service, fixed API service health checks and startup configuration.
+- **Backend automation script** (`scripts/backend.ps1`): PowerShell venv automation for verify, test, lint, format, serve, migrate, setup, and teardown commands.
+
+### Testing
+- All 90 backend tests passing (33.97s) with zero regressions.
+- Backend app loads successfully with all new routes registered.

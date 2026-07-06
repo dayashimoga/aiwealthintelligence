@@ -14,6 +14,8 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://wealthai:wealthai_secret@db:5432/wealthai
       - REDIS_URL=redis://redis:6379/0
+      - APP_ENV=development
+      - APP_DEBUG=true
     depends_on:
       db:
         condition: service_healthy
@@ -24,11 +26,11 @@ services:
       - api-data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
   # ========================
   # PostgreSQL
@@ -70,6 +72,22 @@ services:
       retries: 5
 
   # ========================
+  # Flutter Builder (for local builds without Flutter SDK)
+  # ========================
+  flutter:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.flutter
+    container_name: wealthai-flutter
+    volumes:
+      - ./apps/web:/app
+      - flutter-pub-cache:/opt/flutter/.pub-cache
+    working_dir: /app
+    profiles:
+      - build
+    entrypoint: ["flutter"]
+
+  # ========================
   # Prometheus
   # ========================
   prometheus:
@@ -107,5 +125,6 @@ volumes:
   postgres-data:
   redis-data:
   api-data:
+  flutter-pub-cache:
   prometheus-data:
   grafana-data:

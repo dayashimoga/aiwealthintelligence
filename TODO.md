@@ -17,6 +17,10 @@ This file lists the sequentially ordered tasks for all development phases of the
 - [x] Wrap UI state providers in Riverpod AsyncValue error catcher boundaries
 - [x] Render offline fallback templates using local Hive cached profiles
 - [x] Ensure uvicorn backend handles rate limit headers correctly
+- [x] Fix SQLAlchemy reserved name conflict (metadata → extra_data)
+- [x] Fix CI APP_ENV validation (testing → development)
+- [x] Fix coverage config (remove overbroad omit patterns)
+- [x] Fix Flutter print() → log() in api_client.dart
 
 ## Phase 3: Production-Ready Authentication
 - [x] Update SQL schemas and user domain entities with OAuth, MFA, and Device credentials
@@ -51,24 +55,47 @@ This file lists the sequentially ordered tasks for all development phases of the
 - [x] Calculate tax loss harvesting opportunities (STCG/LTCG offsets)
 - [x] Detect behavioral bias anomalies (over-concentration, panic sells)
 - [x] Support goal planning trackers
+- [x] Add sector rotation analysis endpoint
+- [x] Add dividend planner endpoint
+- [x] Add opportunity radar endpoint
 
-## Phase 8: Premium Fintech Dashboard
+## Phase 8: Notifications & Watchlists
+- [x] Create notification database model and service
+- [x] Build notification REST API routes (list, mark read, count)
+- [x] Create goal planning CRUD routes with SIP calculator
+- [x] Create watchlist CRUD routes with AI intelligence
+- [x] Wire Flutter models, repositories, and providers
+- [x] Add price alert, rebalance, and dividend notification generators
+
+## Phase 9: Premium Fintech Dashboard
 - [x] Render interactive portfolio health rings and risk meter ranges
 - [x] Visualize allocations, winners/losers, upcoming corporate action calendars
 - [x] Integrate economic calendar timeline widgets
 - [x] Add interactive charts
 
-## Phase 9: Setting Workflows Completion
+## Phase 10: Setting Workflows Completion
 - [x] Bind Settings pages to Passkeys, device management, theme parameters, API keys, and account deletion
 
-## Phase 10: Performance Optimization
+## Phase 11: Performance Optimization
 - [x] Cache app data using local Hive store
 - [x] Reduce unnecessary widget re-renders
 - [x] Limit redundant network requests during startup
 
-## Phase 11: Testing Expansion (>90% Coverage)
+## Phase 12: Testing Expansion (>90% Coverage)
 - [x] Write integration test coverage for MFA and biometrics
 - [x] Add Flutter widget tests for all new screens
+- [x] Backend: 90 tests passing
 
-## Phase 12: CI/CD automation
+## Phase 13: CI/CD & Infrastructure
+- [x] Create Dockerfile.flutter for builds without local Flutter
+- [x] Update docker-compose.yml with API service + Flutter builder
+- [x] Remove continue-on-error from critical CI steps
+- [x] Create backend automation script (venv setup/teardown)
 - [ ] Map Cloudflare pages builds and Android bundle compiles in CI scripts
+
+## Phase 14: Smart Imports (Future Integrations)
+- [x] CAS PDF parser framework
+- [x] Broker CSV parser framework (Groww, Zerodha, Upstox, Angel, ICICI, Kotak)
+- [x] Account Aggregator consent framework
+- [ ] Email CAS auto-import (future: user authorizes mailbox)
+- [ ] CAMS & KFin mutual fund import API integration

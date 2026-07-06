@@ -318,6 +318,7 @@ class PortfolioAnalyticsResponse(BaseModel):
     asset_allocation: dict[str, float] = Field(default_factory=dict)
     sector_allocation: dict[str, float] = Field(default_factory=dict)
     country_allocation: dict[str, float] = Field(default_factory=dict)
+    tax_estimate: dict[str, float] | None = None
     calculated_at: datetime
 
 

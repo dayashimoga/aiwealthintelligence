@@ -59,11 +59,33 @@ class ApiConstants {
   static String copilotDoctor(String portfolioId) => '$copilotPrefix/portfolio-doctor/$portfolioId';
   static String copilotScenario(String portfolioId) => '$copilotPrefix/scenario/$portfolioId';
   static String copilotAdvanced(String portfolioId) => '$copilotPrefix/advanced/$portfolioId';
+  static String copilotSectorRotation(String portfolioId) => '$copilotPrefix/sector-rotation/$portfolioId';
+  static String copilotDividendPlanner(String portfolioId) => '$copilotPrefix/dividend-planner/$portfolioId';
+  static String copilotOpportunityRadar(String portfolioId) => '$copilotPrefix/opportunity-radar/$portfolioId';
 
   // Market
   static const String marketNews = '$apiPrefix/market/news';
   static const String marketSectors = '$apiPrefix/market/sectors';
   static const String marketOverview = '$apiPrefix/market/overview';
+
+  // Notifications
+  static const String notifications = '$apiPrefix/notifications';
+  static String notificationRead(String id) => '$notifications/$id/read';
+  static const String notificationsReadAll = '$notifications/read-all';
+  static const String notificationsCount = '$notifications/count';
+
+  // Goals
+  static const String goals = '$apiPrefix/goals';
+  static String goal(String id) => '$goals/$id';
+
+  // Watchlists
+  static const String watchlists = '$apiPrefix/watchlists';
+  static String watchlist(String id) => '$watchlists/$id';
+  static String watchlistSymbols(String id) => '$watchlists/$id/symbols';
+  static String watchlistRemoveSymbol(String id, String symbol) =>
+      '$watchlists/$id/symbols/$symbol';
+  static String watchlistIntelligence(String id) =>
+      '$watchlists/$id/intelligence';
 
   // Health
   static const String health = '$apiPrefix/health';

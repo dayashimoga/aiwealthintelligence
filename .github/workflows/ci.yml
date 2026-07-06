@@ -54,7 +54,7 @@ jobs:
         run: |
           pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=90 -v
         env:
-          APP_ENV: testing
+          APP_ENV: development
           APP_DEBUG: "false"
           DATABASE_URL: "sqlite+aiosqlite:///:memory:"
           JWT_SECRET_KEY: "test-secret-key-for-ci-only"
@@ -95,11 +95,9 @@ jobs:
 
       - name: Analyze
         run: flutter analyze
-        continue-on-error: true
 
       - name: Run tests
         run: flutter test --coverage
-        continue-on-error: true
 
       - name: Build Web (Production Check)
         run: flutter build web --release --web-renderer canvaskit --dart-define=FLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/
