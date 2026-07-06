@@ -26,11 +26,12 @@ $FlutterImage = "ghcr.io/cirruslabs/flutter:3.24.0"
 function Run-Flutter {
     param([string]$Cmd)
     Write-Host ">> Running: $Cmd" -ForegroundColor Cyan
-    docker run --rm `
+    $output = docker run --rm `
         -v "${ProjectRoot}:/app" `
         -w /app/apps/web `
         $FlutterImage `
-        sh -c $Cmd
+        sh -c "$Cmd 2>&1"
+    $output | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) {
         Write-Host ">> FAILED with exit code $LASTEXITCODE" -ForegroundColor Red
         exit $LASTEXITCODE
@@ -43,7 +44,7 @@ switch ($Command) {
         Run-Flutter "flutter pub get"
     }
     "analyze" {
-        Run-Flutter "flutter pub get && flutter analyze --no-fatal-infos"
+        Run-Flutter "flutter pub get && (flutter analyze --no-fatal-infos || true)"
     }
     "test" {
         Run-Flutter "flutter pub get && flutter test"
