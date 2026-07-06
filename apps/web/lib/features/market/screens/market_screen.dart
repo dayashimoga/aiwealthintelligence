@@ -176,7 +176,6 @@ class MarketScreen extends ConsumerWidget {
   }
 
   Widget _buildIndexHeader(BuildContext context, MarketOverview overview) {
-    final theme = Theme.of(context);
     final indices = overview.indexPerformance;
 
     return Container(
@@ -344,7 +343,6 @@ class MarketScreen extends ConsumerWidget {
   }
 
   Widget _buildCalendarTab(BuildContext context, MarketOverview overview) {
-    final theme = Theme.of(context);
     final repoRateStr = '${overview.macroIndicators['repo_rate']?.toStringAsFixed(2) ?? '6.50'}%';
     final inflationStr = '${overview.macroIndicators['inflation_rate']?.toStringAsFixed(2) ?? '4.80'}%';
 
