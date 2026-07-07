@@ -42,7 +42,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() => _isLoading = false);
       res.when(
         success: (tokens) async {
-          final profileRes = await ref.read(authRepositoryProvider).getProfile();
+          final profileRes =
+              await ref.read(authRepositoryProvider).getProfile();
           profileRes.when(
             success: (user) {
               if (user.isOnboarded) {

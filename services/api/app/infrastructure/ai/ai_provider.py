@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
 from openai import AsyncOpenAI
@@ -17,6 +17,9 @@ from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.shared.exceptions import AIProviderError
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 
@@ -260,6 +263,7 @@ def get_ai_provider() -> AIProvider:
 
 class StructuredRecommendation(BaseModel):
     """Pydantic schema to validate LLM output structure."""
+
     action: Literal["strong_buy", "buy", "hold", "reduce", "sell", "exit"]
     confidence: float = Field(ge=0, le=100)
     reasoning: str
@@ -340,18 +344,20 @@ async def generate_recommendation(
     """Generate an AI recommendation for a holding enriched with live market data."""
     symbol = holding_data.get("symbol", "")
     asset_type = holding_data.get("asset_type", "stock")
-    
+
     # Asynchronously fetch live fundamentals and news
     from app.infrastructure.market.market_data_service import market_data_service
-    
+
     fundamentals_task = market_data_service.get_fundamental_data(symbol, asset_type)
     news_task = market_data_service.get_ticker_news(symbol)
-    
+
     try:
-        fundamentals, news = await asyncio.gather(fundamentals_task, news_task, return_exceptions=True)
+        fundamentals, news = await asyncio.gather(
+            fundamentals_task, news_task, return_exceptions=True
+        )
     except Exception:
         fundamentals, news = {}, []
-        
+
     if isinstance(fundamentals, Exception):
         fundamentals = {}
     if isinstance(news, Exception):
@@ -361,14 +367,17 @@ async def generate_recommendation(
     market_data_section = "No fundamental metrics available."
     if fundamentals:
         market_data_section = "\n".join(
-            f"- {k.replace('_', ' ').title()}: {v}" for k, v in fundamentals.items() if v is not None
+            f"- {k.replace('_', ' ').title()}: {v}"
+            for k, v in fundamentals.items()
+            if v is not None
         )
 
     # Format news section
     news_section = "No recent news headlines available."
     if news:
         news_section = "\n".join(
-            f"- {n.get('title')} ({n.get('source')}): {n.get('summary') or 'No summary'}" for n in news[:5]
+            f"- {n.get('title')} ({n.get('source')}): {n.get('summary') or 'No summary'}"
+            for n in news[:5]
         )
 
     user_message = RECOMMENDATION_USER_TEMPLATE.format(
@@ -405,7 +414,9 @@ async def generate_recommendation(
         validated = StructuredRecommendation(**parsed_json)
         result = validated.model_dump()
     except Exception as e:
-        logger.error("ai_recommendation_pydantic_validation_failed", error=str(e), response=response[:1000])
+        logger.error(
+            "ai_recommendation_pydantic_validation_failed", error=str(e), response=response[:1000]
+        )
         # Fallback ensuring absolute schema compliance
         result = {
             "action": "hold",
@@ -427,8 +438,8 @@ async def generate_recommendation(
                 "institutional_activity": "FII buying remains rangebound.",
                 "insider_activity": "No major insider sales reported.",
                 "market_sentiment": "Overall market exhibits neutral to bullish bias.",
-                "overall_summary": "Balanced setup with limited short term variance."
-            }
+                "overall_summary": "Balanced setup with limited short term variance.",
+            },
         }
 
     return result
@@ -474,8 +485,9 @@ async def chat_with_portfolio(
         Chat response with message and metadata.
     """
     import re
+
     # Extract uppercase stock symbol codes from user query
-    mentioned_symbols = re.findall(r'\b[A-Z]{2,6}\b', user_message)
+    mentioned_symbols = re.findall(r"\b[A-Z]{2,6}\b", user_message)
     if not mentioned_symbols:
         common_symbols = {
             "reliance": "RELIANCE",
@@ -483,15 +495,16 @@ async def chat_with_portfolio(
             "infosys": "INFY",
             "hdfc": "HDFCBANK",
             "wipro": "WIPRO",
-            "icici": "ICICIBANK"
+            "icici": "ICICIBANK",
         }
         for name, sym in common_symbols.items():
             if name in user_message.lower():
                 mentioned_symbols.append(sym)
 
     from app.infrastructure.market.market_data_service import market_data_service
+
     news_lines = []
-    
+
     symbols_to_fetch = list(set(mentioned_symbols))[:2]
     if not symbols_to_fetch:
         symbols_to_fetch = ["^NSEI"]
@@ -502,7 +515,9 @@ async def chat_with_portfolio(
             if raw_news:
                 news_lines.append(f"Recent Live News headlines for {sym}:")
                 for art in raw_news[:3]:
-                    news_lines.append(f"- {art.get('title')} ({art.get('source')}): {art.get('summary') or 'No summary'}")
+                    news_lines.append(
+                        f"- {art.get('title')} ({art.get('source')}): {art.get('summary') or 'No summary'}"
+                    )
         except Exception:
             pass
 

@@ -6,7 +6,7 @@ Production-grade FastAPI application with Clean Architecture.
 from __future__ import annotations
 
 import contextlib
-from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 import structlog
 from fastapi import FastAPI
@@ -15,12 +15,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.infrastructure.database.session import engine, sessionmanager
 from app.infrastructure.repositories.redis_cache import cache_repo
-from app.infrastructure.scheduler.scheduler import start_scheduler, shutdown_scheduler
+from app.infrastructure.scheduler.scheduler import shutdown_scheduler, start_scheduler
 from app.presentation.api.v1.router import api_router
 from app.presentation.middleware.error_handler import register_exception_handlers
 from app.presentation.middleware.rate_limiter import limiter
 from app.presentation.middleware.security_headers import SecurityHeadersMiddleware
 from app.shared.observability import setup_observability
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 

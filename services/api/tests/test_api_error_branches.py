@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from typing import TYPE_CHECKING
+
 import pytest
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -13,7 +16,7 @@ async def test_portfolio_routes_errors(client: AsyncClient, auth_headers: dict[s
     # Get non-existent portfolio
     resp = await client.get("/api/v1/portfolios/non-existent-id", headers=auth_headers)
     assert resp.status_code == 404
-    
+
     # Update non-existent portfolio
     resp = await client.patch(
         "/api/v1/portfolios/non-existent-id",
@@ -21,7 +24,7 @@ async def test_portfolio_routes_errors(client: AsyncClient, auth_headers: dict[s
         headers=auth_headers,
     )
     assert resp.status_code == 404
-    
+
     # Delete non-existent portfolio
     resp = await client.delete("/api/v1/portfolios/non-existent-id", headers=auth_headers)
     assert resp.status_code == 404

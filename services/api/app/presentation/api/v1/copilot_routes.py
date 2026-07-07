@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from datetime import UTC
+from typing import TYPE_CHECKING, Annotated
 
 import structlog
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.ai.ai_copilot import (
     generate_daily_brief,
@@ -29,6 +29,9 @@ from app.presentation.schemas.api_schemas import (
     ScenarioSimulationResponse,
 )
 from app.shared.exceptions import NotFoundError
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -57,20 +60,22 @@ async def get_daily_brief(
     # Format holdings for AI
     holdings_data = []
     for h in all_holdings:
-        holdings_data.append({
-            "symbol": h.symbol,
-            "name": h.name,
-            "quantity": float(h.quantity),
-            "current_price": float(h.current_price),
-            "gain_loss_pct": float(h.gain_loss_percentage),
-            "sector": h.sector,
-            "asset_type": h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value,
-        })
+        holdings_data.append(
+            {
+                "symbol": h.symbol,
+                "name": h.name,
+                "quantity": float(h.quantity),
+                "current_price": float(h.current_price),
+                "gain_loss_pct": float(h.gain_loss_percentage),
+                "sector": h.sector,
+                "asset_type": h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value,
+            }
+        )
 
     provider = get_ai_provider()
     result = await generate_daily_brief(provider, holdings_data, news_articles)
 
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     return DailyBriefResponse(
         summary=result.get("summary", ""),
@@ -78,7 +83,7 @@ async def get_daily_brief(
         top_gainers=result.get("top_gainers", []),
         top_losers=result.get("top_losers", []),
         actionable_insights=result.get("actionable_insights", []),
-        generated_at=datetime.now(timezone.utc),
+        generated_at=datetime.now(UTC),
     )
 
 
@@ -101,15 +106,17 @@ async def get_portfolio_doctor(
 
     holdings_data = []
     for h in all_holdings:
-        holdings_data.append({
-            "symbol": h.symbol,
-            "name": h.name,
-            "quantity": float(h.quantity),
-            "current_price": float(h.current_price),
-            "gain_loss_pct": float(h.gain_loss_percentage),
-            "sector": h.sector,
-            "asset_type": h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value,
-        })
+        holdings_data.append(
+            {
+                "symbol": h.symbol,
+                "name": h.name,
+                "quantity": float(h.quantity),
+                "current_price": float(h.current_price),
+                "gain_loss_pct": float(h.gain_loss_percentage),
+                "sector": h.sector,
+                "asset_type": h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value,
+            }
+        )
 
     provider = get_ai_provider()
     result = await generate_portfolio_doctor(provider, holdings_data)
@@ -148,15 +155,17 @@ async def post_scenario_simulation(
     for h in all_holdings:
         h_val = float(h.quantity) * float(h.current_price)
         total_val += h_val
-        holdings_data.append({
-            "symbol": h.symbol,
-            "name": h.name,
-            "quantity": float(h.quantity),
-            "current_price": float(h.current_price),
-            "gain_loss_pct": float(h.gain_loss_percentage),
-            "sector": h.sector,
-            "asset_type": h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value,
-        })
+        holdings_data.append(
+            {
+                "symbol": h.symbol,
+                "name": h.name,
+                "quantity": float(h.quantity),
+                "current_price": float(h.current_price),
+                "gain_loss_pct": float(h.gain_loss_percentage),
+                "sector": h.sector,
+                "asset_type": h.asset_type if isinstance(h.asset_type, str) else h.asset_type.value,
+            }
+        )
 
     if total_val > 0:
         for h in all_holdings:
@@ -173,12 +182,14 @@ async def post_scenario_simulation(
     # Format simulation actions
     actions_list = []
     for action in request.actions:
-        actions_list.append({
-            "symbol": action.symbol,
-            "action": action.action,
-            "quantity": action.quantity,
-            "price": action.price,
-        })
+        actions_list.append(
+            {
+                "symbol": action.symbol,
+                "action": action.action,
+                "quantity": action.quantity,
+                "price": action.price,
+            }
+        )
 
     provider = get_ai_provider()
     result = await simulate_scenario(provider, holdings_data, actions_list, original_metrics)

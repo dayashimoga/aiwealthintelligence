@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date
 from decimal import Decimal
-import pytest
 
-from app.domain.entities import Holding, AssetType, Transaction
+from app.domain.entities import AssetType, Holding
 from app.infrastructure.analytics.portfolio_analytics_engine import PortfolioAnalyticsEngine
 
 
@@ -14,7 +13,7 @@ def test_calculate_metrics_empty() -> None:
     """Calculating metrics for an empty portfolio returns zero values."""
     engine = PortfolioAnalyticsEngine()
     metrics = engine.calculate_metrics([])
-    
+
     assert metrics["total_invested"] == 0.0
     assert metrics["total_current_value"] == 0.0
     assert metrics["total_gain_loss"] == 0.0
@@ -27,7 +26,7 @@ def test_calculate_metrics_empty() -> None:
 def test_calculate_metrics_with_holdings() -> None:
     """Calculating metrics for a standard list of holdings."""
     engine = PortfolioAnalyticsEngine()
-    
+
     holdings = [
         Holding(
             id="1",
@@ -59,12 +58,12 @@ def test_calculate_metrics_with_holdings() -> None:
             industry="Private Banks",
             country="India",
             isin="INE040A01034",
-            buy_date=date(2026, 1, 1), # Short term (< 1 year from 2026 current date)
-        )
+            buy_date=date(2026, 1, 1),  # Short term (< 1 year from 2026 current date)
+        ),
     ]
-    
+
     metrics = engine.calculate_metrics(holdings)
-    
+
     # TCS invested = 30000, current = 35000
     # HDFCBANK invested = 30000, current = 32000
     # Total invested = 60000, current = 67000
@@ -76,7 +75,7 @@ def test_calculate_metrics_with_holdings() -> None:
     assert metrics["diversification_score"] > 0.0
     assert "Information Technology" in metrics["sector_allocation"]
     assert "Financial Services" in metrics["sector_allocation"]
-    
+
     # Verify tax estimations
     tax = metrics["tax_estimate"]
     assert tax["taxable_profit"] == 7000.0

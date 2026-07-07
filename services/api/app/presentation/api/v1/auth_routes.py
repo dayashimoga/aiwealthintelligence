@@ -5,17 +5,16 @@ from __future__ import annotations
 import random
 import string
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Annotated, Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Annotated, Any
 
 import pyotp
 import structlog
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.domain.entities import User, UserRole
+from app.domain.entities import User
 from app.infrastructure.database.models import UserModel
 from app.infrastructure.database.session import get_db_session
 from app.infrastructure.repositories.redis_cache import cache_repo
@@ -23,22 +22,22 @@ from app.infrastructure.repositories.sqlalchemy_repos import SQLAlchemyUserRepos
 from app.infrastructure.services.mail_service import mail_service
 from app.presentation.middleware.auth_dependency import get_current_user
 from app.presentation.schemas.api_schemas import (
+    DeviceResponse,
     ErrorResponse,
     LoginRequest,
-    RefreshTokenRequest,
-    RegisterRequest,
-    TokenResponse,
-    UserResponse,
     OAuthLoginRequest,
-    SendOTPRequest,
-    VerifyOTPRequest,
-    TOTPSetupResponse,
-    TOTPVerifyRequest,
-    DeviceResponse,
     PasskeyOptionsResponse,
     PasskeyVerifyRequest,
+    RefreshTokenRequest,
+    RegisterRequest,
+    SendOTPRequest,
+    TokenResponse,
+    TOTPSetupResponse,
+    TOTPVerifyRequest,
+    UserResponse,
+    VerifyOTPRequest,
 )
-from app.shared.exceptions import AuthenticationError, ConflictError, ValidationError, NotFoundError
+from app.shared.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
 from app.shared.security import (
     create_access_token,
     create_refresh_token,
@@ -47,6 +46,9 @@ from app.shared.security import (
     validate_password_strength,
     verify_password,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -59,7 +61,9 @@ def _generate_otp() -> str:
 
 def _generate_backup_codes(count: int = 8) -> list[str]:
     """Generate secure backup codes for account recovery."""
-    return ["".join(random.choices(string.ascii_uppercase + string.digits, k=10)) for _ in range(count)]
+    return [
+        "".join(random.choices(string.ascii_uppercase + string.digits, k=10)) for _ in range(count)
+    ]
 
 
 @router.post(
@@ -428,7 +432,10 @@ async def enable_totp(
     await session.commit()
     await cache_repo.delete(f"totp_pending:{current_user['id']}")
 
-    return {"message": "Two-factor authentication enabled successfully", "backup_codes": backup_codes}
+    return {
+        "message": "Two-factor authentication enabled successfully",
+        "backup_codes": backup_codes,
+    }
 
 
 @router.post(
@@ -548,6 +555,7 @@ async def delete_account(
 # Passkey WebAuthn Framework Mock Options
 # ============================================================
 
+
 @router.post(
     "/passkeys/register/options",
     response_model=PasskeyOptionsResponse,
@@ -584,7 +592,7 @@ async def passkey_register_verify(
     new_key = {
         "credential_id": request.credential_id,
         "public_key": request.client_data_json,  # mock representation of the key
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
     user.passkeys.append(new_key)
     await repo.update(user)

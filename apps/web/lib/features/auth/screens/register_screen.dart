@@ -134,9 +134,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ? 'Please enter your name'
                               : null,
                         ).animate().fadeIn(delay: 300.ms),
-
                         const SizedBox(height: AppTheme.spacingMd),
-
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -154,9 +152,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             return null;
                           },
                         ).animate().fadeIn(delay: 400.ms),
-
                         const SizedBox(height: AppTheme.spacingMd),
-
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -180,9 +176,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             return null;
                           },
                         ).animate().fadeIn(delay: 500.ms),
-
                         const SizedBox(height: AppTheme.spacingMd),
-
                         CheckboxListTile(
                           value: _agreedToTerms,
                           onChanged: (v) =>
@@ -194,9 +188,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           controlAffinity: ListTileControlAffinity.leading,
                           contentPadding: EdgeInsets.zero,
                         ).animate().fadeIn(delay: 600.ms),
-
                         const SizedBox(height: AppTheme.spacingLg),
-
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -212,9 +204,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 : const Text('Create Account'),
                           ),
                         ).animate().fadeIn(delay: 700.ms),
-
                         const SizedBox(height: AppTheme.spacingLg),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

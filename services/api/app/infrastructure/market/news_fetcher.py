@@ -6,10 +6,9 @@ then uses the AI provider to analyze sentiment and generate summaries.
 
 from __future__ import annotations
 
-import asyncio
 import urllib.parse
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -24,7 +23,9 @@ logger = structlog.get_logger(__name__)
 
 # Google News RSS search template for Indian market
 RSS_MARKET_URL = "https://news.google.com/rss/search?q=Indian+stock+market+Nifty+Sensex&hl=en-IN&gl=IN&ceid=IN:en"
-RSS_SYMBOL_TEMPLATE = "https://news.google.com/rss/search?q={symbol}+stock+finance+India&hl=en-IN&gl=IN&ceid=IN:en"
+RSS_SYMBOL_TEMPLATE = (
+    "https://news.google.com/rss/search?q={symbol}+stock+finance+India&hl=en-IN&gl=IN&ceid=IN:en"
+)
 
 
 async def fetch_rss_news(symbol: str | None = None, limit: int = 10) -> list[dict[str, Any]]:
@@ -39,10 +40,10 @@ async def fetch_rss_news(symbol: str | None = None, limit: int = 10) -> list[dic
             resp = await client.get(url)
             resp.raise_for_status()
             text = resp.text
-            
+
             root = ET.fromstring(text)
             items = root.findall(".//item")
-            
+
             articles = []
             for item in items[:limit]:
                 title = item.find("title")
@@ -50,7 +51,7 @@ async def fetch_rss_news(symbol: str | None = None, limit: int = 10) -> list[dic
                 pub_date = item.find("pubDate")
                 source = item.find("source")
                 desc = item.find("description")
-                
+
                 # Strip HTML from description if present
                 clean_desc = ""
                 if desc is not None and desc.text:
@@ -60,17 +61,21 @@ async def fetch_rss_news(symbol: str | None = None, limit: int = 10) -> list[dic
                 pub_str = pub_date.text if pub_date is not None else None
                 try:
                     # Parse standard RSS date format: "Sat, 04 Jul 2026 09:12:00 GMT"
-                    pub_dt = datetime.strptime(pub_str, "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo=timezone.utc)
+                    pub_dt = datetime.strptime(pub_str, "%a, %d %b %Y %H:%M:%S %Z").replace(
+                        tzinfo=UTC
+                    )
                 except Exception:
-                    pub_dt = datetime.now(timezone.utc)
+                    pub_dt = datetime.now(UTC)
 
-                articles.append({
-                    "title": title.text if title is not None else "",
-                    "url": link.text if link is not None else "",
-                    "published_at": pub_dt,
-                    "source": source.text if source is not None else "Google News",
-                    "description": clean_desc,
-                })
+                articles.append(
+                    {
+                        "title": title.text if title is not None else "",
+                        "url": link.text if link is not None else "",
+                        "published_at": pub_dt,
+                        "source": source.text if source is not None else "Google News",
+                        "description": clean_desc,
+                    }
+                )
             return articles
     except Exception as e:
         logger.warning("rss_fetch_failed", symbol=symbol, error=str(e))
@@ -80,7 +85,7 @@ async def fetch_rss_news(symbol: str | None = None, limit: int = 10) -> list[dic
 async def analyze_news_sentiment(title: str, description: str) -> dict[str, Any]:
     """Use AI provider to summarize and extract sentiment/relevance from news."""
     provider = get_ai_provider()
-    
+
     prompt = f"""You are a financial analyst AI. Analyze this news article headline and description.
 Title: {title}
 Description: {description}
@@ -96,10 +101,10 @@ Return ONLY the JSON block. Do not include markdown code block formatting."""
 
     try:
         response = await provider.complete(
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
+            messages=[{"role": "user", "content": prompt}], response_format={"type": "json_object"}
         )
         import json
+
         data = json.loads(response)
         return {
             "sentiment": data.get("sentiment", "neutral"),
@@ -123,11 +128,11 @@ Return ONLY the JSON block. Do not include markdown code block formatting."""
 async def fetch_and_analyze_news(symbol: str | None = None, limit: int = 5) -> list[MarketNews]:
     """Fetch raw news articles and perform AI analysis to return MarketNews objects."""
     raw_articles = await fetch_rss_news(symbol, limit=limit)
-    
+
     news_items = []
     for art in raw_articles:
         analysis = await analyze_news_sentiment(art["title"], art["description"])
-        
+
         item = MarketNews(
             title=art["title"],
             summary=analysis["summary"],
@@ -138,7 +143,7 @@ async def fetch_and_analyze_news(symbol: str | None = None, limit: int = 5) -> l
             sectors=analysis["sectors"],
             symbols=analysis["symbols"] if symbol is None else [symbol.upper()],
             published_at=art["published_at"],
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(UTC),
         )
         news_items.append(item)
     return news_items

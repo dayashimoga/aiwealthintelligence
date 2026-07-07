@@ -7,8 +7,7 @@ Supports both SQLite (development) and PostgreSQL (production).
 from __future__ import annotations
 
 import contextlib
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
@@ -19,6 +18,9 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.config import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 
 class DatabaseSessionManager:
@@ -83,6 +85,7 @@ class DatabaseSessionManager:
             msg = "DatabaseSessionManager is not initialized"
             raise RuntimeError(msg)
         from app.infrastructure.database.models import Base
+
         async with self._engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 

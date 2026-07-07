@@ -5,16 +5,16 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.presentation.api.v1 import (
-    auth_routes,
-    health_routes,
-    portfolio_routes,
     ai_routes,
-    market_routes,
-    copilot_routes,
+    auth_routes,
     consent_routes,
     copilot_advanced_routes,
-    notification_routes,
+    copilot_routes,
     goal_routes,
+    health_routes,
+    market_routes,
+    notification_routes,
+    portfolio_routes,
     watchlist_routes,
 )
 

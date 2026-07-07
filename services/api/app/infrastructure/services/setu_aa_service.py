@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import base64
-import json
 from typing import Any
+
 import httpx
 import structlog
-from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from app.config import get_settings
 
@@ -28,7 +28,7 @@ class AASecurityService:
         """Generates prime256v1 (NIST P-256) ephemeral key pair for key exchange."""
         private_key = ec.generate_private_key(ec.SECP256R1())
         public_key = private_key.public_key()
-        
+
         # Serialize public key to raw bytes in uncompressed X9.62 format
         public_bytes = public_key.public_bytes(
             encoding=serialization.Encoding.X962,
@@ -48,10 +48,10 @@ class AASecurityService:
             ec.SECP256R1(),
             remote_public_bytes,
         )
-        
+
         # Perform ECDH key exchange to get shared secret
         shared_secret = private_key.exchange(ec.ECDH(), remote_public_key)
-        
+
         # Perform KDF to get 256-bit AES key
         hkdf = HKDF(
             algorithm=hashes.SHA256(),
@@ -70,7 +70,7 @@ class AASecurityService:
         """Decrypts AES-256-GCM encrypted payload from FIP / Setu."""
         ciphertext = base64.b64decode(encrypted_data_base64)
         nonce = base64.b64decode(nonce_base64)
-        
+
         aesgcm = AESGCM(aes_key)
         # Sahamati usually doesn't mandate associated data, defaults to None
         decrypted_bytes = aesgcm.decrypt(nonce, ciphertext, None)
@@ -85,7 +85,7 @@ class SetuAAService:
         self.client_id = self.settings.SETU_AA_CLIENT_ID
         self.client_secret = self.settings.SETU_AA_CLIENT_SECRET
         self.base_url = self.settings.SETU_AA_BASE_URL
-        
+
     @property
     def is_configured(self) -> bool:
         """Checks if Setu AA credentials are ready for production integration."""
@@ -97,7 +97,9 @@ class SetuAAService:
             logger.warning("setu_aa_credentials_missing_running_in_sandbox_mode")
             # Return Sandbox mock details for local testing
             return {
-                "consent_id": f"setu-consent-{uuid.uuid4()}" if "uuid" in globals() else "setu-consent-dummy-12345",
+                "consent_id": f"setu-consent-{uuid.uuid4()}"
+                if "uuid" in globals()
+                else "setu-consent-dummy-12345",
                 "redirect_url": "https://setu.co/aa/consent-mock-gateway",
                 "sandbox": True,
             }
@@ -107,7 +109,7 @@ class SetuAAService:
             "x-client-secret": self.client_secret,
             "Content-Type": "application/json",
         }
-        
+
         # Detail consent parameters tracking equities and mutual funds
         payload = {
             "ConsentDetail": {
@@ -213,7 +215,7 @@ class SetuAAService:
                     remote_key_b64 = fi_data["KeyMaterial"]["DHPublicKey"]["KeyValue"]
                     remote_public_bytes = base64.b64decode(remote_key_b64)
                     salt = base64.b64decode(fi_data["KeyMaterial"]["Nonce"])
-                    
+
                     # Derive AES key
                     aes_key = AASecurityService.derive_aes_key(
                         private_key,
@@ -236,7 +238,9 @@ class SetuAAService:
 
                 return holdings
             except Exception as e:
-                logger.error("setu_aa_data_fetch_and_decrypt_failed", consent_id=consent_id, error=str(e))
+                logger.error(
+                    "setu_aa_data_fetch_and_decrypt_failed", consent_id=consent_id, error=str(e)
+                )
                 raise ValueError(f"Setu AA session decryption failure: {e}") from e
 
     def _parse_decrypted_assets(self, decrypted_xml: str) -> list[dict[str, Any]]:
@@ -253,18 +257,20 @@ class SetuAAService:
                 name = (re.findall(r"<name>(.*?)</name>", eq) or [symbol])[0]
                 qty = float((re.findall(r"<units>(.*?)</units>", eq) or ["0.0"])[0])
                 avg_price = float((re.findall(r"<rate>(.*?)</rate>", eq) or ["0.0"])[0])
-                
+
                 if isin and qty > 0:
-                    holdings.append({
-                        "symbol": symbol or isin,
-                        "name": name,
-                        "isin": isin,
-                        "asset_type": "stock",
-                        "exchange": "NSE",
-                        "quantity": qty,
-                        "average_buy_price": avg_price,
-                        "current_price": avg_price,
-                    })
+                    holdings.append(
+                        {
+                            "symbol": symbol or isin,
+                            "name": name,
+                            "isin": isin,
+                            "asset_type": "stock",
+                            "exchange": "NSE",
+                            "quantity": qty,
+                            "average_buy_price": avg_price,
+                            "current_price": avg_price,
+                        }
+                    )
 
             # Mutual funds tag: <mutualFund> ... <isin>... </mutualFund>
             mfs = re.findall(r"<mutualFund\b[^>]*>(.*?)</mutualFund>", decrypted_xml, re.DOTALL)
@@ -273,24 +279,26 @@ class SetuAAService:
                 name = (re.findall(r"<name>(.*?)</name>", mf) or [""])[0]
                 qty = float((re.findall(r"<units>(.*?)</units>", mf) or ["0.0"])[0])
                 avg_price = float((re.findall(r"<nav>(.*?)</nav>", mf) or ["0.0"])[0])
-                
+
                 if isin and qty > 0:
-                    holdings.append({
-                        "symbol": isin,
-                        "name": name or f"MF ({isin})",
-                        "isin": isin,
-                        "asset_type": "mutual_fund",
-                        "exchange": "OTHER",
-                        "quantity": qty,
-                        "average_buy_price": avg_price,
-                        "current_price": avg_price,
-                    })
+                    holdings.append(
+                        {
+                            "symbol": isin,
+                            "name": name or f"MF ({isin})",
+                            "isin": isin,
+                            "asset_type": "mutual_fund",
+                            "exchange": "OTHER",
+                            "quantity": qty,
+                            "average_buy_price": avg_price,
+                            "current_price": avg_price,
+                        }
+                    )
         except Exception as e:
             logger.warning("xml_parsing_failed", error=str(e))
         return holdings
 
 
-import uuid
 import re
+import uuid
 
 setu_aa_service = SetuAAService()

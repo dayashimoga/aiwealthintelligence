@@ -6,16 +6,18 @@ Implements RBAC (Role-Based Access Control).
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import structlog
 from fastapi import Depends, Header
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.session import get_db_session
 from app.infrastructure.repositories.sqlalchemy_repos import SQLAlchemyUserRepository
 from app.shared.exceptions import AuthenticationError, AuthorizationError
 from app.shared.security import decode_token
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 

@@ -71,8 +71,7 @@ class ShellScaffold extends StatelessWidget {
             NavigationRail(
               extended: isDesktop,
               selectedIndex: selectedIndex,
-              onDestinationSelected: (i) =>
-                  _onDestinationSelected(context, i),
+              onDestinationSelected: (i) => _onDestinationSelected(context, i),
               leading: Padding(
                 padding: EdgeInsets.symmetric(
                   vertical: AppTheme.spacingMd,
@@ -129,7 +128,8 @@ class ShellScaffold extends StatelessWidget {
               gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            child:
+                const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Text(

@@ -7,14 +7,17 @@ returning structured JSON error responses with correct HTTP status codes.
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 import structlog
-from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.shared.exceptions import AppException
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI, Request
 
 logger = structlog.get_logger(__name__)
 
@@ -64,9 +67,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(StarletteHTTPException)
-    async def http_exception_handler(
-        request: Request, exc: StarletteHTTPException
-    ) -> JSONResponse:
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         """Handle Starlette HTTP exceptions (404, 405, etc.)."""
         return JSONResponse(
             status_code=exc.status_code,

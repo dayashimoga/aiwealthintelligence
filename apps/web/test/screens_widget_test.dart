@@ -9,7 +9,8 @@ import 'package:wealthai/features/settings/screens/settings_screen.dart';
 import 'package:wealthai/features/copilot/screens/advanced_analysis_screen.dart';
 
 void main() {
-  testWidgets('HealthRingWidget renders score and EXCELLENT label', (WidgetTester tester) async {
+  testWidgets('HealthRingWidget renders score and EXCELLENT label',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -23,7 +24,8 @@ void main() {
     expect(find.text('EXCELLENT'), findsOneWidget);
   });
 
-  testWidgets('RiskGaugeWidget renders label range and needle', (WidgetTester tester) async {
+  testWidgets('RiskGaugeWidget renders label range and needle',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -37,7 +39,8 @@ void main() {
     expect(find.text('Portfolio Risk'), findsOneWidget);
   });
 
-  testWidgets('SettingsScreen mock profile state bindings', (WidgetTester tester) async {
+  testWidgets('SettingsScreen mock profile state bindings',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -78,7 +81,8 @@ void main() {
     expect(find.text('Two-Factor Authentication'), findsOneWidget);
   });
 
-  testWidgets('AdvancedAnalysisScreen renders stress tests and goals tabs', (WidgetTester tester) async {
+  testWidgets('AdvancedAnalysisScreen renders stress tests and goals tabs',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -114,7 +118,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          advancedAnalysisProvider.overrideWith((ref) => Future.value(mockAnalysis)),
+          advancedAnalysisProvider
+              .overrideWith((ref) => Future.value(mockAnalysis)),
         ],
         child: const MaterialApp(
           home: AdvancedAnalysisScreen(portfolioId: 'port-1'),
@@ -127,7 +132,8 @@ void main() {
     // Verify Tab titles render
     expect(find.text('Stress Tests'), findsOneWidget);
     expect(find.text('Inflation Spike'), findsOneWidget);
-    expect(find.text('Retirement fund'), findsNothing); // goal content is in goal tab view
+    expect(find.text('Retirement fund'),
+        findsNothing); // goal content is in goal tab view
 
     // Switch to Goals Tab
     await tester.tap(find.text('Goals'));

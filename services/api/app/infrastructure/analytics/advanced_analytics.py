@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from typing import Any
+from datetime import UTC, date, datetime
+from typing import TYPE_CHECKING, Any
 
-from app.domain.entities import Holding
+if TYPE_CHECKING:
+    from app.domain.entities import Holding
 
 
 class AdvancedAnalyticsEngine:
     """Performs stress testing, tax loss harvesting, bias detection, and goal tracking."""
 
-    def calculate_advanced_metrics(self, portfolio_id: str, holdings: list[Holding]) -> dict[str, Any]:
+    def calculate_advanced_metrics(
+        self, portfolio_id: str, holdings: list[Holding]
+    ) -> dict[str, Any]:
         total_value = sum(float(h.current_value) for h in holdings)
 
         # 1. Stress Tests
@@ -33,7 +36,7 @@ class AdvancedAnalyticsEngine:
             "total_potential_tax_savings": round(total_tax_savings, 2),
             "behavioral_biases": biases,
             "goals": goals,
-            "calculated_at": datetime.now(timezone.utc),
+            "calculated_at": datetime.now(UTC),
         }
 
     def _run_stress_tests(self, total_val: float, holdings: list[Holding]) -> list[dict[str, Any]]:
@@ -53,7 +56,7 @@ class AdvancedAnalyticsEngine:
                 new_val_rate += c_val
 
         change_rate = new_val_rate - total_val
-        change_rate_pct = (change_rate / total_val * 100)
+        change_rate_pct = change_rate / total_val * 100
 
         # Scenario B: Recession Crash (-20%)
         new_val_recession = 0.0
@@ -72,7 +75,7 @@ class AdvancedAnalyticsEngine:
                 new_val_recession += c_val
 
         change_recess = new_val_recession - total_val
-        change_recess_pct = (change_recess / total_val * 100)
+        change_recess_pct = change_recess / total_val * 100
 
         # Scenario C: High Inflation Spike (+2.0%)
         new_val_inflation = 0.0
@@ -91,7 +94,7 @@ class AdvancedAnalyticsEngine:
                 new_val_inflation += c_val
 
         change_infl = new_val_inflation - total_val
-        change_infl_pct = (change_infl / total_val * 100)
+        change_infl_pct = change_infl / total_val * 100
 
         return [
             {
@@ -120,7 +123,9 @@ class AdvancedAnalyticsEngine:
             },
         ]
 
-    def _calculate_tax_harvesting(self, holdings: list[Holding]) -> tuple[list[dict[str, Any]], float]:
+    def _calculate_tax_harvesting(
+        self, holdings: list[Holding]
+    ) -> tuple[list[dict[str, Any]], float]:
         opportunities = []
         total_savings = 0.0
 
@@ -139,7 +144,9 @@ class AdvancedAnalyticsEngine:
             asset_type = h.asset_type.value if hasattr(h.asset_type, "value") else str(h.asset_type)
 
             # Tax offset savings rate (STCG: 15% for equities, LTCG: 10% for equities)
-            if asset_type == "stock" or (asset_type == "mutual_fund" and "DEBT" not in h.name.upper()):
+            if asset_type == "stock" or (
+                asset_type == "mutual_fund" and "DEBT" not in h.name.upper()
+            ):
                 if days_held > 365:
                     rate = 0.10  # 10% LTCG offset
                 else:
@@ -153,17 +160,19 @@ class AdvancedAnalyticsEngine:
             savings = loss * rate
             total_savings += savings
 
-            opportunities.append({
-                "symbol": h.symbol,
-                "name": h.name,
-                "quantity": float(h.quantity),
-                "current_price": float(h.current_price),
-                "average_buy_price": float(h.average_buy_price),
-                "unrealized_loss": round(loss, 2),
-                "potential_tax_savings": round(savings, 2),
-                "holding_period_days": days_held,
-                "asset_type": asset_type,
-            })
+            opportunities.append(
+                {
+                    "symbol": h.symbol,
+                    "name": h.name,
+                    "quantity": float(h.quantity),
+                    "current_price": float(h.current_price),
+                    "average_buy_price": float(h.average_buy_price),
+                    "unrealized_loss": round(loss, 2),
+                    "potential_tax_savings": round(savings, 2),
+                    "holding_period_days": days_held,
+                    "asset_type": asset_type,
+                }
+            )
 
         return opportunities, total_savings
 
@@ -184,47 +193,55 @@ class AdvancedAnalyticsEngine:
             sector = h.sector or "Other"
             sector_weights[sector] = sector_weights.get(sector, 0.0) + weight
 
-        for sect, w in sector_weights.items():
+        for _sect, w in sector_weights.items():
             if w > 0.40:
                 sector_cap_warn = True
 
         if single_cap_warn or sector_cap_warn:
-            biases.append({
-                "bias_name": "Over-Concentration Bias",
-                "severity": "high" if single_cap_warn else "medium",
-                "description": "A high portion of capital is tied up in individual holdings or sectors, compounding volatility risk.",
-                "remedy": "Reallocate holdings to alternative sectors/instruments to cap individual assets at 15% weight.",
-            })
+            biases.append(
+                {
+                    "bias_name": "Over-Concentration Bias",
+                    "severity": "high" if single_cap_warn else "medium",
+                    "description": "A high portion of capital is tied up in individual holdings or sectors, compounding volatility risk.",
+                    "remedy": "Reallocate holdings to alternative sectors/instruments to cap individual assets at 15% weight.",
+                }
+            )
 
         # Bias B: Portfolio Fragmentation / FOMO Bias
         small_positions = sum(1 for h in holdings if (float(h.current_value) / total_val) < 0.03)
         if small_positions >= 5:
-            biases.append({
-                "bias_name": "Portfolio Fragmentation / FOMO Bias",
-                "severity": "medium",
-                "description": "Your portfolio holds many tiny positions. This represents potential impulse chasing (FOMO) and creates cash drag.",
-                "remedy": "Consolidate smaller trial positions into primary high-conviction index ETFs or bluechip assets.",
-            })
+            biases.append(
+                {
+                    "bias_name": "Portfolio Fragmentation / FOMO Bias",
+                    "severity": "medium",
+                    "description": "Your portfolio holds many tiny positions. This represents potential impulse chasing (FOMO) and creates cash drag.",
+                    "remedy": "Consolidate smaller trial positions into primary high-conviction index ETFs or bluechip assets.",
+                }
+            )
 
         # Bias C: Loss Aversion
         total_invested = sum(float(h.invested_value) for h in holdings)
         if total_invested > 0:
             overall_return = (total_val - total_invested) / total_invested
             if overall_return < -0.15:
-                biases.append({
-                    "bias_name": "Loss Aversion / Sunk Cost Fallacy",
-                    "severity": "medium",
-                    "description": "Holding onto underperforming positions to avoid realizing a loss, despite better investment opportunities.",
-                    "remedy": "Use our tax harvesting suggestions to offset gains and redeploy capital to rising-conviction holdings.",
-                })
+                biases.append(
+                    {
+                        "bias_name": "Loss Aversion / Sunk Cost Fallacy",
+                        "severity": "medium",
+                        "description": "Holding onto underperforming positions to avoid realizing a loss, despite better investment opportunities.",
+                        "remedy": "Use our tax harvesting suggestions to offset gains and redeploy capital to rising-conviction holdings.",
+                    }
+                )
 
         if not biases:
-            biases.append({
-                "bias_name": "None Detected",
-                "severity": "low",
-                "description": "No significant behavioral anomalies or over-concentration issues were detected in this portfolio.",
-                "remedy": "Maintain regular rebalancing schedules and dollar-cost average into index funds.",
-            })
+            biases.append(
+                {
+                    "bias_name": "None Detected",
+                    "severity": "low",
+                    "description": "No significant behavioral anomalies or over-concentration issues were detected in this portfolio.",
+                    "remedy": "Maintain regular rebalancing schedules and dollar-cost average into index funds.",
+                }
+            )
 
         return biases
 
@@ -246,13 +263,15 @@ class AdvancedAnalyticsEngine:
             elif prog >= 75:
                 status = "ahead"
 
-            results.append({
-                "goal_name": name,
-                "target_amount": target,
-                "current_amount": round(min(total_val, target), 2),
-                "progress_percentage": prog,
-                "status": status,
-            })
+            results.append(
+                {
+                    "goal_name": name,
+                    "target_amount": target,
+                    "current_amount": round(min(total_val, target), 2),
+                    "progress_percentage": prog,
+                    "status": status,
+                }
+            )
 
         return results
 
@@ -298,13 +317,15 @@ class AdvancedAnalyticsEngine:
             elif diff < -5:
                 action = "increase"
 
-            suggestions.append({
-                "sector": sector,
-                "current_weight_pct": current_pct,
-                "recommended_weight_pct": target_pct,
-                "deviation_pct": round(diff, 2),
-                "action": action,
-            })
+            suggestions.append(
+                {
+                    "sector": sector,
+                    "current_weight_pct": current_pct,
+                    "recommended_weight_pct": target_pct,
+                    "deviation_pct": round(diff, 2),
+                    "action": action,
+                }
+            )
 
         # Sort by absolute deviation (largest first)
         suggestions.sort(key=lambda x: abs(x["deviation_pct"]), reverse=True)
@@ -339,14 +360,16 @@ class AdvancedAnalyticsEngine:
             annual_div = qty * current_price * est_yield
             if annual_div > 0:
                 total_annual_dividend += annual_div
-                dividend_holdings.append({
-                    "symbol": h.symbol,
-                    "name": h.name,
-                    "asset_type": asset_type,
-                    "estimated_yield_pct": round(est_yield * 100, 2),
-                    "annual_dividend": round(annual_div, 2),
-                    "current_value": round(qty * current_price, 2),
-                })
+                dividend_holdings.append(
+                    {
+                        "symbol": h.symbol,
+                        "name": h.name,
+                        "asset_type": asset_type,
+                        "estimated_yield_pct": round(est_yield * 100, 2),
+                        "annual_dividend": round(annual_div, 2),
+                        "current_value": round(qty * current_price, 2),
+                    }
+                )
 
         # Sort by annual dividend (highest first)
         dividend_holdings.sort(key=lambda x: x["annual_dividend"], reverse=True)
@@ -385,7 +408,10 @@ class AdvancedAnalyticsEngine:
 
         # Check for missing asset classes
         essential_assets = {
-            "gold": {"min_pct": 5.0, "reason": "Portfolio hedge against inflation and market crashes"},
+            "gold": {
+                "min_pct": 5.0,
+                "reason": "Portfolio hedge against inflation and market crashes",
+            },
             "bond": {"min_pct": 10.0, "reason": "Stable income and capital preservation"},
             "mutual_fund": {"min_pct": 15.0, "reason": "Diversified professional management"},
             "etf": {"min_pct": 5.0, "reason": "Low-cost diversified market exposure"},
@@ -394,42 +420,47 @@ class AdvancedAnalyticsEngine:
         for asset, info in essential_assets.items():
             current = asset_pcts.get(asset, 0.0)
             if current < info["min_pct"]:
-                opportunities.append({
-                    "type": "missing_asset_class",
-                    "asset_class": asset,
-                    "current_allocation_pct": round(current, 2),
-                    "recommended_min_pct": info["min_pct"],
-                    "reason": info["reason"],
-                    "priority": "high" if current == 0 else "medium",
-                })
+                opportunities.append(
+                    {
+                        "type": "missing_asset_class",
+                        "asset_class": asset,
+                        "current_allocation_pct": round(current, 2),
+                        "recommended_min_pct": info["min_pct"],
+                        "reason": info["reason"],
+                        "priority": "high" if current == 0 else "medium",
+                    }
+                )
 
         # Check for over-concentration
         for asset, pct in asset_pcts.items():
             if pct > 60:
-                opportunities.append({
-                    "type": "over_concentration",
-                    "asset_class": asset,
-                    "current_allocation_pct": round(pct, 2),
-                    "recommended_max_pct": 50.0,
-                    "reason": f"Over {pct:.0f}% in {asset} creates unnecessary risk. Diversify.",
-                    "priority": "high",
-                })
+                opportunities.append(
+                    {
+                        "type": "over_concentration",
+                        "asset_class": asset,
+                        "current_allocation_pct": round(pct, 2),
+                        "recommended_max_pct": 50.0,
+                        "reason": f"Over {pct:.0f}% in {asset} creates unnecessary risk. Diversify.",
+                        "priority": "high",
+                    }
+                )
 
         # Check if international exposure exists
         has_international = any(h.country and h.country.lower() != "india" for h in holdings)
         if not has_international:
-            opportunities.append({
-                "type": "geographic_gap",
-                "asset_class": "international",
-                "current_allocation_pct": 0.0,
-                "recommended_min_pct": 10.0,
-                "reason": "No international exposure. Consider US/global ETFs for geographic diversification.",
-                "priority": "medium",
-            })
+            opportunities.append(
+                {
+                    "type": "geographic_gap",
+                    "asset_class": "international",
+                    "current_allocation_pct": 0.0,
+                    "recommended_min_pct": 10.0,
+                    "reason": "No international exposure. Consider US/global ETFs for geographic diversification.",
+                    "priority": "medium",
+                }
+            )
 
         # Sort by priority
         priority_order = {"high": 0, "medium": 1, "low": 2}
         opportunities.sort(key=lambda x: priority_order.get(x.get("priority", "low"), 2))
 
         return opportunities
-

@@ -41,12 +41,16 @@ async def test_get_current_user_inactive() -> None:
 
     mock_session = AsyncMock()
 
-    with pytest.raises(AuthenticationError, match="User not found or inactive"):
-        with patch("app.presentation.middleware.auth_dependency.SQLAlchemyUserRepository") as mock_repo_class:
-            mock_repo = AsyncMock()
-            mock_repo.get_by_id.return_value = mock_user
-            mock_repo_class.return_value = mock_repo
-            await get_current_user("user-123", mock_session)
+    with (
+        pytest.raises(AuthenticationError, match="User not found or inactive"),
+        patch(
+            "app.presentation.middleware.auth_dependency.SQLAlchemyUserRepository"
+        ) as mock_repo_class,
+    ):
+        mock_repo = AsyncMock()
+        mock_repo.get_by_id.return_value = mock_user
+        mock_repo_class.return_value = mock_repo
+        await get_current_user("user-123", mock_session)
 
 
 @pytest.mark.asyncio

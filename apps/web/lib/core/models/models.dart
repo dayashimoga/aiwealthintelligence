@@ -46,8 +46,12 @@ class User {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
-      passkeys: rawPasskeys.map((p) => Passkey.fromJson(p as Map<String, dynamic>)).toList(),
-      trustedDevices: rawDevices.map((d) => Device.fromJson(d as Map<String, dynamic>)).toList(),
+      passkeys: rawPasskeys
+          .map((p) => Passkey.fromJson(p as Map<String, dynamic>))
+          .toList(),
+      trustedDevices: rawDevices
+          .map((d) => Device.fromJson(d as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -84,30 +88,32 @@ class Portfolio {
   final DateTime? updatedAt;
 
   factory Portfolio.fromJson(Map<String, dynamic> json) => Portfolio(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    description: json['description'] as String? ?? '',
-    currency: json['currency'] as String? ?? 'INR',
-    isDefault: json['is_default'] as bool? ?? false,
-    importSource: json['import_source'] as String? ?? 'manual',
-    holdingCount: json['holding_count'] as int? ?? 0,
-    totalInvested: (json['total_invested'] as num?)?.toDouble() ?? 0,
-    totalCurrentValue: (json['total_current_value'] as num?)?.toDouble() ?? 0,
-    totalGainLoss: (json['total_gain_loss'] as num?)?.toDouble() ?? 0,
-    totalGainLossPct: (json['total_gain_loss_pct'] as num?)?.toDouble() ?? 0,
-    createdAt: json['created_at'] != null
-        ? DateTime.parse(json['created_at'] as String)
-        : null,
-    updatedAt: json['updated_at'] != null
-        ? DateTime.parse(json['updated_at'] as String)
-        : null,
-  );
+        id: json['id'] as String,
+        name: json['name'] as String,
+        description: json['description'] as String? ?? '',
+        currency: json['currency'] as String? ?? 'INR',
+        isDefault: json['is_default'] as bool? ?? false,
+        importSource: json['import_source'] as String? ?? 'manual',
+        holdingCount: json['holding_count'] as int? ?? 0,
+        totalInvested: (json['total_invested'] as num?)?.toDouble() ?? 0,
+        totalCurrentValue:
+            (json['total_current_value'] as num?)?.toDouble() ?? 0,
+        totalGainLoss: (json['total_gain_loss'] as num?)?.toDouble() ?? 0,
+        totalGainLossPct:
+            (json['total_gain_loss_pct'] as num?)?.toDouble() ?? 0,
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'] as String)
+            : null,
+        updatedAt: json['updated_at'] != null
+            ? DateTime.parse(json['updated_at'] as String)
+            : null,
+      );
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'description': description,
-    'currency': currency,
-  };
+        'name': name,
+        'description': description,
+        'currency': currency,
+      };
 }
 
 class Holding {
@@ -160,50 +166,50 @@ class Holding {
   final DateTime? updatedAt;
 
   factory Holding.fromJson(Map<String, dynamic> json) => Holding(
-    id: json['id'] as String,
-    portfolioId: json['portfolio_id'] as String,
-    symbol: json['symbol'] as String,
-    name: json['name'] as String,
-    assetType: json['asset_type'] as String? ?? 'stock',
-    exchange: json['exchange'] as String? ?? 'NSE',
-    currency: json['currency'] as String? ?? 'INR',
-    quantity: (json['quantity'] as num?)?.toDouble() ?? 0,
-    averageBuyPrice: (json['average_buy_price'] as num?)?.toDouble() ?? 0,
-    currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
-    investedValue: (json['invested_value'] as num?)?.toDouble() ?? 0,
-    currentValue: (json['current_value'] as num?)?.toDouble() ?? 0,
-    gainLoss: (json['gain_loss'] as num?)?.toDouble() ?? 0,
-    gainLossPct: (json['gain_loss_pct'] as num?)?.toDouble() ?? 0,
-    sector: json['sector'] as String? ?? '',
-    industry: json['industry'] as String? ?? '',
-    country: json['country'] as String? ?? 'India',
-    isin: json['isin'] as String? ?? '',
-    notes: json['notes'] as String? ?? '',
-    buyDate: json['buy_date'] != null
-        ? DateTime.parse(json['buy_date'] as String)
-        : null,
-    createdAt: json['created_at'] != null
-        ? DateTime.parse(json['created_at'] as String)
-        : null,
-    updatedAt: json['updated_at'] != null
-        ? DateTime.parse(json['updated_at'] as String)
-        : null,
-  );
+        id: json['id'] as String,
+        portfolioId: json['portfolio_id'] as String,
+        symbol: json['symbol'] as String,
+        name: json['name'] as String,
+        assetType: json['asset_type'] as String? ?? 'stock',
+        exchange: json['exchange'] as String? ?? 'NSE',
+        currency: json['currency'] as String? ?? 'INR',
+        quantity: (json['quantity'] as num?)?.toDouble() ?? 0,
+        averageBuyPrice: (json['average_buy_price'] as num?)?.toDouble() ?? 0,
+        currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
+        investedValue: (json['invested_value'] as num?)?.toDouble() ?? 0,
+        currentValue: (json['current_value'] as num?)?.toDouble() ?? 0,
+        gainLoss: (json['gain_loss'] as num?)?.toDouble() ?? 0,
+        gainLossPct: (json['gain_loss_pct'] as num?)?.toDouble() ?? 0,
+        sector: json['sector'] as String? ?? '',
+        industry: json['industry'] as String? ?? '',
+        country: json['country'] as String? ?? 'India',
+        isin: json['isin'] as String? ?? '',
+        notes: json['notes'] as String? ?? '',
+        buyDate: json['buy_date'] != null
+            ? DateTime.parse(json['buy_date'] as String)
+            : null,
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'] as String)
+            : null,
+        updatedAt: json['updated_at'] != null
+            ? DateTime.parse(json['updated_at'] as String)
+            : null,
+      );
 
   Map<String, dynamic> toJson() => {
-    'symbol': symbol,
-    'name': name,
-    'asset_type': assetType,
-    'exchange': exchange,
-    'quantity': quantity.toString(),
-    'average_buy_price': averageBuyPrice.toString(),
-    'current_price': currentPrice.toString(),
-    'sector': sector,
-    'industry': industry,
-    'country': country,
-    'isin': isin,
-    'notes': notes,
-  };
+        'symbol': symbol,
+        'name': name,
+        'asset_type': assetType,
+        'exchange': exchange,
+        'quantity': quantity.toString(),
+        'average_buy_price': averageBuyPrice.toString(),
+        'current_price': currentPrice.toString(),
+        'sector': sector,
+        'industry': industry,
+        'country': country,
+        'isin': isin,
+        'notes': notes,
+      };
 }
 
 class PortfolioAnalytics {
@@ -317,8 +323,7 @@ class AIRecommendation {
                     ?.map((e) => e as String)
                     .toList() ??
                 [],
-        explainability:
-            json['explainability'] as Map<String, dynamic>? ?? {},
+        explainability: json['explainability'] as Map<String, dynamic>? ?? {},
         generatedAt: json['generated_at'] != null
             ? DateTime.parse(json['generated_at'] as String)
             : null,
@@ -339,17 +344,17 @@ class ChatMessage {
   final double confidence;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
-    message: json['message'] as String,
-    suggestions: (json['suggestions'] as List<dynamic>?)
-            ?.map((e) => e as String)
-            .toList() ??
-        [],
-    referencedHoldings: (json['referenced_holdings'] as List<dynamic>?)
-            ?.map((e) => e as String)
-            .toList() ??
-        [],
-    confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
-  );
+        message: json['message'] as String,
+        suggestions: (json['suggestions'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        referencedHoldings: (json['referenced_holdings'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
+      );
 }
 
 class AuthTokens {
@@ -366,11 +371,11 @@ class AuthTokens {
   final int expiresIn;
 
   factory AuthTokens.fromJson(Map<String, dynamic> json) => AuthTokens(
-    accessToken: json['access_token'] as String,
-    refreshToken: json['refresh_token'] as String,
-    tokenType: json['token_type'] as String? ?? 'bearer',
-    expiresIn: json['expires_in'] as int? ?? 1800,
-  );
+        accessToken: json['access_token'] as String,
+        refreshToken: json['refresh_token'] as String,
+        tokenType: json['token_type'] as String? ?? 'bearer',
+        expiresIn: json['expires_in'] as int? ?? 1800,
+      );
 }
 
 // ============================================================
@@ -428,7 +433,8 @@ class ScenarioMetrics {
   final double diversificationScore;
   final double riskScore;
 
-  factory ScenarioMetrics.fromJson(Map<String, dynamic> json) => ScenarioMetrics(
+  factory ScenarioMetrics.fromJson(Map<String, dynamic> json) =>
+      ScenarioMetrics(
         totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
         xirr: (json['xirr'] as num?)?.toDouble(),
         diversificationScore:
@@ -500,7 +506,8 @@ class PortfolioDoctor {
   final double sectorConcentrationPct;
   final double cashDragPct;
 
-  factory PortfolioDoctor.fromJson(Map<String, dynamic> json) => PortfolioDoctor(
+  factory PortfolioDoctor.fromJson(Map<String, dynamic> json) =>
+      PortfolioDoctor(
         healthScore: json['health_score'] as int? ?? 100,
         issues: (json['issues'] as List<dynamic>?)
                 ?.map((e) => PortfolioIssue.fromJson(e as Map<String, dynamic>))
@@ -601,9 +608,17 @@ class MarketNews {
         url: json['url'] as String? ?? '',
         sentiment: json['sentiment'] as String? ?? 'neutral',
         relevanceScore: (json['relevance_score'] as num?)?.toDouble() ?? 0.0,
-        sectors: (json['sectors'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-        symbols: (json['symbols'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-        publishedAt: json['published_at'] != null ? DateTime.parse(json['published_at'] as String) : null,
+        sectors: (json['sectors'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        symbols: (json['symbols'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        publishedAt: json['published_at'] != null
+            ? DateTime.parse(json['published_at'] as String)
+            : null,
       );
 }
 
@@ -652,7 +667,7 @@ class MarketOverview {
   factory MarketOverview.fromJson(Map<String, dynamic> json) {
     final rawNews = json['news'] as List<dynamic>? ?? [];
     final rawSectors = json['sector_rankings'] as List<dynamic>? ?? [];
-    
+
     final macroMap = <String, double>{};
     if (json['macro_indicators'] != null) {
       (json['macro_indicators'] as Map<String, dynamic>).forEach((k, v) {
@@ -661,11 +676,18 @@ class MarketOverview {
     }
 
     return MarketOverview(
-      news: rawNews.map((n) => MarketNews.fromJson(n as Map<String, dynamic>)).toList(),
-      sectorRankings: rawSectors.map((s) => SectorRanking.fromJson(s as Map<String, dynamic>)).toList(),
+      news: rawNews
+          .map((n) => MarketNews.fromJson(n as Map<String, dynamic>))
+          .toList(),
+      sectorRankings: rawSectors
+          .map((s) => SectorRanking.fromJson(s as Map<String, dynamic>))
+          .toList(),
       macroIndicators: macroMap,
-      indexPerformance: json['index_performance'] as Map<String, dynamic>? ?? {},
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      indexPerformance:
+          json['index_performance'] as Map<String, dynamic>? ?? {},
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
     );
   }
 }
@@ -687,12 +709,15 @@ class StressScenarioResult {
   final double changePercentage;
   final String impactLevel;
 
-  factory StressScenarioResult.fromJson(Map<String, dynamic> json) => StressScenarioResult(
+  factory StressScenarioResult.fromJson(Map<String, dynamic> json) =>
+      StressScenarioResult(
         scenarioName: json['scenario_name'] as String? ?? '',
         scenarioDescription: json['scenario_description'] as String? ?? '',
-        estimatedNewValue: (json['estimated_new_value'] as num?)?.toDouble() ?? 0.0,
+        estimatedNewValue:
+            (json['estimated_new_value'] as num?)?.toDouble() ?? 0.0,
         changeValue: (json['change_value'] as num?)?.toDouble() ?? 0.0,
-        changePercentage: (json['change_percentage'] as num?)?.toDouble() ?? 0.0,
+        changePercentage:
+            (json['change_percentage'] as num?)?.toDouble() ?? 0.0,
         impactLevel: json['impact_level'] as String? ?? 'neutral',
       );
 }
@@ -720,14 +745,16 @@ class TaxHarvestingOpportunity {
   final int holdingPeriodDays;
   final String assetType;
 
-  factory TaxHarvestingOpportunity.fromJson(Map<String, dynamic> json) => TaxHarvestingOpportunity(
+  factory TaxHarvestingOpportunity.fromJson(Map<String, dynamic> json) =>
+      TaxHarvestingOpportunity(
         symbol: json['symbol'] as String? ?? '',
         name: json['name'] as String? ?? '',
         quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
         currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0.0,
         averageBuyPrice: (json['average_buy_price'] as num?)?.toDouble() ?? 0.0,
         unrealizedLoss: (json['unrealized_loss'] as num?)?.toDouble() ?? 0.0,
-        potentialTaxSavings: (json['potential_tax_savings'] as num?)?.toDouble() ?? 0.0,
+        potentialTaxSavings:
+            (json['potential_tax_savings'] as num?)?.toDouble() ?? 0.0,
         holdingPeriodDays: json['holding_period_days'] as int? ?? 0,
         assetType: json['asset_type'] as String? ?? 'stock',
       );
@@ -773,7 +800,8 @@ class GoalProgress {
         goalName: json['goal_name'] as String? ?? '',
         targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0.0,
         currentAmount: (json['current_amount'] as num?)?.toDouble() ?? 0.0,
-        progressPercentage: (json['progress_percentage'] as num?)?.toDouble() ?? 0.0,
+        progressPercentage:
+            (json['progress_percentage'] as num?)?.toDouble() ?? 0.0,
         status: json['status'] as String? ?? 'on_track',
       );
 }
@@ -805,16 +833,27 @@ class AdvancedAnalysis {
 
     return AdvancedAnalysis(
       portfolioId: json['portfolio_id'] as String? ?? '',
-      stressTest: rawStress.map((s) => StressScenarioResult.fromJson(s as Map<String, dynamic>)).toList(),
-      taxHarvesting: rawTax.map((t) => TaxHarvestingOpportunity.fromJson(t as Map<String, dynamic>)).toList(),
-      totalPotentialTaxSavings: (json['total_potential_tax_savings'] as num?)?.toDouble() ?? 0.0,
-      behavioralBiases: rawBiases.map((b) => BehavioralBias.fromJson(b as Map<String, dynamic>)).toList(),
-      goals: rawGoals.map((g) => GoalProgress.fromJson(g as Map<String, dynamic>)).toList(),
-      calculatedAt: json['calculated_at'] != null ? DateTime.parse(json['calculated_at'] as String) : null,
+      stressTest: rawStress
+          .map((s) => StressScenarioResult.fromJson(s as Map<String, dynamic>))
+          .toList(),
+      taxHarvesting: rawTax
+          .map((t) =>
+              TaxHarvestingOpportunity.fromJson(t as Map<String, dynamic>))
+          .toList(),
+      totalPotentialTaxSavings:
+          (json['total_potential_tax_savings'] as num?)?.toDouble() ?? 0.0,
+      behavioralBiases: rawBiases
+          .map((b) => BehavioralBias.fromJson(b as Map<String, dynamic>))
+          .toList(),
+      goals: rawGoals
+          .map((g) => GoalProgress.fromJson(g as Map<String, dynamic>))
+          .toList(),
+      calculatedAt: json['calculated_at'] != null
+          ? DateTime.parse(json['calculated_at'] as String)
+          : null,
     );
   }
 }
-
 
 class AppNotification {
   const AppNotification({
@@ -837,22 +876,22 @@ class AppNotification {
   final Map<String, dynamic> metadata;
   final DateTime? createdAt;
 
-  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    body: json['body'] as String? ?? '',
-    category: json['category'] as String? ?? 'system',
-    priority: json['priority'] as String? ?? 'medium',
-    isRead: json['is_read'] as bool? ?? false,
-    metadata: json['metadata'] is Map
-        ? Map<String, dynamic>.from(json['metadata'] as Map)
-        : const {},
-    createdAt: json['created_at'] != null
-        ? DateTime.parse(json['created_at'] as String)
-        : null,
-  );
+  factory AppNotification.fromJson(Map<String, dynamic> json) =>
+      AppNotification(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        body: json['body'] as String? ?? '',
+        category: json['category'] as String? ?? 'system',
+        priority: json['priority'] as String? ?? 'medium',
+        isRead: json['is_read'] as bool? ?? false,
+        metadata: json['metadata'] is Map
+            ? Map<String, dynamic>.from(json['metadata'] as Map)
+            : const {},
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'] as String)
+            : null,
+      );
 }
-
 
 class FinancialGoal {
   const FinancialGoal({
@@ -894,30 +933,32 @@ class FinancialGoal {
   final DateTime? createdAt;
 
   factory FinancialGoal.fromJson(Map<String, dynamic> json) => FinancialGoal(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    goalType: json['goal_type'] as String? ?? 'custom',
-    targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0,
-    currentAmount: (json['current_amount'] as num?)?.toDouble() ?? 0,
-    monthlyContribution: (json['monthly_contribution'] as num?)?.toDouble() ?? 0,
-    targetDate: json['target_date'] != null
-        ? DateTime.parse(json['target_date'] as String)
-        : null,
-    expectedReturnRate: (json['expected_return_rate'] as num?)?.toDouble() ?? 12.0,
-    inflationRate: (json['inflation_rate'] as num?)?.toDouble() ?? 6.0,
-    linkedPortfolioId: json['linked_portfolio_id'] as String?,
-    isActive: json['is_active'] as bool? ?? true,
-    notes: json['notes'] as String? ?? '',
-    progressPct: (json['progress_pct'] as num?)?.toDouble() ?? 0,
-    monthsRemaining: json['months_remaining'] as int?,
-    requiredMonthlySip: (json['required_monthly_sip'] as num?)?.toDouble() ?? 0,
-    shortfall: (json['shortfall'] as num?)?.toDouble() ?? 0,
-    createdAt: json['created_at'] != null
-        ? DateTime.parse(json['created_at'] as String)
-        : null,
-  );
+        id: json['id'] as String,
+        name: json['name'] as String,
+        goalType: json['goal_type'] as String? ?? 'custom',
+        targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0,
+        currentAmount: (json['current_amount'] as num?)?.toDouble() ?? 0,
+        monthlyContribution:
+            (json['monthly_contribution'] as num?)?.toDouble() ?? 0,
+        targetDate: json['target_date'] != null
+            ? DateTime.parse(json['target_date'] as String)
+            : null,
+        expectedReturnRate:
+            (json['expected_return_rate'] as num?)?.toDouble() ?? 12.0,
+        inflationRate: (json['inflation_rate'] as num?)?.toDouble() ?? 6.0,
+        linkedPortfolioId: json['linked_portfolio_id'] as String?,
+        isActive: json['is_active'] as bool? ?? true,
+        notes: json['notes'] as String? ?? '',
+        progressPct: (json['progress_pct'] as num?)?.toDouble() ?? 0,
+        monthsRemaining: json['months_remaining'] as int?,
+        requiredMonthlySip:
+            (json['required_monthly_sip'] as num?)?.toDouble() ?? 0,
+        shortfall: (json['shortfall'] as num?)?.toDouble() ?? 0,
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'] as String)
+            : null,
+      );
 }
-
 
 class WatchlistItem {
   const WatchlistItem({
@@ -944,9 +985,8 @@ class WatchlistItem {
       id: json['id'] as String,
       name: json['name'] as String? ?? 'Watchlist',
       symbols: rawSymbols.map((s) => s.toString()).toList(),
-      alerts: rawAlerts
-          .map((a) => Map<String, dynamic>.from(a as Map))
-          .toList(),
+      alerts:
+          rawAlerts.map((a) => Map<String, dynamic>.from(a as Map)).toList(),
       symbolCount: json['symbol_count'] as int? ?? rawSymbols.length,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -954,7 +994,6 @@ class WatchlistItem {
     );
   }
 }
-
 
 class WatchlistIntelligenceItem {
   const WatchlistIntelligenceItem({

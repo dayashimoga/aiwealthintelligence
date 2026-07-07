@@ -50,6 +50,7 @@ class RedisCacheRepository(CacheRepository):
 
     def _get_time(self) -> float:
         import time
+
         return time.time()
 
     async def get(self, key: str) -> Any | None:

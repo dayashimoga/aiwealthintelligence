@@ -6,8 +6,7 @@ Provides async test client, database session, and common fixtures.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import pytest_asyncio
@@ -19,6 +18,8 @@ from app.infrastructure.database.session import get_db_session
 from app.main import app
 from app.shared.security import create_access_token, hash_password
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # Use in-memory SQLite for tests
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

@@ -7,17 +7,19 @@ and AI-powered intelligence for watched symbols.
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.models import WatchlistModel
 from app.infrastructure.database.session import get_db_session
 from app.infrastructure.market.market_data_service import market_data_service
 from app.presentation.middleware.auth_dependency import get_current_user
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -196,28 +198,32 @@ async def get_watchlist_intelligence(
                     if alert.get("below") and price <= alert["below"]:
                         triggered_alerts.append(f"Price below ₹{alert['below']:,.2f}")
 
-            intelligence.append({
-                "symbol": symbol,
-                "current_price": price,
-                "pe_ratio": fundamentals.get("pe_ratio"),
-                "market_cap": fundamentals.get("market_cap"),
-                "fifty_two_week_high": fundamentals.get("fifty_two_week_high"),
-                "fifty_two_week_low": fundamentals.get("fifty_two_week_low"),
-                "sector": fundamentals.get("sector", ""),
-                "analyst_target": estimates.get("target_mean"),
-                "analyst_recommendation": estimates.get("recommendation_key"),
-                "recent_news": [
-                    {"title": n.get("title", ""), "source": n.get("source", "")}
-                    for n in (news or [])[:3]
-                ],
-                "triggered_alerts": triggered_alerts,
-            })
+            intelligence.append(
+                {
+                    "symbol": symbol,
+                    "current_price": price,
+                    "pe_ratio": fundamentals.get("pe_ratio"),
+                    "market_cap": fundamentals.get("market_cap"),
+                    "fifty_two_week_high": fundamentals.get("fifty_two_week_high"),
+                    "fifty_two_week_low": fundamentals.get("fifty_two_week_low"),
+                    "sector": fundamentals.get("sector", ""),
+                    "analyst_target": estimates.get("target_mean"),
+                    "analyst_recommendation": estimates.get("recommendation_key"),
+                    "recent_news": [
+                        {"title": n.get("title", ""), "source": n.get("source", "")}
+                        for n in (news or [])[:3]
+                    ],
+                    "triggered_alerts": triggered_alerts,
+                }
+            )
         except Exception:
-            intelligence.append({
-                "symbol": symbol,
-                "current_price": 0,
-                "error": "Failed to fetch data",
-            })
+            intelligence.append(
+                {
+                    "symbol": symbol,
+                    "current_price": 0,
+                    "error": "Failed to fetch data",
+                }
+            )
 
     return {
         "watchlist_id": watchlist_id,

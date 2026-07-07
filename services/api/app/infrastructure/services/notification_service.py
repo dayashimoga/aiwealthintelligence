@@ -7,14 +7,15 @@ notifications based on portfolio events and scheduled analysis.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.models import NotificationModel
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 
@@ -193,10 +194,7 @@ class NotificationService:
     ) -> NotificationModel:
         """Generate a dividend notification."""
         title = f"Dividend: {symbol}"
-        body = (
-            f"{symbol} has declared a dividend of ₹{dividend_amount:,.2f}. "
-            f"Ex-date: {ex_date}"
-        )
+        body = f"{symbol} has declared a dividend of ₹{dividend_amount:,.2f}. Ex-date: {ex_date}"
         return await self.create_notification(
             session,
             user_id=user_id,

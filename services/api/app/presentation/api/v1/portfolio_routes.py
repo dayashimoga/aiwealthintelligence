@@ -6,20 +6,19 @@ import csv
 import io
 import uuid
 from decimal import Decimal, InvalidOperation
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, File, UploadFile
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Holding, Portfolio
+from app.infrastructure.analytics.portfolio_analytics_engine import PortfolioAnalyticsEngine
 from app.infrastructure.database.session import get_db_session
 from app.infrastructure.repositories.sqlalchemy_repos import (
     SQLAlchemyHoldingRepository,
     SQLAlchemyPortfolioRepository,
     SQLAlchemyTransactionRepository,
 )
-from app.infrastructure.analytics.portfolio_analytics_engine import PortfolioAnalyticsEngine
 from app.presentation.middleware.auth_dependency import get_current_user_id
 from app.presentation.schemas.api_schemas import (
     CreateHoldingRequest,
@@ -34,6 +33,9 @@ from app.presentation.schemas.api_schemas import (
     UpdatePortfolioRequest,
 )
 from app.shared.exceptions import NotFoundError, ValidationError
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -281,9 +283,10 @@ async def delete_holding(
 # ============================================================
 
 
-from app.infrastructure.importers.cas_pdf_parser import CASPDFParser
-from app.infrastructure.importers.broker_report_parser import BrokerReportParser
 from fastapi import Form
+
+from app.infrastructure.importers.broker_report_parser import BrokerReportParser
+from app.infrastructure.importers.cas_pdf_parser import CASPDFParser
 
 
 @router.post("/{portfolio_id}/import/cas-pdf", response_model=ImportResponse)
@@ -538,7 +541,11 @@ async def get_portfolio_analytics(
     # Calculate real dividend income from transactions
     dividend_income = 0.0
     for tx in transactions:
-        tx_type = tx.transaction_type.value if hasattr(tx.transaction_type, "value") else str(tx.transaction_type)
+        tx_type = (
+            tx.transaction_type.value
+            if hasattr(tx.transaction_type, "value")
+            else str(tx.transaction_type)
+        )
         if tx_type == "dividend":
             dividend_income += float(tx.quantity) * float(tx.price)
 
@@ -576,9 +583,13 @@ def _portfolio_to_response(portfolio: Portfolio) -> PortfolioResponse:
         id=portfolio.id,
         name=portfolio.name,
         description=portfolio.description,
-        currency=portfolio.currency.value if hasattr(portfolio.currency, "value") else portfolio.currency,
+        currency=portfolio.currency.value
+        if hasattr(portfolio.currency, "value")
+        else portfolio.currency,
         is_default=portfolio.is_default,
-        import_source=portfolio.import_source.value if hasattr(portfolio.import_source, "value") else portfolio.import_source,
+        import_source=portfolio.import_source.value
+        if hasattr(portfolio.import_source, "value")
+        else portfolio.import_source,
         holding_count=portfolio.holding_count,
         total_invested=float(portfolio.total_invested),
         total_current_value=float(portfolio.total_current_value),
@@ -596,7 +607,9 @@ def _holding_to_response(holding: Holding) -> HoldingResponse:
         portfolio_id=holding.portfolio_id,
         symbol=holding.symbol,
         name=holding.name,
-        asset_type=holding.asset_type if isinstance(holding.asset_type, str) else holding.asset_type.value,
+        asset_type=holding.asset_type
+        if isinstance(holding.asset_type, str)
+        else holding.asset_type.value,
         exchange=holding.exchange if isinstance(holding.exchange, str) else holding.exchange.value,
         currency=holding.currency if isinstance(holding.currency, str) else holding.currency.value,
         quantity=float(holding.quantity),

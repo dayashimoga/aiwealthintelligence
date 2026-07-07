@@ -4,7 +4,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:wealthai/core/widgets/common_widgets.dart';
 
 void main() {
-  testWidgets('StatCard renders label, value and change indicators', (WidgetTester tester) async {
+  testWidgets('StatCard renders label, value and change indicators',
+      (WidgetTester tester) async {
     // Build StatCard
     await tester.pumpWidget(
       const MaterialApp(
@@ -27,10 +28,12 @@ void main() {
     expect(find.text('Total Valuation'), findsOneWidget);
     expect(find.text('₹1,50,000'), findsOneWidget);
     expect(find.text('+5.5%'), findsOneWidget);
-    expect(find.byIcon(Icons.trending_up), findsNWidgets(2)); // Card icon + change trend icon
+    expect(find.byIcon(Icons.trending_up),
+        findsNWidgets(2)); // Card icon + change trend icon
   });
 
-  testWidgets('RecommendationChip renders correct styled label text', (WidgetTester tester) async {
+  testWidgets('RecommendationChip renders correct styled label text',
+      (WidgetTester tester) async {
     // Build strong buy chip
     await tester.pumpWidget(
       const MaterialApp(
@@ -48,7 +51,8 @@ void main() {
     expect(find.text('STRONG BUY'), findsOneWidget);
   });
 
-  testWidgets('SkeletonLoader renders shimmer content placeholder', (WidgetTester tester) async {
+  testWidgets('SkeletonLoader renders shimmer content placeholder',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(

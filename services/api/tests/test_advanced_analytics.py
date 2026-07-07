@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_get_advanced_analysis_route(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_get_advanced_analysis_route(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
     """Test get advanced analysis calculation endpoint."""
     # Create portfolio
     p_resp = await client.post(

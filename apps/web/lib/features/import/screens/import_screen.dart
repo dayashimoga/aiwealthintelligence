@@ -20,7 +20,8 @@ class ImportScreen extends ConsumerStatefulWidget {
   ConsumerState<ImportScreen> createState() => _ImportScreenState();
 }
 
-class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerProviderStateMixin {
+class _ImportScreenState extends ConsumerState<ImportScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   PlatformFile? _pickedFile;
   final _passwordController = TextEditingController();
@@ -96,7 +97,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
             widget.portfolioId,
             _pickedFile!.bytes!,
             _pickedFile!.name,
-            password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+            password: _passwordController.text.isNotEmpty
+                ? _passwordController.text
+                : null,
           )
         : await repo.importBrokerReport(
             widget.portfolioId,
@@ -120,7 +123,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Import Complete'),
-            content: Text('Successfully imported ${data.imported} holdings positions!'),
+            content: Text(
+                'Successfully imported ${data.imported} holdings positions!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -213,9 +217,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      Text('• Type: EQUITIES, MUTUAL_FUNDS', style: TextStyle(fontSize: 12)),
-                      Text('• Purpose: Wealth Analytics', style: TextStyle(fontSize: 12)),
-                      Text('• Validity: 3 Years', style: TextStyle(fontSize: 12)),
+                      Text('• Type: EQUITIES, MUTUAL_FUNDS',
+                          style: TextStyle(fontSize: 12)),
+                      Text('• Purpose: Wealth Analytics',
+                          style: TextStyle(fontSize: 12)),
+                      Text('• Validity: 3 Years',
+                          style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
@@ -251,7 +258,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _AAProgressOverlay(consentHandle: consentHandle, portfolioId: widget.portfolioId),
+      builder: (ctx) => _AAProgressOverlay(
+          consentHandle: consentHandle, portfolioId: widget.portfolioId),
     ).then((result) {
       if (result != null && result is int) {
         ref.invalidate(portfoliosProvider);
@@ -264,7 +272,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           barrierDismissible: false,
           builder: (successCtx) => AlertDialog(
             title: const Text('Link Successful!'),
-            content: Text('Successfully linked and imported $result holdings via Account Aggregator!'),
+            content: Text(
+                'Successfully linked and imported $result holdings via Account Aggregator!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -329,7 +338,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                     ),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                      style: const TextStyle(
+                          color: Colors.redAccent, fontSize: 13),
                     ),
                   ),
                 ),
@@ -346,7 +356,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Upload & Import'),
                 ),
@@ -361,14 +372,16 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.picture_as_pdf_outlined, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+        Icon(Icons.picture_as_pdf_outlined,
+            size: 80, color: theme.colorScheme.primary.withAlpha(128)),
         const SizedBox(height: 16),
         Text('Import CAMS / NSDL CAS PDF', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
           'Select the consolidated account statement PDF downloaded from NSDL, CDSL, or CAMS.',
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
         ),
         const SizedBox(height: 24),
         _buildFilePickerArea(theme, ['pdf']),
@@ -390,14 +403,17 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.table_chart_outlined, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+        Icon(Icons.table_chart_outlined,
+            size: 80, color: theme.colorScheme.primary.withAlpha(128)),
         const SizedBox(height: 16),
-        Text('Import Broker CSV/Excel Report', style: theme.textTheme.titleMedium),
+        Text('Import Broker CSV/Excel Report',
+            style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
           'Select the holdings report CSV file exported from Zerodha Kite, Groww, or other brokers.',
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
         ),
         const SizedBox(height: 24),
         _buildFilePickerArea(theme, ['csv', 'xlsx']),
@@ -412,7 +428,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 20),
-          Icon(Icons.sync_alt, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+          Icon(Icons.sync_alt,
+              size: 80, color: theme.colorScheme.primary.withAlpha(128)),
           const SizedBox(height: 16),
           Center(
             child: Text(
@@ -424,7 +441,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           Text(
             'Instantly synchronize all your shares, mutual funds, and bank deposits securely using the RBI consent framework.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
           ),
           const SizedBox(height: 24),
           TextField(
@@ -483,7 +501,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.primary.withAlpha(128), style: BorderStyle.solid),
+          border: Border.all(
+              color: theme.colorScheme.primary.withAlpha(128),
+              style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(16),
           color: theme.colorScheme.primaryContainer.withAlpha(20),
         ),
@@ -506,7 +526,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
               if (hasFile)
                 Text(
                   '${(_pickedFile!.size / 1024).toStringAsFixed(1)} KB',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(128)),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withAlpha(128)),
                 ),
             ],
           ),
@@ -549,7 +570,7 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
 
   void _triggerCallbackAndStartPolling() async {
     final repo = ref.read(portfolioRepositoryProvider);
-    
+
     // Trigger mock callback
     final dio = ref.read(dioProvider);
     try {
@@ -564,7 +585,7 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
 
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       _ticks++;
-      
+
       if (_ticks == 1) {
         setState(() {
           _statusMessage = 'Retrieving FIP session keys and Nonces...';
@@ -572,7 +593,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
         });
       } else if (_ticks == 2) {
         setState(() {
-          _statusMessage = 'Decrypting Equities & Mutual Funds XML materials...';
+          _statusMessage =
+              'Decrypting Equities & Mutual Funds XML materials...';
           _progress = 0.75;
         });
       }
@@ -638,7 +660,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
               Text(
                 _statusMessage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               const SizedBox(height: 12),
               LinearProgressIndicator(value: _progress),

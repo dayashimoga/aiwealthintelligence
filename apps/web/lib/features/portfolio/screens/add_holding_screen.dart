@@ -26,8 +26,16 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
   bool _isLoading = false;
 
   final _assetTypes = [
-    'stock', 'mutual_fund', 'etf', 'bond', 'gold',
-    'crypto', 'real_estate', 'fixed_deposit', 'ppf', 'nps',
+    'stock',
+    'mutual_fund',
+    'etf',
+    'bond',
+    'gold',
+    'crypto',
+    'real_estate',
+    'fixed_deposit',
+    'ppf',
+    'nps',
   ];
 
   final _exchanges = ['NSE', 'BSE', 'NYSE', 'NASDAQ'];
@@ -51,7 +59,8 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
       context.pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${_symbolController.text.toUpperCase()} added to portfolio'),
+          content: Text(
+              '${_symbolController.text.toUpperCase()} added to portfolio'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -80,11 +89,15 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: _assetType,
-                          decoration: const InputDecoration(labelText: 'Asset Type'),
-                          items: _assetTypes.map((t) => DropdownMenuItem(
-                            value: t,
-                            child: Text(t.replaceAll('_', ' ').toUpperCase()),
-                          )).toList(),
+                          decoration:
+                              const InputDecoration(labelText: 'Asset Type'),
+                          items: _assetTypes
+                              .map((t) => DropdownMenuItem(
+                                    value: t,
+                                    child: Text(
+                                        t.replaceAll('_', ' ').toUpperCase()),
+                                  ))
+                              .toList(),
                           onChanged: (v) => setState(() => _assetType = v!),
                         ),
                       ),
@@ -92,10 +105,14 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: _exchange,
-                          decoration: const InputDecoration(labelText: 'Exchange'),
-                          items: _exchanges.map((e) => DropdownMenuItem(
-                            value: e, child: Text(e),
-                          )).toList(),
+                          decoration:
+                              const InputDecoration(labelText: 'Exchange'),
+                          items: _exchanges
+                              .map((e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ))
+                              .toList(),
                           onChanged: (v) => setState(() => _exchange = v!),
                         ),
                       ),
@@ -113,7 +130,8 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                       prefixIcon: Icon(Icons.search),
                     ),
                     textCapitalization: TextCapitalization.characters,
-                    validator: (v) => v == null || v.isEmpty ? 'Symbol is required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Symbol is required' : null,
                   ).animate().fadeIn(delay: 200.ms),
 
                   const SizedBox(height: AppTheme.spacingMd),
@@ -125,7 +143,8 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                       hintText: 'e.g., Reliance Industries Ltd',
                       prefixIcon: Icon(Icons.business),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Name is required' : null,
                   ).animate().fadeIn(delay: 300.ms),
 
                   const SizedBox(height: AppTheme.spacingMd),
@@ -141,10 +160,12 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                             hintText: '0',
                             prefixIcon: Icon(Icons.numbers),
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           validator: (v) {
                             if (v == null || v.isEmpty) return 'Required';
-                            if (double.tryParse(v) == null || double.parse(v) <= 0) {
+                            if (double.tryParse(v) == null ||
+                                double.parse(v) <= 0) {
                               return 'Invalid quantity';
                             }
                             return null;
@@ -160,10 +181,12 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                             hintText: '0.00',
                             prefixIcon: Icon(Icons.currency_rupee),
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           validator: (v) {
                             if (v == null || v.isEmpty) return 'Required';
-                            if (double.tryParse(v) == null) return 'Invalid price';
+                            if (double.tryParse(v) == null)
+                              return 'Invalid price';
                             return null;
                           },
                         ),
@@ -193,13 +216,16 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                       return Container(
                         padding: const EdgeInsets.all(AppTheme.spacingMd),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer.withAlpha(51),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          color:
+                              theme.colorScheme.primaryContainer.withAlpha(51),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Estimated Investment', style: theme.textTheme.bodyMedium),
+                            Text('Estimated Investment',
+                                style: theme.textTheme.bodyMedium),
                             Text('₹${total.toStringAsFixed(2)}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -220,8 +246,10 @@ class _AddHoldingScreenState extends State<AddHoldingScreen> {
                       onPressed: _isLoading ? null : _handleSubmit,
                       icon: _isLoading
                           ? const SizedBox(
-                              width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Icon(Icons.add),
                       label: Text(_isLoading ? 'Adding...' : 'Add Holding'),

@@ -2,20 +2,27 @@
 
 from __future__ import annotations
 
-import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.repositories.sqlalchemy_repos import SQLAlchemyUserRepository
-from app.domain.entities import User
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
 import pyotp
+import pytest
+
 from app.infrastructure.repositories.redis_cache import cache_repo
+from app.infrastructure.repositories.sqlalchemy_repos import SQLAlchemyUserRepository
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
+    from sqlalchemy.ext.asyncio import AsyncSession
+
 
 @pytest.mark.unit
 class TestOAuthLogin:
     """Tests for OAuth registration and login workflows."""
 
-    async def test_oauth_register_and_login_success(self, client: AsyncClient, db_session: AsyncSession) -> None:
+    async def test_oauth_register_and_login_success(
+        self, client: AsyncClient, db_session: AsyncSession
+    ) -> None:
         """Successful Google/Apple login registers new user if not exist."""
         response = await client.post(
             "/api/v1/auth/oauth-login",
@@ -43,7 +50,9 @@ class TestOAuthLogin:
 class TestEmailOTPFlow:
     """Tests for Email OTP send and verify."""
 
-    async def test_otp_send_and_verify_flow(self, client: AsyncClient, db_session: AsyncSession) -> None:
+    async def test_otp_send_and_verify_flow(
+        self, client: AsyncClient, db_session: AsyncSession
+    ) -> None:
         """User can request verification OTP and successfully exchange it for JWT tokens."""
         # 1. Send OTP
         email = "otp_test@wealthai.app"
@@ -101,7 +110,7 @@ class TestTOTPMultiFactor:
         secret = setup_data["secret"]
 
         # 3. Generate correct TOTP token code
-        totp = pyotp_totp = pyotp_helper = pyotp_totp_gen = pyotp.TOTP(secret)
+        totp = pyotp.TOTP(secret)
         code = totp.now()
 
         # 4. Enable TOTP
@@ -135,7 +144,9 @@ class TestTOTPMultiFactor:
 class TestDeviceManagement:
     """Tests for listing and revoking device sessions."""
 
-    async def test_device_list_and_revoke(self, client: AsyncClient, db_session: AsyncSession) -> None:
+    async def test_device_list_and_revoke(
+        self, client: AsyncClient, db_session: AsyncSession
+    ) -> None:
         """Authenticated user can list active devices and revoke a device session."""
         register_res = await client.post(
             "/api/v1/auth/register",
@@ -153,8 +164,16 @@ class TestDeviceManagement:
         repo = SQLAlchemyUserRepository(db_session)
         user = await repo.get_by_email("devices_test@wealthai.app")
         user.trusted_devices = [
-            {"device_id": "dev-id-1", "name": "iPhone 15", "registered_at": datetime.now(timezone.utc).isoformat()},
-            {"device_id": "dev-id-2", "name": "MacBook Pro", "registered_at": datetime.now(timezone.utc).isoformat()},
+            {
+                "device_id": "dev-id-1",
+                "name": "iPhone 15",
+                "registered_at": datetime.now(UTC).isoformat(),
+            },
+            {
+                "device_id": "dev-id-2",
+                "name": "MacBook Pro",
+                "registered_at": datetime.now(UTC).isoformat(),
+            },
         ]
         await repo.update(user)
         await db_session.commit()
@@ -180,7 +199,9 @@ class TestDeviceManagement:
 class TestPasskeyFramework:
     """Tests for passkey registration and authentication option workflows."""
 
-    async def test_passkey_register_and_login_flow(self, client: AsyncClient, db_session: AsyncSession) -> None:
+    async def test_passkey_register_and_login_flow(
+        self, client: AsyncClient, db_session: AsyncSession
+    ) -> None:
         """User can request passkey registration options and verify credentials."""
         # 1. Obtain auth headers
         register_res = await client.post(
@@ -221,7 +242,9 @@ class TestPasskeyFramework:
         assert user.passkeys[0]["credential_id"] == "cred-id-98765"
 
         # 4. Get login options
-        login_opt = await client.post("/api/v1/auth/passkeys/login/options", json={"email": "passkey_test@wealthai.app"})
+        login_opt = await client.post(
+            "/api/v1/auth/passkeys/login/options", json={"email": "passkey_test@wealthai.app"}
+        )
         assert login_opt.status_code == 200
         assert "challenge" in login_opt.json()
 
@@ -237,4 +260,3 @@ class TestPasskeyFramework:
         )
         assert login_verify.status_code == 200
         assert "access_token" in login_verify.json()
-

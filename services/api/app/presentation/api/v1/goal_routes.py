@@ -7,17 +7,19 @@ including retirement planning, emergency fund, wealth building, etc.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.models import GoalModel
 from app.infrastructure.database.session import get_db_session
 from app.presentation.middleware.auth_dependency import get_current_user
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -59,7 +61,7 @@ def _goal_to_dict(goal: GoalModel) -> dict[str, Any]:
     # Calculate months remaining
     months_remaining = None
     if goal.target_date:
-        delta = goal.target_date - datetime.now(timezone.utc)
+        delta = goal.target_date - datetime.now(UTC)
         months_remaining = max(0, delta.days // 30)
 
     # Calculate required monthly SIP to reach goal
@@ -166,7 +168,7 @@ async def update_goal(
         raise HTTPException(status_code=404, detail="Goal not found")
 
     update_data = data.model_dump(exclude_unset=True)
-    if "target_date" in update_data and update_data["target_date"]:
+    if update_data.get("target_date"):
         try:
             update_data["target_date"] = datetime.fromisoformat(update_data["target_date"])
         except ValueError as e:

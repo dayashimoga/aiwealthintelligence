@@ -42,7 +42,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (text.isEmpty) return;
 
     setState(() {
-      _messages.add(_ChatMessage(text: text, isUser: true, timestamp: DateTime.now()));
+      _messages.add(
+          _ChatMessage(text: text, isUser: true, timestamp: DateTime.now()));
       _isTyping = true;
     });
     _messageController.clear();
@@ -121,12 +122,14 @@ class _AIChatScreenState extends State<AIChatScreen> {
         title: Row(
           children: [
             Container(
-              width: 32, height: 32,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 gradient: AppTheme.primaryGradient,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+              child:
+                  const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
             const Text('AI Copilot'),
@@ -142,14 +145,20 @@ class _AIChatScreenState extends State<AIChatScreen> {
             // Quick Actions
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingSm),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingSm),
               child: Row(
                 children: [
-                  _quickAction(context, '📊 Portfolio Health', 'How is my portfolio health?'),
-                  _quickAction(context, '🔍 Find Risks', 'Find hidden risks and overlap in my portfolio'),
-                  _quickAction(context, '💰 Tax Optimize', 'How can I optimize taxes on my portfolio?'),
-                  _quickAction(context, '📈 What if', 'What if I sell WIPRO and buy HDFCBANK?'),
-                  _quickAction(context, '🎯 Rebalance', 'Suggest a rebalancing plan'),
+                  _quickAction(context, '📊 Portfolio Health',
+                      'How is my portfolio health?'),
+                  _quickAction(context, '🔍 Find Risks',
+                      'Find hidden risks and overlap in my portfolio'),
+                  _quickAction(context, '💰 Tax Optimize',
+                      'How can I optimize taxes on my portfolio?'),
+                  _quickAction(context, '📈 What if',
+                      'What if I sell WIPRO and buy HDFCBANK?'),
+                  _quickAction(
+                      context, '🎯 Rebalance', 'Suggest a rebalancing plan'),
                 ],
               ),
             ).animate().fadeIn(),
@@ -193,7 +202,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
                         ),
                         onSubmitted: (_) => _sendMessage(),
                         maxLines: 3,
@@ -275,8 +285,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _dot(0), const SizedBox(width: 4),
-            _dot(200), const SizedBox(width: 4),
+            _dot(0),
+            const SizedBox(width: 4),
+            _dot(200),
+            const SizedBox(width: 4),
             _dot(400),
           ],
         ),
@@ -286,14 +298,19 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   Widget _dot(int delayMs) {
     return Container(
-      width: 8, height: 8,
+      width: 8,
+      height: 8,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onSurface.withAlpha(77),
         shape: BoxShape.circle,
       ),
-    ).animate(onPlay: (c) => c.repeat(reverse: true))
+    )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
         .fadeIn(delay: Duration(milliseconds: delayMs))
-        .scale(begin: const Offset(0.5, 0.5), end: const Offset(1, 1), duration: 600.ms);
+        .scale(
+            begin: const Offset(0.5, 0.5),
+            end: const Offset(1, 1),
+            duration: 600.ms);
   }
 }
 
@@ -302,5 +319,6 @@ class _ChatMessage {
   final bool isUser;
   final DateTime timestamp;
 
-  _ChatMessage({required this.text, required this.isUser, required this.timestamp});
+  _ChatMessage(
+      {required this.text, required this.isUser, required this.timestamp});
 }

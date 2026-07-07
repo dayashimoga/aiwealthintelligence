@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import math
-from datetime import date, datetime, timezone
-from decimal import Decimal
-from typing import Any
+from datetime import UTC, date, datetime
+from typing import TYPE_CHECKING, Any
 
 import structlog
-from pyxirr import xirr, InvalidPaymentsError
+from pyxirr import InvalidPaymentsError, xirr
 
-from app.domain.entities import Holding, Transaction
+if TYPE_CHECKING:
+    from app.domain.entities import Holding, Transaction
 
 logger = structlog.get_logger(__name__)
 
@@ -21,13 +21,15 @@ class PortfolioAnalyticsEngine:
     def calculate_metrics(
         self,
         holdings: list[Holding],
-        transactions: list[Transaction] = None,
+        transactions: list[Transaction] | None = None,
     ) -> dict[str, Any]:
         """Calculates performance, allocation, risk, and diversification metrics."""
         total_invested = sum(float(h.invested_value) for h in holdings)
         total_current = sum(float(h.current_value) for h in holdings)
         total_gain_loss = total_current - total_invested
-        total_gain_loss_pct = (total_gain_loss / total_invested * 100) if total_invested > 0 else 0.0
+        total_gain_loss_pct = (
+            (total_gain_loss / total_invested * 100) if total_invested > 0 else 0.0
+        )
 
         # Group allocations
         asset_alloc: dict[str, float] = {}
@@ -38,13 +40,13 @@ class PortfolioAnalyticsEngine:
             c_val = float(h.current_value)
             if c_val <= 0:
                 continue
-            
+
             asset_type = h.asset_type.value if hasattr(h.asset_type, "value") else str(h.asset_type)
             asset_alloc[asset_type] = asset_alloc.get(asset_type, 0.0) + c_val
-            
+
             sector = h.sector or "Other"
             sector_alloc[sector] = sector_alloc.get(sector, 0.0) + c_val
-            
+
             country = h.country or "India"
             country_alloc[country] = country_alloc.get(country, 0.0) + c_val
 
@@ -52,7 +54,9 @@ class PortfolioAnalyticsEngine:
         if total_current > 0:
             asset_alloc = {k: round((v / total_current) * 100, 2) for k, v in asset_alloc.items()}
             sector_alloc = {k: round((v / total_current) * 100, 2) for k, v in sector_alloc.items()}
-            country_alloc = {k: round((v / total_current) * 100, 2) for k, v in country_alloc.items()}
+            country_alloc = {
+                k: round((v / total_current) * 100, 2) for k, v in country_alloc.items()
+            }
 
         # XIRR calculation
         xirr_val = self._calculate_portfolio_xirr(holdings, transactions)
@@ -77,7 +81,7 @@ class PortfolioAnalyticsEngine:
             "sector_allocation": sector_alloc,
             "country_allocation": country_alloc,
             "tax_estimate": tax_est,
-            "calculated_at": datetime.now(timezone.utc),
+            "calculated_at": datetime.now(UTC),
         }
 
     def _calculate_portfolio_xirr(
@@ -90,9 +94,17 @@ class PortfolioAnalyticsEngine:
         # If we have transaction logs
         if transactions:
             for tx in transactions:
-                tx_date = tx.transaction_date.date() if isinstance(tx.transaction_date, datetime) else tx.transaction_date
-                tx_type = tx.transaction_type.value if hasattr(tx.transaction_type, "value") else str(tx.transaction_type)
-                
+                tx_date = (
+                    tx.transaction_date.date()
+                    if isinstance(tx.transaction_date, datetime)
+                    else tx.transaction_date
+                )
+                tx_type = (
+                    tx.transaction_type.value
+                    if hasattr(tx.transaction_type, "value")
+                    else str(tx.transaction_type)
+                )
+
                 cost = float(tx.price) * float(tx.quantity)
                 if tx_type in ("buy", "split", "bonus"):
                     # outflow from user's wallet
@@ -119,7 +131,7 @@ class PortfolioAnalyticsEngine:
                 if not buy_date:
                     # fallback to 1 year ago
                     buy_date = date.today().replace(year=date.today().year - 1)
-                
+
                 # Assume bought at average cost
                 amounts.append(-(qty * avg_price))
                 dates.append(buy_date)
@@ -139,7 +151,7 @@ class PortfolioAnalyticsEngine:
                 return round(float(val) * 100, 2)
         except (InvalidPaymentsError, ValueError) as e:
             logger.debug("xirr_failed_falling_back_to_cagr", error=str(e))
-            
+
         # Fallback to CAGR
         return self._calculate_fallback_cagr(holdings)
 
@@ -147,7 +159,7 @@ class PortfolioAnalyticsEngine:
         """Calculates time-weighted CAGR based on first buy date."""
         total_invested = sum(float(h.invested_value) for h in holdings)
         total_current = sum(float(h.current_value) for h in holdings)
-        
+
         if total_invested <= 0 or total_current <= 0:
             return None
 
@@ -157,7 +169,7 @@ class PortfolioAnalyticsEngine:
             buy_date = h.buy_date.date() if isinstance(h.buy_date, datetime) else h.buy_date
             if buy_date and buy_date < first_date:
                 first_date = buy_date
-        
+
         years = (date.today() - first_date).days / 365.25
         if years <= 0:
             years = 0.5  # default to half a year if same day
@@ -181,7 +193,7 @@ class PortfolioAnalyticsEngine:
         hhi = 0.0
         for h in holdings:
             weight = float(h.current_value) / total_val
-            hhi += weight ** 2
+            hhi += weight**2
 
         # Convert HHI (1/N to 1) to a score where 100 is highly diversified
         # hhi of 1.0 (single asset) -> 10% score
@@ -189,7 +201,9 @@ class PortfolioAnalyticsEngine:
         score = (1.0 - hhi) * 100
         return round(max(0.0, min(100.0, score)), 2)
 
-    def _calculate_risk_score(self, holdings: list[Holding], asset_alloc: dict[str, float]) -> float:
+    def _calculate_risk_score(
+        self, holdings: list[Holding], asset_alloc: dict[str, float]
+    ) -> float:
         """Computes portfolio risk score (0 to 100) based on asset class volatility weights."""
         # Standard risk values by asset class (10: highest, 1: lowest)
         risk_map = {
@@ -242,7 +256,9 @@ class PortfolioAnalyticsEngine:
             days_held = (date.today() - buy_date).days
             asset_type = h.asset_type.value if hasattr(h.asset_type, "value") else str(h.asset_type)
 
-            if asset_type == "stock" or (asset_type == "mutual_fund" and "DEBT" not in h.name.upper()):
+            if asset_type == "stock" or (
+                asset_type == "mutual_fund" and "DEBT" not in h.name.upper()
+            ):
                 # Equity
                 if days_held > 365:
                     ltcg += gain * 0.10  # 10% LTCG

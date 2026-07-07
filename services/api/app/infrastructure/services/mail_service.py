@@ -5,10 +5,13 @@ from __future__ import annotations
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
 import structlog
+
 from app.config import get_settings
 
 logger = structlog.get_logger(__name__)
+
 
 class MailService:
     """Service to handle outbound transactional emails using standard SMTP."""
@@ -16,7 +19,9 @@ class MailService:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    async def send_email(self, to_email: str, subject: str, html_content: str, text_content: str = "") -> bool:
+    async def send_email(
+        self, to_email: str, subject: str, html_content: str, text_content: str = ""
+    ) -> bool:
         """Send an email using SMTP server defined in app settings."""
         # If SMTP is not configured, log email contents for development and testing
         if not self.settings.SMTP_HOST:
@@ -25,7 +30,7 @@ class MailService:
                 to=to_email,
                 subject=subject,
                 text_content=text_content,
-                info="SMTP settings not configured. Logging instead."
+                info="SMTP settings not configured. Logging instead.",
             )
             return True
 
@@ -54,5 +59,6 @@ class MailService:
         except Exception as e:
             logger.exception("email_send_failed", to=to_email, error=str(e))
             return False
+
 
 mail_service = MailService()

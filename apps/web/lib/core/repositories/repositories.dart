@@ -67,7 +67,8 @@ class AuthRepository {
     try {
       final response = await _dio.get(ApiConstants.profile);
       await HiveCacheManager.set('user_profile_raw', response.data);
-      await HiveCacheManager.set('user_profile_raw_time', DateTime.now().millisecondsSinceEpoch);
+      await HiveCacheManager.set(
+          'user_profile_raw_time', DateTime.now().millisecondsSinceEpoch);
       return Result.success(
           User.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
@@ -93,16 +94,20 @@ class AuthRepository {
       await _saveTokens(tokens);
       return Result.success(tokens);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
   Future<Result<String>> sendOtp({required String email}) async {
     try {
-      final response = await _dio.post(ApiConstants.otpSend, data: {'email': email});
-      return Result.success((response.data as Map<String, dynamic>)['message'] as String);
+      final response =
+          await _dio.post(ApiConstants.otpSend, data: {'email': email});
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -119,7 +124,8 @@ class AuthRepository {
       await _saveTokens(tokens);
       return Result.success(tokens);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -128,28 +134,34 @@ class AuthRepository {
       final response = await _dio.post(ApiConstants.totpSetup);
       return Result.success(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
   Future<Result<List<String>>> enableTotp({required String code}) async {
     try {
-      final response = await _dio.post(ApiConstants.totpEnable, data: {'code': code});
-      final backupCodes = ((response.data as Map<String, dynamic>)['backup_codes'] as List<dynamic>)
+      final response =
+          await _dio.post(ApiConstants.totpEnable, data: {'code': code});
+      final backupCodes = ((response.data
+              as Map<String, dynamic>)['backup_codes'] as List<dynamic>)
           .map((e) => e as String)
           .toList();
       return Result.success(backupCodes);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
   Future<Result<String>> disableTotp() async {
     try {
       final response = await _dio.post(ApiConstants.totpDisable);
-      return Result.success((response.data as Map<String, dynamic>)['message'] as String);
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -161,25 +173,30 @@ class AuthRepository {
           .toList();
       return Result.success(devices);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
   Future<Result<String>> revokeDevice({required String deviceId}) async {
     try {
       final response = await _dio.delete(ApiConstants.device(deviceId));
-      return Result.success((response.data as Map<String, dynamic>)['message'] as String);
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
   Future<Result<String>> completeOnboarding() async {
     try {
       final response = await _dio.post(ApiConstants.onboardingComplete);
-      return Result.success((response.data as Map<String, dynamic>)['message'] as String);
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -188,7 +205,8 @@ class AuthRepository {
       final response = await _dio.post(ApiConstants.passkeyRegisterOptions);
       return Result.success(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -199,24 +217,30 @@ class AuthRepository {
     required String signature,
   }) async {
     try {
-      final response = await _dio.post(ApiConstants.passkeyRegisterVerify, data: {
+      final response =
+          await _dio.post(ApiConstants.passkeyRegisterVerify, data: {
         'credential_id': credentialId,
         'client_data_json': clientDataJson,
         'authenticator_data': authenticatorData,
         'signature': signature,
       });
-      return Result.success((response.data as Map<String, dynamic>)['message'] as String);
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
-  Future<Result<Map<String, dynamic>>> passkeyLoginOptions({required String email}) async {
+  Future<Result<Map<String, dynamic>>> passkeyLoginOptions(
+      {required String email}) async {
     try {
-      final response = await _dio.post(ApiConstants.passkeyLoginOptions, data: {'email': email});
+      final response = await _dio
+          .post(ApiConstants.passkeyLoginOptions, data: {'email': email});
       return Result.success(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -237,7 +261,8 @@ class AuthRepository {
       await _saveTokens(tokens);
       return Result.success(tokens);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
@@ -251,16 +276,17 @@ class AuthRepository {
     try {
       final response = await _dio.delete(ApiConstants.deleteAccount);
       await logout();
-      return Result.success((response.data as Map<String, dynamic>)['message'] as String);
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
     } on DioException catch (e) {
-      return Result.failure(_extractError(e), statusCode: e.response?.statusCode);
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
     }
   }
 
   Future<void> _saveTokens(AuthTokens tokens) async {
     final storage = _ref.read(secureStorageProvider);
-    await storage.write(
-        key: TokenKeys.accessToken, value: tokens.accessToken);
+    await storage.write(key: TokenKeys.accessToken, value: tokens.accessToken);
     await storage.write(
         key: TokenKeys.refreshToken, value: tokens.refreshToken);
   }
@@ -283,7 +309,8 @@ class PortfolioRepository {
     try {
       final response = await _dio.get(ApiConstants.portfolios);
       await HiveCacheManager.set('portfolios_list_raw', response.data);
-      await HiveCacheManager.set('portfolios_list_raw_time', DateTime.now().millisecondsSinceEpoch);
+      await HiveCacheManager.set(
+          'portfolios_list_raw_time', DateTime.now().millisecondsSinceEpoch);
       final data = response.data as Map<String, dynamic>;
       final portfolios = (data['portfolios'] as List)
           .map((p) => Portfolio.fromJson(p as Map<String, dynamic>))
@@ -347,10 +374,12 @@ class PortfolioRepository {
     try {
       final response =
           await _dio.get(ApiConstants.portfolioAnalytics(portfolioId));
-      await HiveCacheManager.set('portfolio_analytics_${portfolioId}_raw', response.data);
-      await HiveCacheManager.set('portfolio_analytics_${portfolioId}_raw_time', DateTime.now().millisecondsSinceEpoch);
-      return Result.success(PortfolioAnalytics.fromJson(
-          response.data as Map<String, dynamic>));
+      await HiveCacheManager.set(
+          'portfolio_analytics_${portfolioId}_raw', response.data);
+      await HiveCacheManager.set('portfolio_analytics_${portfolioId}_raw_time',
+          DateTime.now().millisecondsSinceEpoch);
+      return Result.success(
+          PortfolioAnalytics.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -371,7 +400,8 @@ class PortfolioRepository {
         ApiConstants.importCasPdf(portfolioId),
         data: formData,
       );
-      return Result.success(ImportResult.fromJson(response.data as Map<String, dynamic>));
+      return Result.success(
+          ImportResult.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -390,7 +420,8 @@ class PortfolioRepository {
         ApiConstants.importBrokerReport(portfolioId),
         data: formData,
       );
-      return Result.success(ImportResult.fromJson(response.data as Map<String, dynamic>));
+      return Result.success(
+          ImportResult.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -446,8 +477,10 @@ class HoldingRepository {
   Future<Result<List<Holding>>> listHoldings(String portfolioId) async {
     try {
       final response = await _dio.get(ApiConstants.holdings(portfolioId));
-      await HiveCacheManager.set('holdings_list_${portfolioId}_raw', response.data);
-      await HiveCacheManager.set('holdings_list_${portfolioId}_raw_time', DateTime.now().millisecondsSinceEpoch);
+      await HiveCacheManager.set(
+          'holdings_list_${portfolioId}_raw', response.data);
+      await HiveCacheManager.set('holdings_list_${portfolioId}_raw_time',
+          DateTime.now().millisecondsSinceEpoch);
       final data = response.data as Map<String, dynamic>;
       final holdings = (data['holdings'] as List)
           .map((h) => Holding.fromJson(h as Map<String, dynamic>))
@@ -509,10 +542,10 @@ class AIRepository {
   Future<Result<AIRecommendation>> getRecommendation(
       String portfolioId, String holdingId) async {
     try {
-      final response = await _dio
-          .get(ApiConstants.aiRecommendation(portfolioId, holdingId));
-      return Result.success(AIRecommendation.fromJson(
-          response.data as Map<String, dynamic>));
+      final response =
+          await _dio.get(ApiConstants.aiRecommendation(portfolioId, holdingId));
+      return Result.success(
+          AIRecommendation.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -537,7 +570,8 @@ class AIRepository {
   Future<Result<DailyBrief>> getCopilotBrief(String portfolioId) async {
     try {
       final response = await _dio.get(ApiConstants.copilotBrief(portfolioId));
-      return Result.success(DailyBrief.fromJson(response.data as Map<String, dynamic>));
+      return Result.success(
+          DailyBrief.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -546,7 +580,8 @@ class AIRepository {
   Future<Result<PortfolioDoctor>> getCopilotDoctor(String portfolioId) async {
     try {
       final response = await _dio.get(ApiConstants.copilotDoctor(portfolioId));
-      return Result.success(PortfolioDoctor.fromJson(response.data as Map<String, dynamic>));
+      return Result.success(
+          PortfolioDoctor.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -564,16 +599,20 @@ class AIRepository {
           'actions': actions,
         },
       );
-      return Result.success(ScenarioSimulation.fromJson(response.data as Map<String, dynamic>));
+      return Result.success(
+          ScenarioSimulation.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
   }
 
-  Future<Result<AdvancedAnalysis>> getCopilotAdvanced(String portfolioId) async {
+  Future<Result<AdvancedAnalysis>> getCopilotAdvanced(
+      String portfolioId) async {
     try {
-      final response = await _dio.get(ApiConstants.copilotAdvanced(portfolioId));
-      return Result.success(AdvancedAnalysis.fromJson(response.data as Map<String, dynamic>));
+      final response =
+          await _dio.get(ApiConstants.copilotAdvanced(portfolioId));
+      return Result.success(
+          AdvancedAnalysis.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -597,8 +636,10 @@ class MarketRepository {
     try {
       final response = await _dio.get(ApiConstants.marketOverview);
       await HiveCacheManager.set('market_overview_raw', response.data);
-      await HiveCacheManager.set('market_overview_raw_time', DateTime.now().millisecondsSinceEpoch);
-      return Result.success(MarketOverview.fromJson(response.data as Map<String, dynamic>));
+      await HiveCacheManager.set(
+          'market_overview_raw_time', DateTime.now().millisecondsSinceEpoch);
+      return Result.success(
+          MarketOverview.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Result.failure(_extractError(e));
     }
@@ -622,7 +663,8 @@ class NotificationRepository {
     int limit = 50,
   }) async {
     try {
-      final response = await _dio.get(ApiConstants.notifications, queryParameters: {
+      final response =
+          await _dio.get(ApiConstants.notifications, queryParameters: {
         'unread_only': unreadOnly,
         'limit': limit,
       });
@@ -679,7 +721,8 @@ class GoalRepository {
   GoalRepository(this._dio);
   final Dio _dio;
 
-  Future<Result<List<FinancialGoal>>> listGoals({bool activeOnly = true}) async {
+  Future<Result<List<FinancialGoal>>> listGoals(
+      {bool activeOnly = true}) async {
     try {
       final response = await _dio.get(ApiConstants.goals, queryParameters: {
         'active_only': activeOnly,
@@ -695,7 +738,8 @@ class GoalRepository {
     }
   }
 
-  Future<Result<FinancialGoal>> createGoal(Map<String, dynamic> goalData) async {
+  Future<Result<FinancialGoal>> createGoal(
+      Map<String, dynamic> goalData) async {
     try {
       final response = await _dio.post(ApiConstants.goals, data: goalData);
       return Result.success(
@@ -706,7 +750,8 @@ class GoalRepository {
     }
   }
 
-  Future<Result<FinancialGoal>> updateGoal(String goalId, Map<String, dynamic> data) async {
+  Future<Result<FinancialGoal>> updateGoal(
+      String goalId, Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(ApiConstants.goal(goalId), data: data);
       return Result.success(
@@ -770,7 +815,8 @@ class WatchlistRepository {
     }
   }
 
-  Future<Result<Map<String, dynamic>>> addSymbol(String watchlistId, {
+  Future<Result<Map<String, dynamic>>> addSymbol(
+    String watchlistId, {
     required String symbol,
     double? alertAbove,
     double? alertBelow,
@@ -800,7 +846,8 @@ class WatchlistRepository {
       final data = response.data as Map<String, dynamic>;
       final rawList = data['intelligence'] as List<dynamic>? ?? [];
       final items = rawList
-          .map((i) => WatchlistIntelligenceItem.fromJson(i as Map<String, dynamic>))
+          .map((i) =>
+              WatchlistIntelligenceItem.fromJson(i as Map<String, dynamic>))
           .toList();
       return Result.success(items);
     } on DioException catch (e) {
@@ -849,4 +896,3 @@ String _extractError(DioException e) {
   }
   return e.message ?? 'An unexpected error occurred';
 }
-

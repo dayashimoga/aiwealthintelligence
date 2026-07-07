@@ -28,7 +28,9 @@ class CopilotScreen extends ConsumerWidget {
           gradient: isDark ? AppTheme.darkBgGradient : null,
         ),
         child: selectedId == null
-            ? const Center(child: Text('Select or create a portfolio to view AI insights.'))
+            ? const Center(
+                child:
+                    Text('Select or create a portfolio to view AI insights.'))
             : RefreshIndicator(
                 onRefresh: () async {
                   ref.invalidate(dailyBriefProvider);
@@ -42,11 +44,15 @@ class CopilotScreen extends ConsumerWidget {
                     briefAsync.when(
                       data: (brief) {
                         if (brief == null) return const SizedBox.shrink();
-                        final isPositive = brief.marketSentiment.toLowerCase() == 'positive';
-                        final isNegative = brief.marketSentiment.toLowerCase() == 'negative';
+                        final isPositive =
+                            brief.marketSentiment.toLowerCase() == 'positive';
+                        final isNegative =
+                            brief.marketSentiment.toLowerCase() == 'negative';
                         final sentimentColor = isPositive
                             ? AppTheme.profitGreen
-                            : (isNegative ? AppTheme.lossRed : AppTheme.infoBlue);
+                            : (isNegative
+                                ? AppTheme.lossRed
+                                : AppTheme.infoBlue);
                         return GlassCard(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,16 +60,19 @@ class CopilotScreen extends ConsumerWidget {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: sentimentColor.withAlpha(30),
                                       borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: sentimentColor.withAlpha(100)),
+                                      border: Border.all(
+                                          color: sentimentColor.withAlpha(100)),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.circle, size: 8, color: sentimentColor),
+                                        Icon(Icons.circle,
+                                            size: 8, color: sentimentColor),
                                         const SizedBox(width: 6),
                                         Text(
                                           brief.marketSentiment.toUpperCase(),
@@ -77,29 +86,39 @@ class CopilotScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const Spacer(),
-                                  const Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
+                                  const Icon(Icons.auto_awesome,
+                                      color: Colors.amber, size: 16),
                                 ],
                               ),
                               const SizedBox(height: 12),
                               Text(
                                 brief.summary,
-                                style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(height: 1.4),
                               ),
                               if (brief.actionableInsights.isNotEmpty) ...[
                                 const Divider(height: 24),
-                                Text('Actionable Insights', style: theme.textTheme.titleSmall),
+                                Text('Actionable Insights',
+                                    style: theme.textTheme.titleSmall),
                                 const SizedBox(height: 8),
-                                ...brief.actionableInsights.map((insight) => Padding(
+                                ...brief.actionableInsights.map((insight) =>
+                                    Padding(
                                       padding: const EdgeInsets.only(bottom: 6),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          const Text('• ',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold)),
                                           Expanded(
                                             child: Text(
                                               insight,
-                                              style: theme.textTheme.bodySmall?.copyWith(
-                                                color: theme.colorScheme.onSurface.withAlpha(180),
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                color: theme
+                                                    .colorScheme.onSurface
+                                                    .withAlpha(180),
                                               ),
                                             ),
                                           ),
@@ -112,29 +131,35 @@ class CopilotScreen extends ConsumerWidget {
                         ).animate().fadeIn();
                       },
                       loading: () => _buildShimmerBrief(),
-                      error: (err, _) => Center(child: Text('Failed to load brief: $err')),
+                      error: (err, _) =>
+                          Center(child: Text('Failed to load brief: $err')),
                     ),
 
                     const SizedBox(height: AppTheme.spacingLg),
 
                     // Quick Diagnostic Tools
-                    Text('Copilot Diagnostic Tools', style: theme.textTheme.titleMedium),
+                    Text('Copilot Diagnostic Tools',
+                        style: theme.textTheme.titleMedium),
                     const SizedBox(height: AppTheme.spacingSm),
 
                     // Portfolio Doctor Card
                     Card(
                       child: ListTile(
-                        contentPadding: const EdgeInsets.all(AppTheme.spacingMd),
+                        contentPadding:
+                            const EdgeInsets.all(AppTheme.spacingMd),
                         leading: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: Colors.red.withAlpha(20),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.health_and_safety, color: Colors.redAccent, size: 28),
+                          child: const Icon(Icons.health_and_safety,
+                              color: Colors.redAccent, size: 28),
                         ),
-                        title: const Text('Portfolio Doctor', style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text('Diagnose structural risks, overlap issues, and concentration metrics.'),
+                        title: const Text('Portfolio Doctor',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text(
+                            'Diagnose structural risks, overlap issues, and concentration metrics.'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           context.push('/portfolios/$selectedId/doctor');
@@ -147,17 +172,21 @@ class CopilotScreen extends ConsumerWidget {
                     // Scenario Simulator Card
                     Card(
                       child: ListTile(
-                        contentPadding: const EdgeInsets.all(AppTheme.spacingMd),
+                        contentPadding:
+                            const EdgeInsets.all(AppTheme.spacingMd),
                         leading: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: Colors.blue.withAlpha(20),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.psychology, color: Colors.blueAccent, size: 28),
+                          child: const Icon(Icons.psychology,
+                              color: Colors.blueAccent, size: 28),
                         ),
-                        title: const Text('Scenario Simulator', style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text('Simulate "what if" buy/sell transactions and observe analytics impact.'),
+                        title: const Text('Scenario Simulator',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text(
+                            'Simulate "what if" buy/sell transactions and observe analytics impact.'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           context.push('/portfolios/$selectedId/scenario');
@@ -170,20 +199,25 @@ class CopilotScreen extends ConsumerWidget {
                     // Advanced Wealth Analysis Card
                     Card(
                       child: ListTile(
-                        contentPadding: const EdgeInsets.all(AppTheme.spacingMd),
+                        contentPadding:
+                            const EdgeInsets.all(AppTheme.spacingMd),
                         leading: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: Colors.purple.withAlpha(20),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.analytics, color: Colors.purpleAccent, size: 28),
+                          child: const Icon(Icons.analytics,
+                              color: Colors.purpleAccent, size: 28),
                         ),
-                        title: const Text('Advanced Wealth Analysis', style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text('Analyze stress tests, tax offset savings, behavioral biases, and wealth goals.'),
+                        title: const Text('Advanced Wealth Analysis',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text(
+                            'Analyze stress tests, tax offset savings, behavioral biases, and wealth goals.'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          context.push('/portfolios/$selectedId/advanced-analysis');
+                          context.push(
+                              '/portfolios/$selectedId/advanced-analysis');
                         },
                       ),
                     ).animate().fadeIn(delay: 300.ms),

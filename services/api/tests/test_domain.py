@@ -7,12 +7,10 @@ from decimal import Decimal
 import pytest
 
 from app.domain.entities import (
-    AIRecommendation,
     Holding,
     Money,
     Percentage,
     Portfolio,
-    RecommendationAction,
     Transaction,
     User,
 )

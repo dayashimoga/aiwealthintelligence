@@ -160,7 +160,8 @@ class RetryInterceptor extends Interceptor {
       final retries = (options.extra['retries'] as int? ?? 0);
       if (retries < maxRetries) {
         options.extra['retries'] = retries + 1;
-        log('[API] Retrying request: ${options.path} (Attempt ${retries + 1} of $maxRetries)', name: 'RetryInterceptor');
+        log('[API] Retrying request: ${options.path} (Attempt ${retries + 1} of $maxRetries)',
+            name: 'RetryInterceptor');
         await Future.delayed(Duration(milliseconds: delayMs * (retries + 1)));
         try {
           final response = await dio.fetch(options);
@@ -173,4 +174,3 @@ class RetryInterceptor extends Interceptor {
     super.onError(err, handler);
   }
 }
-

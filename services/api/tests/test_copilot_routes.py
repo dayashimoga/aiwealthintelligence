@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -53,7 +56,9 @@ async def test_copilot_endpoints_flow(client: AsyncClient, auth_headers: dict[st
         '{"impact_summary": "Simulating sell of TCS", "recommendations": ["Hold the cash."]}'
     )
 
-    with patch("app.presentation.api.v1.copilot_routes.get_ai_provider", return_value=mock_provider):
+    with patch(
+        "app.presentation.api.v1.copilot_routes.get_ai_provider", return_value=mock_provider
+    ):
         # A. Test Daily Brief Endpoint
         mock_provider.complete.return_value = brief_json
         resp = await client.get(
@@ -98,5 +103,7 @@ async def test_copilot_endpoints_flow(client: AsyncClient, auth_headers: dict[st
         data = resp.json()
         assert "original_metrics" in data
         assert "simulated_metrics" in data
-        assert data["simulated_metrics"]["total_value"] == 17500.0  # 10 TCS -> sell 5 @ 3500 -> 5 remaining @ 3500 = 17500
+        assert (
+            data["simulated_metrics"]["total_value"] == 17500.0
+        )  # 10 TCS -> sell 5 @ 3500 -> 5 remaining @ 3500 = 17500
         assert "impact_summary" in data

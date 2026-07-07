@@ -5,24 +5,58 @@ Supports CSV and Excel file formats, automatically mapping columns based on name
 
 from __future__ import annotations
 
-import csv
 import io
-import pandas as pd
 from decimal import Decimal
+
+import pandas as pd
 import structlog
 
 logger = structlog.get_logger(__name__)
 
 # Heuristic mappings for column detection
 COLUMN_MAPPINGS = {
-    "symbol": ["symbol", "ticker", "instrument", "tradingsymbol", "stock symbol", "scrip code", "security symbol"],
+    "symbol": [
+        "symbol",
+        "ticker",
+        "instrument",
+        "tradingsymbol",
+        "stock symbol",
+        "scrip code",
+        "security symbol",
+    ],
     "isin": ["isin", "isin code", "security isin"],
     "name": ["name", "security name", "company name", "instrument name", "company", "description"],
-    "quantity": ["quantity", "qty", "qty.", "shares", "units", "balance qty", "holding qty", "available qty"],
-    "average_buy_price": ["average buy price", "avg price", "avg cost", "buy price", "avg. cost", "average cost", "acquisition price"],
-    "current_price": ["current price", "live price", "ltp", "last traded price", "market price", "cmp", "close price"],
+    "quantity": [
+        "quantity",
+        "qty",
+        "qty.",
+        "shares",
+        "units",
+        "balance qty",
+        "holding qty",
+        "available qty",
+    ],
+    "average_buy_price": [
+        "average buy price",
+        "avg price",
+        "avg cost",
+        "buy price",
+        "avg. cost",
+        "average cost",
+        "acquisition price",
+    ],
+    "current_price": [
+        "current price",
+        "live price",
+        "ltp",
+        "last traded price",
+        "market price",
+        "cmp",
+        "close price",
+    ],
     "asset_type": ["asset type", "type", "instrument type", "security type"],
 }
+
 
 class BrokerReportParser:
     """Parser that automatically detects and processes broker holdings statements."""
@@ -46,21 +80,37 @@ class BrokerReportParser:
         for index, row in df.iterrows():
             try:
                 # Extract values using detected columns or sensible fallbacks
-                symbol = str(row[detected_cols["symbol"]]).strip().upper() if "symbol" in detected_cols else ""
-                isin = str(row[detected_cols["isin"]]).strip().upper() if "isin" in detected_cols else ""
-                
+                symbol = (
+                    str(row[detected_cols["symbol"]]).strip().upper()
+                    if "symbol" in detected_cols
+                    else ""
+                )
+                isin = (
+                    str(row[detected_cols["isin"]]).strip().upper()
+                    if "isin" in detected_cols
+                    else ""
+                )
+
                 # We need at least symbol or ISIN
                 if not symbol and not isin:
                     continue
-                
+
                 if not symbol:
                     symbol = isin
-                    
-                name = str(row[detected_cols["name"]]).strip() if "name" in detected_cols else symbol
-                
+
+                name = (
+                    str(row[detected_cols["name"]]).strip() if "name" in detected_cols else symbol
+                )
+
                 qty_val = row[detected_cols["quantity"]] if "quantity" in detected_cols else 0
-                avg_price_val = row[detected_cols["average_buy_price"]] if "average_buy_price" in detected_cols else 0
-                curr_price_val = row[detected_cols["current_price"]] if "current_price" in detected_cols else 0
+                avg_price_val = (
+                    row[detected_cols["average_buy_price"]]
+                    if "average_buy_price" in detected_cols
+                    else 0
+                )
+                curr_price_val = (
+                    row[detected_cols["current_price"]] if "current_price" in detected_cols else 0
+                )
 
                 # Clean numeric values
                 quantity = self._parse_decimal(qty_val)
@@ -78,16 +128,18 @@ class BrokerReportParser:
                 elif isin.startswith("INF"):
                     asset_type = "mutual_fund"
 
-                holdings.append({
-                    "symbol": symbol,
-                    "name": name,
-                    "isin": isin,
-                    "asset_type": asset_type,
-                    "exchange": "NSE" if asset_type == "stock" else "OTHER",
-                    "quantity": quantity,
-                    "average_buy_price": average_buy_price,
-                    "current_price": current_price,
-                })
+                holdings.append(
+                    {
+                        "symbol": symbol,
+                        "name": name,
+                        "isin": isin,
+                        "asset_type": asset_type,
+                        "exchange": "NSE" if asset_type == "stock" else "OTHER",
+                        "quantity": quantity,
+                        "average_buy_price": average_buy_price,
+                        "current_price": current_price,
+                    }
+                )
             except Exception as e:
                 logger.warning("broker_report_row_parse_failed", index=index, error=str(e))
                 continue
@@ -100,14 +152,13 @@ class BrokerReportParser:
             if self.filename.endswith(".xlsx") or self.filename.endswith(".xls"):
                 # Excel file
                 return pd.read_excel(io.BytesIO(self.file_bytes))
-            else:
-                # Fallback to CSV
-                # Try UTF-8 first, then Latin-1
-                try:
-                    text = self.file_bytes.decode("utf-8")
-                except UnicodeDecodeError:
-                    text = self.file_bytes.decode("latin-1")
-                return pd.read_csv(io.StringIO(text))
+            # Fallback to CSV
+            # Try UTF-8 first, then Latin-1
+            try:
+                text = self.file_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                text = self.file_bytes.decode("latin-1")
+            return pd.read_csv(io.StringIO(text))
         except Exception as e:
             logger.error("dataframe_load_failed", error=str(e))
             raise ValueError(f"Could not load file into DataFrame: {e}") from e
@@ -116,7 +167,7 @@ class BrokerReportParser:
         """Detects indices or names of columns based on text patterns."""
         detected = {}
         columns = [str(c).strip().lower() for c in df.columns]
-        
+
         for canonical, options in COLUMN_MAPPINGS.items():
             for opt in options:
                 if opt in columns:

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 import structlog
 import yfinance as yf
@@ -97,23 +96,25 @@ async def get_market_news(
     # Fetch fresh news and perform AI analysis
     try:
         news_items = await fetch_and_analyze_news(symbol=None, limit=10)
-        
+
         # Serialize to dict for cache
         serialized = []
         for item in news_items:
-            serialized.append({
-                "id": item.id,
-                "title": item.title,
-                "summary": item.summary,
-                "source": item.source,
-                "url": item.url,
-                "sentiment": item.sentiment,
-                "relevance_score": float(item.relevance_score),
-                "sectors": item.sectors,
-                "symbols": item.symbols,
-                "published_at": item.published_at.isoformat(),
-            })
-        
+            serialized.append(
+                {
+                    "id": item.id,
+                    "title": item.title,
+                    "summary": item.summary,
+                    "source": item.source,
+                    "url": item.url,
+                    "sentiment": item.sentiment,
+                    "relevance_score": float(item.relevance_score),
+                    "sectors": item.sectors,
+                    "symbols": item.symbols,
+                    "published_at": item.published_at.isoformat(),
+                }
+            )
+
         # Cache for 15 minutes (900 seconds)
         await cache_repo.set(cache_key, serialized, ttl=900)
         return [MarketNewsResponse(**item) for item in serialized[skip : skip + limit]]
@@ -136,16 +137,16 @@ async def get_sector_rankings() -> list[SectorRankingResponse]:
     try:
         tasks = [_fetch_sector_perf(sect, sym) for sect, sym in SECTOR_MAP.items()]
         rankings = await asyncio.gather(*tasks)
-        
+
         # Convert Pydantic models to dict for caching
         serialized = [item.model_dump() for item in rankings]
-        
+
         # Cache for 5 minutes (300 seconds)
         await cache_repo.set(cache_key, serialized, ttl=300)
         return rankings
     except Exception as e:
         logger.warning("sectors_route_failed", error=str(e))
-        return [SectorRankingResponse(sector=s) for s in SECTOR_MAP.keys()]
+        return [SectorRankingResponse(sector=s) for s in SECTOR_MAP]
 
 
 @router.get("/overview", response_model=MarketOverviewResponse)
@@ -161,11 +162,11 @@ async def get_market_overview() -> MarketOverviewResponse:
     sectors = await get_sector_rankings()
     macro = await market_data_service.get_macro_indicators()
     indices = await market_data_service.get_index_performance()
-    
+
     return MarketOverviewResponse(
         news=news,
         sector_rankings=sectors,
         macro_indicators=macro,
         index_performance=indices,
-        updated_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(UTC),
     )

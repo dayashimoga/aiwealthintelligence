@@ -48,8 +48,10 @@ final portfoliosProvider = StreamProvider<List<Portfolio>>((ref) async* {
           .map((p) => Portfolio.fromJson(Map<String, dynamic>.from(p as Map)))
           .toList();
       yield cachedList;
-      if (cachedList.isNotEmpty && ref.read(selectedPortfolioIdProvider) == null) {
-        ref.read(selectedPortfolioIdProvider.notifier).state = cachedList.first.id;
+      if (cachedList.isNotEmpty &&
+          ref.read(selectedPortfolioIdProvider) == null) {
+        ref.read(selectedPortfolioIdProvider.notifier).state =
+            cachedList.first.id;
       }
     } catch (_) {}
   }
@@ -125,7 +127,8 @@ final holdingsProvider = StreamProvider<List<Holding>>((ref) async* {
 });
 
 /// Analytics provider for selected portfolio.
-final portfolioAnalyticsProvider = StreamProvider<PortfolioAnalytics?>((ref) async* {
+final portfolioAnalyticsProvider =
+    StreamProvider<PortfolioAnalytics?>((ref) async* {
   final portfolioId = ref.watch(selectedPortfolioIdProvider);
   if (portfolioId == null) {
     yield null;
@@ -137,7 +140,8 @@ final portfolioAnalyticsProvider = StreamProvider<PortfolioAnalytics?>((ref) asy
   PortfolioAnalytics? cachedAnalytics;
   if (cached != null) {
     try {
-      cachedAnalytics = PortfolioAnalytics.fromJson(Map<String, dynamic>.from(cached as Map));
+      cachedAnalytics =
+          PortfolioAnalytics.fromJson(Map<String, dynamic>.from(cached as Map));
       yield cachedAnalytics;
     } catch (_) {}
   }
@@ -201,7 +205,8 @@ final marketOverviewProvider = StreamProvider<MarketOverview>((ref) async* {
   MarketOverview? cachedOverview;
   if (cached != null) {
     try {
-      cachedOverview = MarketOverview.fromJson(Map<String, dynamic>.from(cached as Map));
+      cachedOverview =
+          MarketOverview.fromJson(Map<String, dynamic>.from(cached as Map));
       yield cachedOverview;
     } catch (_) {}
   }
@@ -223,7 +228,8 @@ final marketOverviewProvider = StreamProvider<MarketOverview>((ref) async* {
 });
 
 /// AI recommendation provider for a specific holding.
-final aiRecommendationProvider = FutureProvider.family<AIRecommendation?, String>((ref, holdingId) async {
+final aiRecommendationProvider =
+    FutureProvider.family<AIRecommendation?, String>((ref, holdingId) async {
   final portfolioId = ref.watch(selectedPortfolioIdProvider);
   if (portfolioId == null) return null;
   final repo = ref.watch(aiRepositoryProvider);
@@ -235,7 +241,8 @@ final aiRecommendationProvider = FutureProvider.family<AIRecommendation?, String
 });
 
 /// Notifications provider.
-final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async {
+final notificationsProvider =
+    FutureProvider<List<AppNotification>>((ref) async {
   final repo = ref.watch(notificationRepositoryProvider);
   final result = await repo.listNotifications();
   return result.when(
@@ -273,4 +280,3 @@ final watchlistsProvider = FutureProvider<List<WatchlistItem>>((ref) async {
     failure: (err, _) => throw Exception(err),
   );
 });
-

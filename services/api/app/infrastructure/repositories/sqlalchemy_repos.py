@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import (
     AIRecommendation,
@@ -41,6 +40,8 @@ from app.infrastructure.database.models import (
     WatchlistModel,
 )
 
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 # ============================================================
 # Model <-> Entity Mappers
@@ -199,9 +200,7 @@ class SQLAlchemyUserRepository(UserRepository):
         return _user_model_to_entity(result) if result else None
 
     async def get_by_email(self, email: str) -> User | None:
-        stmt = select(UserModel).where(
-            UserModel.email == email, UserModel.is_active.is_(True)
-        )
+        stmt = select(UserModel).where(UserModel.email == email, UserModel.is_active.is_(True))
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return _user_model_to_entity(model) if model else None
@@ -260,9 +259,8 @@ class SQLAlchemyUserRepository(UserRepository):
         self, skip: int = 0, limit: int = 50, filters: dict[str, Any] | None = None
     ) -> list[User]:
         stmt = select(UserModel).where(UserModel.is_active.is_(True))
-        if filters:
-            if "role" in filters:
-                stmt = stmt.where(UserModel.role == filters["role"])
+        if filters and "role" in filters:
+            stmt = stmt.where(UserModel.role == filters["role"])
         stmt = stmt.offset(skip).limit(limit)
         result = await self._session.execute(stmt)
         return [_user_model_to_entity(m) for m in result.scalars().all()]
@@ -301,9 +299,7 @@ class SQLAlchemyPortfolioRepository(PortfolioRepository):
         model = result.scalar_one_or_none()
         return _portfolio_model_to_entity(model) if model else None
 
-    async def list_by_user(
-        self, user_id: str, skip: int = 0, limit: int = 50
-    ) -> list[Portfolio]:
+    async def list_by_user(self, user_id: str, skip: int = 0, limit: int = 50) -> list[Portfolio]:
         stmt = (
             select(PortfolioModel)
             .where(PortfolioModel.user_id == user_id)

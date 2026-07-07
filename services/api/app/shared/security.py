@@ -6,11 +6,13 @@ Implements OWASP ASVS recommendations for credential handling.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
-from app.config import get_settings
 import bcrypt
+from jose import JWTError, jwt
+
+from app.config import get_settings
+
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt.
@@ -64,7 +66,7 @@ def create_access_token(
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": user_id,
         "email": email,
@@ -87,7 +89,7 @@ def create_refresh_token(user_id: str) -> str:
         Encoded JWT refresh token string.
     """
     settings = get_settings()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": user_id,
         "type": "refresh",
@@ -109,12 +111,11 @@ def decode_token(token: str) -> dict | None:
     """
     settings = get_settings()
     try:
-        payload = jwt.decode(
+        return jwt.decode(
             token,
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        return payload
     except JWTError:
         return None
 

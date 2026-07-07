@@ -5,12 +5,16 @@ Provides endpoints for listing, reading, and managing user notifications.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.session import get_db_session
 from app.infrastructure.services.notification_service import notification_service
 from app.presentation.middleware.auth_dependency import get_current_user
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -29,9 +33,7 @@ async def list_notifications(
         unread_only=unread_only,
         limit=limit,
     )
-    unread_count = await notification_service.get_unread_count(
-        session, user_id=current_user["sub"]
-    )
+    unread_count = await notification_service.get_unread_count(session, user_id=current_user["sub"])
     return {
         "notifications": [
             {
@@ -72,9 +74,7 @@ async def mark_all_notifications_read(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Mark all notifications as read for the current user."""
-    count = await notification_service.mark_all_read(
-        session, user_id=current_user["sub"]
-    )
+    count = await notification_service.mark_all_read(session, user_id=current_user["sub"])
     await session.commit()
     return {"marked_read": count}
 
@@ -85,7 +85,5 @@ async def get_unread_count(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Get count of unread notifications."""
-    count = await notification_service.get_unread_count(
-        session, user_id=current_user["sub"]
-    )
+    count = await notification_service.get_unread_count(session, user_id=current_user["sub"])
     return {"unread_count": count}

@@ -6,12 +6,13 @@ for all API endpoints. They are separate from domain entities.
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+if TYPE_CHECKING:
+    from datetime import datetime
 
 # ============================================================
 # Common
@@ -163,7 +164,6 @@ class PasskeyVerifyRequest(BaseModel):
 # ============================================================
 # Portfolio
 # ============================================================
-
 
 
 class CreatePortfolioRequest(BaseModel):
@@ -547,5 +547,3 @@ class AdvancedAnalysisResponse(BaseModel):
     behavioral_biases: list[BehavioralBias]
     goals: list[GoalProgress]
     calculated_at: datetime
-
-

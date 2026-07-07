@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import io
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
+
 import pytest
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -41,7 +45,7 @@ async def test_ai_copilot_routes(client: AsyncClient, auth_headers: dict[str, st
     """Test AI Copilot chat and recommendation endpoints."""
     mock_provider = AsyncMock()
     mock_provider.complete.return_value = "This is a copilot response."
-    
+
     with patch("app.presentation.api.v1.ai_routes.get_ai_provider", return_value=mock_provider):
         resp = await client.post(
             "/api/v1/ai/chat",
@@ -65,7 +69,7 @@ async def test_ai_copilot_routes(client: AsyncClient, auth_headers: dict[str, st
     )
     assert p_resp.status_code == 201
     portfolio_id = p_resp.json()["id"]
-    
+
     # Create holding
     h_resp = await client.post(
         f"/api/v1/portfolios/{portfolio_id}/holdings",
@@ -82,7 +86,7 @@ async def test_ai_copilot_routes(client: AsyncClient, auth_headers: dict[str, st
     )
     assert h_resp.status_code == 201
     holding_id = h_resp.json()["id"]
-    
+
     with patch("app.presentation.api.v1.ai_routes.get_ai_provider", return_value=mock_provider):
         resp = await client.get(
             f"/api/v1/ai/recommendations/{portfolio_id}/{holding_id}",
@@ -117,14 +121,14 @@ async def test_cas_pdf_import_route(client: AsyncClient, auth_headers: dict[str,
             "sector": "Information Technology",
         }
     ]
-    
+
     with patch(
         "app.infrastructure.importers.cas_pdf_parser.CASPDFParser.parse",
         return_value=mock_parsed_holdings,
     ):
         pdf_data = b"%PDF-1.4 Mock CAS PDF data..."
         files = {"file": ("cams_cas.pdf", io.BytesIO(pdf_data), "application/pdf")}
-        
+
         resp = await client.post(
             f"/api/v1/portfolios/{portfolio_id}/import/cas-pdf",
             files=files,

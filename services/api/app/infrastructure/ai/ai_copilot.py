@@ -7,13 +7,12 @@ using real market news, fundamentals, and portfolio metrics.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from app.infrastructure.ai.ai_provider import AIProvider
-from app.shared.exceptions import AIProviderError
+if TYPE_CHECKING:
+    from app.infrastructure.ai.ai_provider import AIProvider
 
 logger = structlog.get_logger(__name__)
 
@@ -111,7 +110,9 @@ async def generate_daily_brief(
 
     news_context = []
     for art in news_articles[:5]:
-        news_context.append(f"- Title: {art.get('title')}\n  Source: {art.get('source')}\n  Summary: {art.get('description')}")
+        news_context.append(
+            f"- Title: {art.get('title')}\n  Source: {art.get('source')}\n  Summary: {art.get('description')}"
+        )
 
     user_prompt = f"""Generate a daily brief for my portfolio:
 
@@ -237,7 +238,12 @@ Cash Drag: {cash_drag_pct:.1f}%
     try:
         response = await provider.complete(
             messages=[
-                {"role": "system", "content": PORTFOLIO_DOCTOR_SYSTEM_PROMPT.replace("{raw_issues}", raw_issues_str)},
+                {
+                    "role": "system",
+                    "content": PORTFOLIO_DOCTOR_SYSTEM_PROMPT.replace(
+                        "{raw_issues}", raw_issues_str
+                    ),
+                },
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
@@ -306,7 +312,7 @@ async def simulate_scenario(
 
     # Calculate simulated portfolio value
     sim_total_val = sum(h.get("quantity", 0) * h.get("current_price", 0) for h in sim_holdings_list)
-    orig_total_val = original_metrics.get("total_value", 0.0)
+    original_metrics.get("total_value", 0.0)
 
     # Calculate simulated HHI & Risk score
     sim_hhi = 0.0
@@ -354,7 +360,9 @@ async def simulate_scenario(
         return {
             "original_metrics": original_metrics,
             "simulated_metrics": simulated_metrics,
-            "impact_summary": data.get("impact_summary", "Simulated metrics calculated successfully."),
+            "impact_summary": data.get(
+                "impact_summary", "Simulated metrics calculated successfully."
+            ),
             "recommendations": data.get("recommendations", []),
         }
     except Exception as e:
@@ -363,5 +371,7 @@ async def simulate_scenario(
             "original_metrics": original_metrics,
             "simulated_metrics": simulated_metrics,
             "impact_summary": f"Trade simulation results: New total portfolio valuation estimated at ₹{sim_total_val:,.2f}.",
-            "recommendations": ["Review individual sector allocations for potential overlap concerns."],
+            "recommendations": [
+                "Review individual sector allocations for potential overlap concerns."
+            ],
         }

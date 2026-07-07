@@ -7,8 +7,7 @@ analyst estimates, and macro indicators, running synchronously blocked calls in 
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from decimal import Decimal
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -27,7 +26,7 @@ def _format_symbol(symbol: str, asset_type: str = "stock") -> str:
             # Common suffix or try both, let's default to .BO for mutual funds
             return f"{sym}.BO"
         return sym
-    
+
     # Stocks: Default to .NS (NSE) if no extension is present
     if not (sym.endswith(".NS") or sym.endswith(".BO") or sym.endswith(".BO") or "^" in sym):
         return f"{sym}.NS"
@@ -48,13 +47,12 @@ class YFinanceMarketDataService:
             if price is None:
                 # Fallback to history
                 hist = await asyncio.to_thread(lambda: ticker.history(period="1d"))
-                if not hist.empty:
-                    price = float(hist["Close"].iloc[-1])
-                else:
-                    price = 0.0
+                price = float(hist["Close"].iloc[-1]) if not hist.empty else 0.0
             return float(price)
         except Exception as e:
-            logger.warning("yfinance_price_fetch_failed", symbol=symbol, formatted=formatted, error=str(e))
+            logger.warning(
+                "yfinance_price_fetch_failed", symbol=symbol, formatted=formatted, error=str(e)
+            )
             return 0.0
 
     async def get_fundamental_data(self, symbol: str, asset_type: str = "stock") -> dict[str, Any]:
@@ -63,14 +61,16 @@ class YFinanceMarketDataService:
         try:
             ticker = yf.Ticker(formatted)
             info = await asyncio.to_thread(lambda: ticker.info)
-            
+
             return {
                 "pe_ratio": info.get("trailingPE"),
                 "forward_pe": info.get("forwardPE"),
                 "peg_ratio": info.get("pegRatio"),
                 "price_to_book": info.get("priceToBook"),
                 "market_cap": info.get("marketCap"),
-                "dividend_yield": info.get("dividendYield", 0.0) * 100 if info.get("dividendYield") else 0.0,
+                "dividend_yield": info.get("dividendYield", 0.0) * 100
+                if info.get("dividendYield")
+                else 0.0,
                 "beta": info.get("beta"),
                 "eps": info.get("trailingEps"),
                 "book_value": info.get("bookValue"),
@@ -85,34 +85,40 @@ class YFinanceMarketDataService:
             logger.warning("yfinance_fundamentals_fetch_failed", symbol=symbol, error=str(e))
             return {}
 
-    async def get_historical_prices(self, symbol: str, period: str = "1y", interval: str = "1d") -> list[dict[str, Any]]:
+    async def get_historical_prices(
+        self, symbol: str, period: str = "1y", interval: str = "1d"
+    ) -> list[dict[str, Any]]:
         """Fetch historical prices for charts."""
         formatted = _format_symbol(symbol)
         try:
             ticker = yf.Ticker(formatted)
             hist = await asyncio.to_thread(lambda: ticker.history(period=period, interval=interval))
-            
+
             prices = []
             for index, row in hist.iterrows():
-                prices.append({
-                    "date": index.strftime("%Y-%m-%d"),
-                    "open": float(row["Open"]),
-                    "high": float(row["High"]),
-                    "low": float(row["Low"]),
-                    "close": float(row["Close"]),
-                    "volume": int(row["Volume"]),
-                })
+                prices.append(
+                    {
+                        "date": index.strftime("%Y-%m-%d"),
+                        "open": float(row["Open"]),
+                        "high": float(row["High"]),
+                        "low": float(row["Low"]),
+                        "close": float(row["Close"]),
+                        "volume": int(row["Volume"]),
+                    }
+                )
             return prices
         except Exception as e:
             logger.warning("yfinance_history_fetch_failed", symbol=symbol, error=str(e))
             return []
 
-    async def get_financial_statements(self, symbol: str, asset_type: str = "stock") -> dict[str, Any]:
+    async def get_financial_statements(
+        self, symbol: str, asset_type: str = "stock"
+    ) -> dict[str, Any]:
         """Fetch income statement, balance sheet, and cash flow statements."""
         formatted = _format_symbol(symbol, asset_type)
         try:
             ticker = yf.Ticker(formatted)
-            
+
             # Helper to convert pandas dataframe to dictionary
             def df_to_dict(df):
                 if df is None or df.empty:
@@ -120,13 +126,16 @@ class YFinanceMarketDataService:
                 res = {}
                 for col in df.columns:
                     col_str = col.strftime("%Y-%m-%d") if hasattr(col, "strftime") else str(col)
-                    res[col_str] = {str(k): float(v) if not isinstance(v, str) else v for k, v in df[col].dropna().items()}
+                    res[col_str] = {
+                        str(k): float(v) if not isinstance(v, str) else v
+                        for k, v in df[col].dropna().items()
+                    }
                 return res
 
             financials = await asyncio.to_thread(lambda: ticker.financials)
             balance_sheet = await asyncio.to_thread(lambda: ticker.balance_sheet)
             cashflow = await asyncio.to_thread(lambda: ticker.cashflow)
-            
+
             return {
                 "income_statement": df_to_dict(financials),
                 "balance_sheet": df_to_dict(balance_sheet),
@@ -143,7 +152,7 @@ class YFinanceMarketDataService:
             ticker = yf.Ticker(formatted)
             dividends = await asyncio.to_thread(lambda: ticker.dividends)
             splits = await asyncio.to_thread(lambda: ticker.splits)
-            
+
             div_list = []
             if not dividends.empty:
                 for idx, val in dividends.items():
@@ -168,7 +177,7 @@ class YFinanceMarketDataService:
         try:
             ticker = yf.Ticker(formatted)
             info = await asyncio.to_thread(lambda: ticker.info)
-            
+
             return {
                 "target_high": info.get("targetHighPrice"),
                 "target_low": info.get("targetLowPrice"),
@@ -187,21 +196,23 @@ class YFinanceMarketDataService:
         try:
             ticker = yf.Ticker(formatted)
             news = await asyncio.to_thread(lambda: ticker.news)
-            
+
             results = []
             for item in news or []:
                 # Convert news structure to standardized format
                 published = item.get("providerPublishTime")
-                pub_dt = datetime.fromtimestamp(published, timezone.utc) if published else datetime.now(timezone.utc)
-                
-                results.append({
-                    "id": item.get("uuid", ""),
-                    "title": item.get("title", ""),
-                    "summary": item.get("summary", ""),
-                    "source": item.get("publisher", ""),
-                    "url": item.get("link", ""),
-                    "published_at": pub_dt.isoformat(),
-                })
+                pub_dt = datetime.fromtimestamp(published, UTC) if published else datetime.now(UTC)
+
+                results.append(
+                    {
+                        "id": item.get("uuid", ""),
+                        "title": item.get("title", ""),
+                        "summary": item.get("summary", ""),
+                        "source": item.get("publisher", ""),
+                        "url": item.get("link", ""),
+                        "published_at": pub_dt.isoformat(),
+                    }
+                )
             return results
         except Exception as e:
             logger.warning("yfinance_news_fetch_failed", symbol=symbol, error=str(e))
@@ -238,8 +249,9 @@ class YFinanceMarketDataService:
 
     async def get_macro_indicators(self) -> dict[str, Any]:
         """Fetch macro indicators (inflation, repo rate, US/India 10Y Yields) from World Bank and yfinance."""
-        from app.infrastructure.market.price_cache import cache_repo
         import httpx
+
+        from app.infrastructure.market.price_cache import cache_repo
 
         cache_key = "market:macro_indicators"
         cached = await cache_repo.get(cache_key)
@@ -278,7 +290,7 @@ class YFinanceMarketDataService:
             try:
                 inf_res = await client.get(
                     "http://api.worldbank.org/v2/country/IN/indicator/FP.CPI.TOTL.ZG?format=json",
-                    timeout=5.0
+                    timeout=5.0,
                 )
                 if inf_res.status_code == 200:
                     data = inf_res.json()
@@ -294,7 +306,7 @@ class YFinanceMarketDataService:
             try:
                 gdp_res = await client.get(
                     "http://api.worldbank.org/v2/country/IN/indicator/NY.GDP.MKTP.KD.ZG?format=json",
-                    timeout=5.0
+                    timeout=5.0,
                 )
                 if gdp_res.status_code == 200:
                     data = gdp_res.json()

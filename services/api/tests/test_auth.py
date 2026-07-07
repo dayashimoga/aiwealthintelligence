@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
-from httpx import AsyncClient
+from typing import TYPE_CHECKING
 
+import pytest
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 # ============================================================
 # Health Check Tests
@@ -147,9 +150,7 @@ class TestLogin:
 class TestProfile:
     """Tests for user profile endpoint."""
 
-    async def test_get_profile(
-        self, client: AsyncClient, auth_headers: dict[str, str]
-    ) -> None:
+    async def test_get_profile(self, client: AsyncClient, auth_headers: dict[str, str]) -> None:
         """Authenticated user can get their profile."""
         response = await client.get("/api/v1/auth/me", headers=auth_headers)
         assert response.status_code == 200

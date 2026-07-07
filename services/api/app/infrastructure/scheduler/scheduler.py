@@ -5,7 +5,7 @@ Uses APScheduler to update holding prices and fetch market news at regular inter
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -14,7 +14,6 @@ from sqlalchemy import select, update
 from app.infrastructure.database.models import HoldingModel
 from app.infrastructure.database.session import sessionmanager
 from app.infrastructure.market.market_data_service import market_data_service
-from app.infrastructure.market.news_fetcher import fetch_and_analyze_news
 from app.presentation.api.v1.market_routes import get_market_news
 
 logger = structlog.get_logger(__name__)
@@ -45,7 +44,7 @@ async def sync_holding_prices() -> None:
                     update_stmt = (
                         update(HoldingModel)
                         .where(HoldingModel.symbol == sym)
-                        .values(current_price=price, updated_at=datetime.now(timezone.utc))
+                        .values(current_price=price, updated_at=datetime.now(UTC))
                     )
                     await session.execute(update_stmt)
                     updated_count += 1
@@ -56,16 +55,18 @@ async def sync_holding_prices() -> None:
             )
             missing_result = await session.execute(missing_stmt)
             missing_holdings = missing_result.scalars().all()
-            
+
             if missing_holdings:
                 logger.info("scheduler_populating_missing_metadata", count=len(missing_holdings))
                 for h in missing_holdings:
-                    metadata = await market_data_service.get_fundamental_data(h.symbol, h.asset_type)
+                    metadata = await market_data_service.get_fundamental_data(
+                        h.symbol, h.asset_type
+                    )
                     if metadata:
                         h.sector = metadata.get("sector") or "Other"
                         h.industry = metadata.get("industry") or "Other"
-                        h.updated_at = datetime.now(timezone.utc)
-            
+                        h.updated_at = datetime.now(UTC)
+
             await session.commit()
             logger.info("scheduler_job_completed", job="sync_holding_prices", updated=updated_count)
     except Exception as e:
@@ -89,7 +90,7 @@ def start_scheduler() -> None:
     scheduler.add_job(sync_holding_prices, "interval", minutes=15, id="sync_holding_prices")
     # Run news refresh every 30 minutes
     scheduler.add_job(refresh_market_news, "interval", minutes=30, id="refresh_market_news")
-    
+
     scheduler.start()
     logger.info("background_scheduler_started")
 
