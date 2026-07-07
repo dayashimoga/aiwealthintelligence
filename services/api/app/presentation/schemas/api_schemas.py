@@ -118,6 +118,20 @@ class VerifyOTPRequest(BaseModel):
     code: str
 
 
+class PasswordResetRequestSchema(BaseModel):
+    """Request a password reset OTP to be sent to the user's email."""
+
+    email: EmailStr
+
+
+class PasswordResetConfirmSchema(BaseModel):
+    """Confirm password reset using the OTP code and a new password."""
+
+    email: EmailStr
+    code: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
 class TOTPSetupResponse(BaseModel):
     """TOTP MFA setup response."""
 

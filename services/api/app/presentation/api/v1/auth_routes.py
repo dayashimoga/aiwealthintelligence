@@ -29,6 +29,8 @@ from app.presentation.schemas.api_schemas import (
     OAuthLoginRequest,
     PasskeyOptionsResponse,
     PasskeyVerifyRequest,
+    PasswordResetConfirmSchema,
+    PasswordResetRequestSchema,
     RefreshTokenRequest,
     RegisterRequest,
     SendOTPRequest,
@@ -656,3 +658,85 @@ async def passkey_login_verify(
         refresh_token=refresh_token,
         expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
+
+
+# ============================================================
+# Password Reset
+# ============================================================
+
+_RESET_OTP_PREFIX = "pwd_reset:"
+_RESET_OTP_TTL = 900  # 15 minutes
+
+
+@router.post(
+    "/password-reset/request",
+    status_code=200,
+    responses={404: {"model": ErrorResponse}},
+)
+async def request_password_reset(
+    request: PasswordResetRequestSchema,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, str]:
+    """Send a 6-digit OTP to the user's email to initiate password reset.
+
+    Always returns 200 even when email is not found (prevents user enumeration).
+    """
+    repo = SQLAlchemyUserRepository(session)
+    user = await repo.get_by_email(request.email)
+
+    if user is not None:
+        otp = _generate_otp()
+        cache_key = f"{_RESET_OTP_PREFIX}{request.email}"
+        await cache_repo.set(cache_key, otp, ttl=_RESET_OTP_TTL)
+        await mail_service.send_password_reset_otp(request.email, otp)
+        logger.info("password_reset_otp_sent", email=request.email)
+
+    # Return identical response whether user exists or not.
+    return {"message": "If that email is registered, a reset code has been sent."}
+
+
+@router.post(
+    "/password-reset/confirm",
+    status_code=200,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+)
+async def confirm_password_reset(
+    request: PasswordResetConfirmSchema,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, str]:
+    """Validate OTP and set a new password for the account."""
+    cache_key = f"{_RESET_OTP_PREFIX}{request.email}"
+    stored_otp = await cache_repo.get(cache_key)
+
+    if stored_otp is None or stored_otp != request.code:
+        raise ValidationError(
+            message="Invalid or expired reset code",
+            details={"field": "code"},
+        )
+
+    password_errors = validate_password_strength(request.new_password)
+    if password_errors:
+        raise ValidationError(
+            message="Password does not meet requirements",
+            details={"errors": password_errors},
+        )
+
+    repo = SQLAlchemyUserRepository(session)
+    user = await repo.get_by_email(request.email)
+    if user is None:
+        raise NotFoundError("User not found")
+
+    # Update hashed password directly via SQLAlchemy.
+    result = await session.execute(select(UserModel).where(UserModel.email == request.email))
+    user_model = result.scalar_one_or_none()
+    if user_model is None:
+        raise NotFoundError("User not found")
+
+    user_model.hashed_password = hash_password(request.new_password)
+    await session.commit()
+
+    # Invalidate the OTP so it can't be reused.
+    await cache_repo.delete(cache_key)
+
+    logger.info("password_reset_completed", email=request.email)
+    return {"message": "Password updated successfully. Please log in with your new password."}

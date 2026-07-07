@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 import pytest
@@ -52,7 +53,6 @@ async def db_session() -> AsyncIterator[AsyncSession]:
 
     Uses the same sessionmanager as the application, so committed data is visible.
     """
-    from sqlalchemy.ext.asyncio import AsyncSession
 
     # Ensure sessionmanager is initialised.
     if sessionmanager._engine is None:

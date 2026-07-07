@@ -34,6 +34,8 @@ class ApiConstants {
   static const String passkeyLoginVerify =
       '$apiPrefix/auth/passkeys/login/verify';
   static const String deleteAccount = '$apiPrefix/auth/account';
+  static const String passwordResetRequest = '$apiPrefix/auth/password-reset/request';
+  static const String passwordResetConfirm = '$apiPrefix/auth/password-reset/confirm';
 
   // Portfolios
   static const String portfolios = '$apiPrefix/portfolios';

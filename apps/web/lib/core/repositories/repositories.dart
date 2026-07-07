@@ -290,6 +290,40 @@ class AuthRepository {
     await storage.write(
         key: TokenKeys.refreshToken, value: tokens.refreshToken);
   }
+
+  /// Step 1: Request a 6-digit OTP to be sent to [email] for password reset.
+  Future<Result<String>> requestPasswordReset(String email) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.passwordResetRequest,
+        data: {'email': email},
+      );
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
+    }
+  }
+
+  /// Step 2: Confirm password reset with OTP [code] and [newPassword].
+  Future<Result<String>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.passwordResetConfirm,
+        data: {'email': email, 'code': code, 'new_password': newPassword},
+      );
+      return Result.success(
+          (response.data as Map<String, dynamic>)['message'] as String);
+    } on DioException catch (e) {
+      return Result.failure(_extractError(e),
+          statusCode: e.response?.statusCode);
+    }
+  }
 }
 
 // ============================================================

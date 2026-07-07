@@ -60,5 +60,31 @@ class MailService:
             logger.exception("email_send_failed", to=to_email, error=str(e))
             return False
 
+    async def send_otp(self, to_email: str, otp: str) -> bool:
+        """Send a one-time password for email verification."""
+        subject = "WealthAI — Your verification code"
+        html = (
+            f"<h2>WealthAI Verification</h2>"
+            f"<p>Your one-time verification code is:</p>"
+            f"<h1 style='letter-spacing:8px;font-family:monospace'>{otp}</h1>"
+            f"<p>This code expires in 10 minutes. Do not share it.</p>"
+        )
+        return await self.send_email(
+            to_email, subject, html, text_content=f"Verification code: {otp}"
+        )
+
+    async def send_password_reset_otp(self, to_email: str, otp: str) -> bool:
+        """Send a password-reset OTP to the user's email."""
+        subject = "WealthAI — Password reset code"
+        html = (
+            f"<h2>WealthAI Password Reset</h2>"
+            f"<p>Your password reset code is:</p>"
+            f"<h1 style='letter-spacing:8px;font-family:monospace'>{otp}</h1>"
+            f"<p>This code expires in 15 minutes. If you did not request a reset, ignore this email.</p>"
+        )
+        return await self.send_email(
+            to_email, subject, html, text_content=f"Password reset code: {otp}"
+        )
+
 
 mail_service = MailService()

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/onboarding_wizard.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/portfolio/screens/portfolio_detail_screen.dart';
 import '../../features/portfolio/screens/portfolio_list_screen.dart';
@@ -50,6 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final isOnAuthRoute = location == '/login' ||
           location == '/register' ||
+          location == '/forgot-password' ||
           location == '/splash';
 
       // Unauthenticated — send to login (unless already there).
@@ -87,6 +89,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/onboarding',

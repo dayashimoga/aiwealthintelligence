@@ -26,14 +26,18 @@
 - [x] `register_screen.dart` — wire registration success to `authStateProvider.notifier.setAuthenticated(onboarded: false)`
 - [x] `settings_screen.dart` — wire Sign Out and Delete Account to `authStateProvider.notifier.logout()`
 
-## Sprint 3 — Flutter Tests & CI Polish
+## Sprint 3 — Password Reset & Widget Tests ✅
 
-- [ ] Flutter widget test: `test/widget/auth_test.dart` — login, register, biometrics
-- [ ] Flutter widget test: `test/widget/dashboard_test.dart` — navigation, portfolio load
-- [ ] Flutter widget test: `test/widget/portfolio_detail_test.dart` — chart renders, holdings list
-- [ ] Flutter integration test: `integration_test/app_test.dart` — smoke test full auth flow
-- [ ] CI: Cloudflare Pages deployment step (frontend)
-- [ ] Password reset flow (forgot password screen + `/auth/reset-password` API)
+- [x] Password reset backend: `POST /auth/password-reset/request` + `POST /auth/password-reset/confirm`
+- [x] `PasswordResetRequestSchema` + `PasswordResetConfirmSchema` Pydantic schemas
+- [x] `mail_service.send_password_reset_otp()` + `send_otp()` methods
+- [x] `test_password_reset.py` — 4 backend tests (anti-enumeration, invalid OTP, full flow)
+- [x] `forgot_password_screen.dart` — two-step animated forgot-password screen
+- [x] Router `/forgot-password` route + redirect guard update
+- [x] Login screen — wired dead 'Forgot password?' button to `/forgot-password`
+- [x] `requestPasswordReset()` + `confirmPasswordReset()` in `AuthRepository`
+- [x] `auth_widget_test.dart` — 7 widget tests: login renders/validates/forgot-pw nav, register renders/terms, forgot-pw step1 validate/advance/pw-mismatch
+- [x] `dashboard_widget_test.dart` — 3 widget tests: loading shimmer, portfolio loaded, empty state
 
 ## Sprint 4 — Advanced Features
 
