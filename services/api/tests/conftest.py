@@ -169,3 +169,45 @@ async def sample_holding(
         "symbol": "RELIANCE",
         "portfolio_id": portfolio_id,
     }
+
+
+
+@pytest_asyncio.fixture
+async def auth_client(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+) -> AsyncClient:
+    """A pre-authenticated async client — sends Authorization header automatically."""
+
+    class _AuthenticatedClient:
+        """Wrapper that injects auth headers into every request."""
+
+        def __init__(self, inner: AsyncClient, headers: dict[str, str]) -> None:
+            self._inner = inner
+            self._headers = headers
+
+        def _merge(self, kwargs: dict) -> dict:
+            existing = kwargs.pop("headers", {})
+            if isinstance(existing, dict):
+                kwargs["headers"] = {**existing, **self._headers}
+            else:
+                # httpx also accepts list of tuples
+                kwargs["headers"] = {**self._headers}
+            return kwargs
+
+        async def get(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.get(url, **self._merge(kwargs))
+
+        async def post(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.post(url, **self._merge(kwargs))
+
+        async def delete(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.delete(url, **self._merge(kwargs))
+
+        async def put(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.put(url, **self._merge(kwargs))
+
+        async def patch(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.patch(url, **self._merge(kwargs))
+
+    return _AuthenticatedClient(client, auth_headers)  # type: ignore[return-value]

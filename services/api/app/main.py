@@ -17,6 +17,7 @@ from app.infrastructure.database.session import engine, sessionmanager
 from app.infrastructure.repositories.redis_cache import cache_repo
 from app.infrastructure.scheduler.scheduler import shutdown_scheduler, start_scheduler
 from app.presentation.api.v1.router import api_router
+from app.presentation.api.v1.ws_market_routes import router as ws_router
 from app.presentation.middleware.error_handler import register_exception_handlers
 from app.presentation.middleware.rate_limiter import limiter
 from app.presentation.middleware.security_headers import SecurityHeadersMiddleware
@@ -101,8 +102,11 @@ def create_app() -> FastAPI:
     # Exception handlers
     register_exception_handlers(app)
 
-    # API routes
+    # API routes (REST)
     app.include_router(api_router, prefix="/api/v1")
+
+    # WebSocket routes (no /api/v1 prefix — uses clean ws:// URLs)
+    app.include_router(ws_router)
 
     return app
 

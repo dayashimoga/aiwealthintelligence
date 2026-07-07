@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/portfolio_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/repositories/repositories.dart';
+import '../../../core/services/market_price_stream.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common_widgets.dart';
 
@@ -53,6 +54,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final marketAsync = ref.watch(marketOverviewProvider);
+    final priceState = ref.watch(marketPriceStreamProvider);
+    final isLive = priceState.isConnected;
 
     return DefaultTabController(
       length: 4,
@@ -62,11 +65,35 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Market Intelligence'),
-              Text(
-                _lastRefreshedLabel,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.5),
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isLive ? AppTheme.profitGreen : Colors.grey,
+                    ),
+                  )
+                      .animate(onPlay: (c) => isLive ? c.repeat() : null)
+                      .scaleXY(
+                        begin: 0.8,
+                        end: 1.2,
+                        duration: 800.ms,
+                        curve: Curves.easeInOut,
+                      )
+                      .then()
+                      .scaleXY(begin: 1.2, end: 0.8, duration: 800.ms),
+                  const SizedBox(width: 4),
+                  Text(
+                    isLive ? 'Live' : _lastRefreshedLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: isLive
+                          ? AppTheme.profitGreen
+                          : theme.colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -266,6 +266,12 @@ class AuthRepository {
     }
   }
 
+  /// Returns the stored JWT access token, or null if not authenticated.
+  Future<String?> getAccessToken() async {
+    final storage = _ref.read(secureStorageProvider);
+    return storage.read(key: TokenKeys.accessToken);
+  }
+
   Future<void> logout() async {
     final storage = _ref.read(secureStorageProvider);
     await storage.delete(key: TokenKeys.accessToken);

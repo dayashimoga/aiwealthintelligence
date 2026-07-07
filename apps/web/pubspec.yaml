@@ -21,6 +21,7 @@ dependencies:
   dio: ^5.7.0
   retrofit: ^4.4.1
   connectivity_plus: ^6.1.0
+  web_socket_channel: ^3.0.1
 
   # Local Storage
   hive_flutter: ^1.1.0

@@ -8,6 +8,10 @@ class ApiConstants {
     defaultValue: 'http://localhost:8000',
   );
 
+  /// WebSocket base URL — derived from baseUrl replacing http(s) scheme with ws(s).
+  static String get wsBaseUrl =>
+      baseUrl.replaceFirst(RegExp(r'^http'), 'ws');
+
   static const String apiPrefix = '/api/v1';
 
   // Auth
