@@ -5,14 +5,24 @@ All notable changes are documented here. Format: `[version] date — description
 
 ---
 
-## [0.5.0] — 2026-07-07 — Sprint 4: Watchlist Inline Management
+## [0.5.0] — 2026-07-07 — Sprint 4: Watchlist Management + AI Copilot Chat
 
 ### Added
 - `market_screen.dart` — 4th **Watchlist** tab with inline symbol management:
-  - `_buildWatchlistTab`: loads `watchlistsProvider`, shows all watchlists with empty/error/data states
-  - `_WatchlistCard` stateful widget: symbol Chips with ✕ remove, inline Add symbol TextField + FilledButton
-  - Create New Watchlist dialog (AlertDialog with name input)
-  - All mutations call `WatchlistRepository` methods + `ref.invalidate(watchlistsProvider)` for live sync
+  - `_buildWatchlistTab`: `watchlistsProvider` with loading/error/data states + empty state
+  - `_WatchlistCard`: symbol Chips with ✕ remove, inline Add symbol TextField + FilledButton
+  - Create Watchlist AlertDialog; all mutations invalidate `watchlistsProvider`
+- `ai_chat_screen.dart` — **Real API-backed chat** (no more mocked responses):
+  - `ConsumerStatefulWidget` with `AIRepository.chat(message, portfolioId)`
+  - Animated typing indicator (3 pulsing dots), gradient send button, clear chat
+  - Suggestion `ActionChip`s, referenced holding `Chip`s, confidence score label
+  - Error bubble on API failure
+- `copilot_screen.dart` — "Chat with AI Copilot" card pinned at top of hub
+
+### Fixed
+- `settings_screen.dart` — restored `dart:math` import (used for passkey mock)
+- `dashboard_widget_test.dart` — correct `Portfolio()` fields + `StreamProvider` overrides
+- `auth_widget_test.dart` — removed unused `models.dart` import
 
 ---
 
