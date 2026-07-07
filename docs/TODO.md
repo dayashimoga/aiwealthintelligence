@@ -57,7 +57,13 @@
 ## Backlog
 
 - [x] Cloudflare deployment `wrangler.toml` — ✅ created
+- [x] Build APK locally — ✅ `dist/wealthai-release-20260707.apk` (27.3 MB)
+- [x] CI/CD repair: `import_screen.dart` compile errors (wrong class placement) — fixed
+- [x] CI/CD repair: `apiClientProvider` undefined → `dioProvider` — fixed
+- [x] CI/CD repair: `pyproject.toml` UTF-8 BOM → pytest TOML parse failure — fixed
+- [x] CI/CD repair: ruff B017/N806/S106 not suppressed in `tests/*` — fixed
+- [x] CI/CD repair: `dart format` drift in 32 files — fixed
+- [x] Backend: maintain ≥65% test coverage — **188 tests, ≥69%** ✅
 - [ ] iOS CI build (macOS runner)
 - [ ] Push notifications (FCM/APNs)
-- [x] Backend: maintain ≥65% test coverage — currently **69.6%** ✅
 - [ ] `docs/API.md` — verify all 60+ endpoints documented
