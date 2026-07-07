@@ -47,7 +47,8 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
 
     if (symbol.isEmpty || qty <= 0 || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill out all fields with valid numbers.')),
+        const SnackBar(
+            content: Text('Please fill out all fields with valid numbers.')),
       );
       return;
     }
@@ -74,7 +75,8 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
   Future<void> _runSimulation() async {
     if (_simulatedActions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one trade to simulate.')),
+        const SnackBar(
+            content: Text('Please add at least one trade to simulate.')),
       );
       return;
     }
@@ -86,7 +88,8 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
     });
 
     final repo = ref.read(aiRepositoryProvider);
-    final result = await repo.simulateScenario(widget.portfolioId, _simulatedActions);
+    final result =
+        await repo.simulateScenario(widget.portfolioId, _simulatedActions);
 
     setState(() {
       _isSimulating = false;
@@ -131,22 +134,26 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Add Trade to Simulate', style: theme.textTheme.titleSmall),
+                      Text('Add Trade to Simulate',
+                          style: theme.textTheme.titleSmall),
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
                             child: TextField(
                               controller: _symbolController,
-                              decoration: const InputDecoration(labelText: 'Ticker (e.g. TCS)'),
+                              decoration: const InputDecoration(
+                                  labelText: 'Ticker (e.g. TCS)'),
                             ),
                           ),
                           const SizedBox(width: 8),
                           DropdownButton<String>(
                             value: _selectedAction,
                             items: const [
-                              DropdownMenuItem(value: 'buy', child: Text('BUY')),
-                              DropdownMenuItem(value: 'sell', child: Text('SELL')),
+                              DropdownMenuItem(
+                                  value: 'buy', child: Text('BUY')),
+                              DropdownMenuItem(
+                                  value: 'sell', child: Text('SELL')),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -164,16 +171,22 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                           Expanded(
                             child: TextField(
                               controller: _quantityController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: const InputDecoration(labelText: 'Quantity'),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration:
+                                  const InputDecoration(labelText: 'Quantity'),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
                               controller: _priceController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: const InputDecoration(labelText: 'Price (₹)'),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration:
+                                  const InputDecoration(labelText: 'Price (₹)'),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -203,10 +216,13 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                       final item = _simulatedActions[index];
                       final isBuy = item['action'] == 'buy';
                       return Card(
-                        color: isBuy ? Colors.green.withAlpha(20) : Colors.red.withAlpha(20),
+                        color: isBuy
+                            ? Colors.green.withAlpha(20)
+                            : Colors.red.withAlpha(20),
                         margin: const EdgeInsets.only(right: 8, bottom: 4),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           child: Row(
                             children: [
                               Column(
@@ -215,8 +231,9 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                                 children: [
                                   Text(
                                     '${item['action'].toString().toUpperCase()} ${item['symbol']}',
-                                    style:
-                                        const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13),
                                   ),
                                   Text(
                                     '${item['quantity']} units @ ₹${item['price']}',
@@ -245,7 +262,8 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                 onPressed: _isSimulating ? null : _runSimulation,
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Simulate Scenario impact'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(14)),
+                style:
+                    ElevatedButton.styleFrom(padding: const EdgeInsets.all(14)),
               ),
 
               const SizedBox(height: AppTheme.spacingMd),
@@ -254,7 +272,8 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                 child: _isSimulating
                     ? const Center(child: CircularProgressIndicator())
                     : (_errorMessage != null
-                        ? Center(child: Text('Error simulating: $_errorMessage'))
+                        ? Center(
+                            child: Text('Error simulating: $_errorMessage'))
                         : (_simulationResult == null
                             ? const Center(
                                 child: Text(
@@ -297,49 +316,64 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                   children: [
                     const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Text('Metric', style: TextStyle(fontWeight: FontWeight.bold))),
+                        child: Text('Metric',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                     const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Text('Original', style: TextStyle(fontWeight: FontWeight.bold))),
+                        child: Text('Original',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                     const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Text('Simulated', style: TextStyle(fontWeight: FontWeight.bold))),
+                        child: Text('Simulated',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
                 TableRow(
                   children: [
-                    const Padding(padding: EdgeInsets.all(4), child: Text('Portfolio Value')),
+                    const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Text('Portfolio Value')),
                     Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Text(_currencyFormatter.format(orig.totalValue))),
+                        child:
+                            Text(_currencyFormatter.format(orig.totalValue))),
                     Padding(
                         padding: const EdgeInsets.all(4),
                         child: Text(_currencyFormatter.format(sim.totalValue),
-                            style: const TextStyle(fontWeight: FontWeight.bold))),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
                 TableRow(
                   children: [
-                    const Padding(padding: EdgeInsets.all(4), child: Text('Diversification')),
+                    const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Text('Diversification')),
                     Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Text('${orig.diversificationScore.toStringAsFixed(0)}/100')),
+                        child: Text(
+                            '${orig.diversificationScore.toStringAsFixed(0)}/100')),
                     Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Text('${sim.diversificationScore.toStringAsFixed(0)}/100',
-                            style: const TextStyle(fontWeight: FontWeight.bold))),
+                        child: Text(
+                            '${sim.diversificationScore.toStringAsFixed(0)}/100',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
                 TableRow(
                   children: [
-                    const Padding(padding: EdgeInsets.all(4), child: Text('Risk Index')),
+                    const Padding(
+                        padding: EdgeInsets.all(4), child: Text('Risk Index')),
                     Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Text('${orig.riskScore.toStringAsFixed(1)}/5.0')),
+                        child:
+                            Text('${orig.riskScore.toStringAsFixed(1)}/5.0')),
                     Padding(
                         padding: const EdgeInsets.all(4),
                         child: Text('${sim.riskScore.toStringAsFixed(1)}/5.0',
-                            style: const TextStyle(fontWeight: FontWeight.bold))),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
               ],
@@ -376,8 +410,11 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Expanded(child: Text(rec, style: const TextStyle(fontSize: 12))),
+                      const Text('• ',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Expanded(
+                          child:
+                              Text(rec, style: const TextStyle(fontSize: 12))),
                     ],
                   ),
                 )),

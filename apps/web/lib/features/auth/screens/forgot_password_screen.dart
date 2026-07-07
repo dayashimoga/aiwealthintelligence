@@ -14,7 +14,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -43,7 +44,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (!_emailKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final res = await ref.read(authRepositoryProvider).requestPasswordReset(_emailCtrl.text.trim());
+    final res = await ref
+        .read(authRepositoryProvider)
+        .requestPasswordReset(_emailCtrl.text.trim());
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -120,7 +123,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               padding: const EdgeInsets.all(AppTheme.spacingLg),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: _step2 ? _buildConfirmStep(theme) : _buildRequestStep(theme),
+                child: _step2
+                    ? _buildConfirmStep(theme)
+                    : _buildRequestStep(theme),
               ),
             ),
           ),
@@ -159,14 +164,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ],
               ),
             ),
-            child: const Icon(Icons.lock_reset_rounded, size: 36, color: Colors.white),
+            child: const Icon(Icons.lock_reset_rounded,
+                size: 36, color: Colors.white),
           ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
 
           const SizedBox(height: AppTheme.spacingLg),
 
           Text(
             'Reset Password',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w800),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 100.ms),
 
@@ -217,7 +224,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       width: 22,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Send Reset Code', style: TextStyle(fontWeight: FontWeight.w700)),
+                  : const Text('Send Reset Code',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ).animate().fadeIn(delay: 250.ms),
         ],
@@ -251,14 +259,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 colors: [AppTheme.profitGreen, theme.colorScheme.primary],
               ),
             ),
-            child: const Icon(Icons.verified_user_rounded, size: 36, color: Colors.white),
+            child: const Icon(Icons.verified_user_rounded,
+                size: 36, color: Colors.white),
           ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
 
           const SizedBox(height: AppTheme.spacingLg),
 
           Text(
             'Enter Reset Code',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w800),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 50.ms),
 
@@ -303,7 +313,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               labelText: 'New password',
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility),
+                icon:
+                    Icon(_obscureNew ? Icons.visibility_off : Icons.visibility),
                 onPressed: () => setState(() => _obscureNew = !_obscureNew),
               ),
             ),
@@ -326,8 +337,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               labelText: 'Confirm new password',
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                icon: Icon(
+                    _obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                onPressed: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
               ),
             ),
             validator: (v) {
@@ -354,10 +367,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ? const SizedBox(
                       height: 22,
                       width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : const Text('Set New Password',
-                      style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           ).animate().fadeIn(delay: 300.ms),
 

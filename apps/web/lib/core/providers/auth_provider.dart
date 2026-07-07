@@ -20,7 +20,8 @@ enum AuthStatus {
 }
 
 /// Global auth state — drives router redirect.
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthStatus>((ref) {
+final authStateProvider =
+    StateNotifierProvider<AuthNotifier, AuthStatus>((ref) {
   return AuthNotifier(ref.read(secureStorageProvider), ref);
 });
 
@@ -44,7 +45,8 @@ class AuthNotifier extends StateNotifier<AuthStatus> {
     final result = await _ref.read(authRepositoryProvider).getProfile();
     result.when(
       success: (user) {
-        state = user.isOnboarded ? AuthStatus.authenticated : AuthStatus.onboarding;
+        state =
+            user.isOnboarded ? AuthStatus.authenticated : AuthStatus.onboarding;
       },
       failure: (_, __) {
         // Token expired or invalid — clear it.

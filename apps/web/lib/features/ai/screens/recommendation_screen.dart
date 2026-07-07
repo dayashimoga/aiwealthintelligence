@@ -77,7 +77,9 @@ class RecommendationScreen extends ConsumerWidget {
                         ),
                         child: Center(
                           child: Text(
-                            (holding?.symbol ?? rec.symbol).substring(0, 2).toUpperCase(),
+                            (holding?.symbol ?? rec.symbol)
+                                .substring(0, 2)
+                                .toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -100,7 +102,8 @@ class RecommendationScreen extends ConsumerWidget {
                             Text(
                               holding?.name ?? 'Stock Asset Details',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha(128),
+                                color:
+                                    theme.colorScheme.onSurface.withAlpha(128),
                               ),
                             ),
                           ],
@@ -119,7 +122,9 @@ class RecommendationScreen extends ConsumerWidget {
                             Text(
                               '${isPositive ? "+" : ""}${holding.gainLossPct.toStringAsFixed(2)}%',
                               style: TextStyle(
-                                color: isPositive ? AppTheme.profitGreen : AppTheme.lossRed,
+                                color: isPositive
+                                    ? AppTheme.profitGreen
+                                    : AppTheme.lossRed,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                               ),
@@ -143,7 +148,8 @@ class RecommendationScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
+                      const Icon(Icons.auto_awesome,
+                          color: Colors.white, size: 32),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -151,7 +157,8 @@ class RecommendationScreen extends ConsumerWidget {
                           children: [
                             const Text(
                               'AI Recommendation',
-                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 12),
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -166,7 +173,8 @@ class RecommendationScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withAlpha(51),
                                     borderRadius: BorderRadius.circular(20),
@@ -187,7 +195,10 @@ class RecommendationScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ).animate().fadeIn(delay: 100.ms).scale(begin: const Offset(0.97, 0.97)),
+                )
+                    .animate()
+                    .fadeIn(delay: 100.ms)
+                    .scale(begin: const Offset(0.97, 0.97)),
 
                 const SizedBox(height: AppTheme.spacingMd),
 
@@ -214,7 +225,9 @@ class RecommendationScreen extends ConsumerWidget {
                     _metricTile(
                       context,
                       'Horizon',
-                      rec.investmentHorizon.isEmpty ? 'N/A' : rec.investmentHorizon,
+                      rec.investmentHorizon.isEmpty
+                          ? 'N/A'
+                          : rec.investmentHorizon,
                       Icons.access_time,
                       AppTheme.infoBlue,
                     ),
@@ -239,7 +252,8 @@ class RecommendationScreen extends ConsumerWidget {
 
                 // Risk Description Warning Box
                 if (rec.riskDescription.isNotEmpty) ...[
-                  Text('Downside Risk Analysis', style: theme.textTheme.titleMedium)
+                  Text('Downside Risk Analysis',
+                          style: theme.textTheme.titleMedium)
                       .animate()
                       .fadeIn(delay: 350.ms),
                   const SizedBox(height: AppTheme.spacingSm),
@@ -253,7 +267,8 @@ class RecommendationScreen extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: AppTheme.lossRed, size: 24),
+                        const Icon(Icons.warning_amber_rounded,
+                            color: AppTheme.lossRed, size: 24),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -270,7 +285,8 @@ class RecommendationScreen extends ConsumerWidget {
                               Text(
                                 rec.riskDescription,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withAlpha(200),
+                                  color: theme.colorScheme.onSurface
+                                      .withAlpha(200),
                                   height: 1.4,
                                 ),
                               ),
@@ -285,7 +301,8 @@ class RecommendationScreen extends ConsumerWidget {
 
                 // AI Explainability factors
                 if (rec.explainability.isNotEmpty) ...[
-                  Text('Explainability Factors', style: theme.textTheme.titleMedium)
+                  Text('Explainability Factors',
+                          style: theme.textTheme.titleMedium)
                       .animate()
                       .fadeIn(delay: 400.ms),
                   const SizedBox(height: AppTheme.spacingSm),
@@ -308,14 +325,15 @@ class RecommendationScreen extends ConsumerWidget {
 
                 // Evidence check list
                 if (rec.evidence.isNotEmpty) ...[
-                  Text('Supporting Evidence', style: theme.textTheme.titleMedium)
+                  Text('Supporting Evidence',
+                          style: theme.textTheme.titleMedium)
                       .animate()
                       .fadeIn(delay: 800.ms),
                   const SizedBox(height: AppTheme.spacingSm),
                   ...rec.evidence.map((e) => ListTile(
                         dense: true,
-                        leading:
-                            const Icon(Icons.check_circle, color: AppTheme.profitGreen, size: 20),
+                        leading: const Icon(Icons.check_circle,
+                            color: AppTheme.profitGreen, size: 20),
                         title: Text(e, style: theme.textTheme.bodySmall),
                         contentPadding: EdgeInsets.zero,
                       )),
@@ -324,14 +342,16 @@ class RecommendationScreen extends ConsumerWidget {
 
                 // Alternative Suggestions chips
                 if (rec.alternativeSuggestions.isNotEmpty) ...[
-                  Text('Alternatives to Consider', style: theme.textTheme.titleMedium),
+                  Text('Alternatives to Consider',
+                      style: theme.textTheme.titleMedium),
                   const SizedBox(height: AppTheme.spacingSm),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: rec.alternativeSuggestions
                         .map((s) => ActionChip(
-                              avatar: const Icon(Icons.compare_arrows, size: 16),
+                              avatar:
+                                  const Icon(Icons.compare_arrows, size: 16),
                               label: Text(s),
                               onPressed: () {},
                             ))
@@ -352,15 +372,19 @@ class RecommendationScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: AppTheme.lossRed),
+                  const Icon(Icons.error_outline,
+                      size: 64, color: AppTheme.lossRed),
                   const SizedBox(height: 16),
-                  Text('Failed loading AI recommendation', style: theme.textTheme.titleMedium),
+                  Text('Failed loading AI recommendation',
+                      style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(err.toString(),
-                      textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () => ref.invalidate(aiRecommendationProvider(holdingId)),
+                    onPressed: () =>
+                        ref.invalidate(aiRecommendationProvider(holdingId)),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -372,7 +396,8 @@ class RecommendationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _metricTile(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _metricTile(BuildContext context, String label, String value,
+      IconData icon, Color color) {
     final theme = Theme.of(context);
     return GlassCard(
       padding: const EdgeInsets.all(12),
@@ -380,7 +405,9 @@ class RecommendationScreen extends ConsumerWidget {
         children: [
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
-          Text(value, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(value,
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(
             label,
@@ -393,8 +420,8 @@ class RecommendationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _explainabilityTile(
-      BuildContext context, String title, String content, IconData icon, Color color) {
+  Widget _explainabilityTile(BuildContext context, String title, String content,
+      IconData icon, Color color) {
     final theme = Theme.of(context);
     return ExpansionTile(
       leading: Container(
@@ -410,7 +437,8 @@ class RecommendationScreen extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Text(content, style: theme.textTheme.bodySmall?.copyWith(height: 1.5)),
+          child: Text(content,
+              style: theme.textTheme.bodySmall?.copyWith(height: 1.5)),
         ),
       ],
     );

@@ -114,7 +114,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               Tab(text: 'News', icon: Icon(Icons.newspaper, size: 18)),
               Tab(text: 'Sectors', icon: Icon(Icons.category, size: 18)),
               Tab(text: 'Calendar', icon: Icon(Icons.calendar_month, size: 18)),
-              Tab(text: 'Watchlist', icon: Icon(Icons.bookmark_outlined, size: 18)),
+              Tab(
+                  text: 'Watchlist',
+                  icon: Icon(Icons.bookmark_outlined, size: 18)),
             ],
           ),
         ),
@@ -142,12 +144,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: AppTheme.lossRed),
+                    const Icon(Icons.error_outline,
+                        size: 64, color: AppTheme.lossRed),
                     const SizedBox(height: 16),
-                    Text('Failed loading market feeds', style: theme.textTheme.titleMedium),
+                    Text('Failed loading market feeds',
+                        style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
                     Text(err.toString(),
-                        textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
@@ -193,7 +198,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: _sentimentColor(news.sentiment).withAlpha(26),
                           borderRadius: BorderRadius.circular(6),
@@ -249,10 +255,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       spacing: 6,
                       children: news.sectors
                           .map((s) => Chip(
-                                label: Text(s, style: const TextStyle(fontSize: 10)),
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                label: Text(s,
+                                    style: const TextStyle(fontSize: 10)),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
                                 padding: EdgeInsets.zero,
-                                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                                labelPadding:
+                                    const EdgeInsets.symmetric(horizontal: 6),
                                 visualDensity: VisualDensity.compact,
                               ))
                           .toList(),
@@ -262,7 +271,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               ),
             ),
           ),
-        ).animate().fadeIn(delay: Duration(milliseconds: index * 100)).slideY(begin: 0.03);
+        )
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: index * 100))
+            .slideY(begin: 0.03);
       },
     );
   }
@@ -321,7 +333,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _indexCard(BuildContext context, String name, String price, double changePct) {
+  Widget _indexCard(
+      BuildContext context, String name, String price, double changePct) {
     final theme = Theme.of(context);
     final isPositive = changePct >= 0;
     final color = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
@@ -335,15 +348,20 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(name, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(name,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Row(
               children: [
-                Text(price, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(price,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(width: 8),
                 Text(
                   '${isPositive ? "+" : ""}${changePct.toStringAsFixed(2)}%',
-                  style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: color, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -353,7 +371,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _macroCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _macroCard(BuildContext context, String title, String value,
+      IconData icon, Color color) {
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(right: 12),
@@ -373,8 +392,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(title,
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey, fontSize: 10)),
-                Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: Colors.grey, fontSize: 10)),
+                Text(value,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
               ],
             ),
           ],
@@ -402,7 +424,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (isPositive ? AppTheme.profitGreen : AppTheme.lossRed).withAlpha(26),
+                color: (isPositive ? AppTheme.profitGreen : AppTheme.lossRed)
+                    .withAlpha(26),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -436,7 +459,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   }
 
   Widget _buildCalendarTab(BuildContext context, MarketOverview overview) {
-    final repoRateStr = '${overview.macroIndicators['repo_rate']?.toStringAsFixed(2) ?? '6.50'}%';
+    final repoRateStr =
+        '${overview.macroIndicators['repo_rate']?.toStringAsFixed(2) ?? '6.50'}%';
     final inflationStr =
         '${overview.macroIndicators['inflation_rate']?.toStringAsFixed(2) ?? '4.80'}%';
 
@@ -445,12 +469,25 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       children: [
         _calendarSection(context, 'Upcoming Earnings', Icons.bar_chart, [
           {'date': 'Jul 10', 'event': 'TCS Q1 Results', 'est': 'EPS Est: ₹65'},
-          {'date': 'Jul 12', 'event': 'Infosys Q1 Results', 'est': 'EPS Est: ₹42'},
-          {'date': 'Jul 15', 'event': 'HDFC Bank Q1 Results', 'est': 'EPS Est: ₹22'},
-          {'date': 'Jul 18', 'event': 'Reliance Q1 Results', 'est': 'EPS Est: ₹38'},
+          {
+            'date': 'Jul 12',
+            'event': 'Infosys Q1 Results',
+            'est': 'EPS Est: ₹42'
+          },
+          {
+            'date': 'Jul 15',
+            'event': 'HDFC Bank Q1 Results',
+            'est': 'EPS Est: ₹22'
+          },
+          {
+            'date': 'Jul 18',
+            'event': 'Reliance Q1 Results',
+            'est': 'EPS Est: ₹38'
+          },
         ]),
         const SizedBox(height: AppTheme.spacingMd),
-        _calendarSection(context, 'Economic Events (Live Indicators)', Icons.public, [
+        _calendarSection(
+            context, 'Economic Events (Live Indicators)', Icons.public, [
           {
             'date': 'Jul 5',
             'event': 'RBI Policy Rate Update',
@@ -461,7 +498,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             'event': 'India CPI Inflation (WB)',
             'est': 'World Bank Stats: $inflationStr'
           },
-          {'date': 'Jul 12', 'event': 'US Federal Funds Rate', 'est': 'Fed Target: 5.25% - 5.50%'},
+          {
+            'date': 'Jul 12',
+            'event': 'US Federal Funds Rate',
+            'est': 'Fed Target: 5.25% - 5.50%'
+          },
           {
             'date': 'Jul 25',
             'event': 'India Union Budget',
@@ -470,20 +511,28 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         ]),
         const SizedBox(height: AppTheme.spacingMd),
         _calendarSection(context, 'Corporate Actions', Icons.business_center, [
-          {'date': 'Jul 6', 'event': 'INFY: Dividend ₹18/share', 'est': 'Ex-date payout schedule'},
+          {
+            'date': 'Jul 6',
+            'event': 'INFY: Dividend ₹18/share',
+            'est': 'Ex-date payout schedule'
+          },
           {
             'date': 'Jul 10',
             'event': 'ITC: Dividend ₹6.75/share',
             'est': 'Ex-date payout schedule'
           },
-          {'date': 'Jul 15', 'event': 'Nykaa: Stock Split 1:5', 'est': 'Record allocation date'},
+          {
+            'date': 'Jul 15',
+            'event': 'Nykaa: Stock Split 1:5',
+            'est': 'Record allocation date'
+          },
         ]),
       ],
     );
   }
 
-  Widget _calendarSection(
-      BuildContext context, String title, IconData icon, List<Map<String, String>> events) {
+  Widget _calendarSection(BuildContext context, String title, IconData icon,
+      List<Map<String, String>> events) {
     final theme = Theme.of(context);
     return GlassCard(
       child: Column(
@@ -493,7 +542,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             children: [
               Icon(icon, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(title,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 12),
@@ -511,8 +562,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ),
                       child: Text(e['date']!,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(fontWeight: FontWeight.w600, fontSize: 10)),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600, fontSize: 10)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -520,11 +571,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(e['event']!,
-                              style:
-                                  theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(fontWeight: FontWeight.w600)),
                           Text(e['est']!,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha(128),
+                                color:
+                                    theme.colorScheme.onSurface.withAlpha(128),
                                 fontSize: 11,
                               )),
                         ],
@@ -573,7 +625,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: AppTheme.lossRed),
             const SizedBox(height: 12),
-            Text('Failed to load watchlists', style: theme.textTheme.titleMedium),
+            Text('Failed to load watchlists',
+                style: theme.textTheme.titleMedium),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.invalidate(watchlistsProvider),
@@ -589,7 +642,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.bookmark_add_outlined,
-                    size: 64, color: theme.colorScheme.primary.withOpacity(0.5)),
+                    size: 64,
+                    color: theme.colorScheme.primary.withOpacity(0.5)),
                 const SizedBox(height: 16),
                 Text('No watchlists yet', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
@@ -628,11 +682,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             return _WatchlistCard(
               watchlist: wl,
               onSymbolRemoved: (symbol) async {
-                await ref.read(watchlistRepositoryProvider).removeSymbol(wl.id, symbol);
+                await ref
+                    .read(watchlistRepositoryProvider)
+                    .removeSymbol(wl.id, symbol);
                 ref.invalidate(watchlistsProvider);
               },
               onSymbolAdded: (symbol) async {
-                await ref.read(watchlistRepositoryProvider).addSymbol(wl.id, symbol: symbol);
+                await ref
+                    .read(watchlistRepositoryProvider)
+                    .addSymbol(wl.id, symbol: symbol);
                 ref.invalidate(watchlistsProvider);
               },
             ).animate().fadeIn(delay: Duration(milliseconds: index * 80));
@@ -657,14 +715,20 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Create')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Create')),
         ],
       ),
     );
 
     if (confirmed == true && nameCtrl.text.trim().isNotEmpty) {
-      await ref.read(watchlistRepositoryProvider).createWatchlist(name: nameCtrl.text.trim());
+      await ref
+          .read(watchlistRepositoryProvider)
+          .createWatchlist(name: nameCtrl.text.trim());
       ref.invalidate(watchlistsProvider);
     }
   }
@@ -712,7 +776,8 @@ class _WatchlistCardState extends State<_WatchlistCard> {
               Expanded(
                 child: Text(
                   widget.watchlist.name,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
@@ -740,12 +805,14 @@ class _WatchlistCardState extends State<_WatchlistCard> {
                   .map((symbol) => Chip(
                         key: Key('chip_${symbol}_${widget.watchlist.id}'),
                         label: Text(symbol,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 12)),
                         deleteIcon: const Icon(Icons.close, size: 14),
                         onDeleted: () => widget.onSymbolRemoved(symbol),
                         visualDensity: VisualDensity.compact,
                         padding: const EdgeInsets.symmetric(horizontal: 4),
-                        backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                        backgroundColor:
+                            theme.colorScheme.primaryContainer.withOpacity(0.4),
                       ))
                   .toList(),
             ),
@@ -765,7 +832,8 @@ class _WatchlistCardState extends State<_WatchlistCard> {
                     hintText: 'Add symbol (e.g. RELIANCE)',
                     hintStyle: theme.textTheme.bodySmall,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -777,14 +845,17 @@ class _WatchlistCardState extends State<_WatchlistCard> {
               FilledButton(
                 onPressed: _adding ? null : _submitAdd,
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 child: _adding
                     ? const SizedBox(
-                        width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('Add'),
               ),
             ],

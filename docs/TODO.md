@@ -56,14 +56,15 @@
 
 ## Backlog
 
-- [x] Cloudflare deployment `wrangler.toml` — ✅ created
+- [x] Cloudflare deployment `wrangler.toml` — ✅ created, deploy job is opt-in via `CLOUDFLARE_DEPLOYMENT_ENABLED` repo var
 - [x] Build APK locally — ✅ `dist/wealthai-release-20260707.apk` (27.3 MB)
+- [x] iOS CI build (macOS runner) — ✅ `ios/` directory created, `build-ios` job on macos-latest
+- [x] CI/CD repair: `dart format --set-exit-if-changed` — root cause: Windows CRLF in git objects. Fixed with `apps/web/.gitattributes` `*.dart text eol=lf`
+- [x] CI/CD repair: `bandit -ll -ii` — B104 (`0.0.0.0`) and B314 (ET.fromstring). Fixed with `# nosec B104/B314` annotations
 - [x] CI/CD repair: `import_screen.dart` compile errors (wrong class placement) — fixed
 - [x] CI/CD repair: `apiClientProvider` undefined → `dioProvider` — fixed
 - [x] CI/CD repair: `pyproject.toml` UTF-8 BOM → pytest TOML parse failure — fixed
 - [x] CI/CD repair: ruff B017/N806/S106 not suppressed in `tests/*` — fixed
-- [x] CI/CD repair: `dart format` drift in 32 files — fixed
 - [x] Backend: maintain ≥65% test coverage — **188 tests, ≥69%** ✅
-- [ ] iOS CI build (macOS runner)
 - [ ] Push notifications (FCM/APNs)
 - [ ] `docs/API.md` — verify all 60+ endpoints documented

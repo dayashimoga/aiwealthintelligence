@@ -75,7 +75,13 @@ class MarketPriceStreamNotifier extends StateNotifier<MarketPriceState> {
   Timer? _pingTimer;
   bool _disposed = false;
 
-  static const _defaultSymbols = ['TCS', 'INFY', 'RELIANCE', 'HDFCBANK', 'ICICIBANK'];
+  static const _defaultSymbols = [
+    'TCS',
+    'INFY',
+    'RELIANCE',
+    'HDFCBANK',
+    'ICICIBANK'
+  ];
   static const _reconnectDelaySeconds = 5;
   static const _intervalSeconds = 5;
 
@@ -146,7 +152,8 @@ class MarketPriceStreamNotifier extends StateNotifier<MarketPriceState> {
         final data = msg['data'] as Map<String, dynamic>? ?? {};
         final newPrices = Map<String, PriceTick>.from(state.prices);
         for (final entry in data.entries) {
-          newPrices[entry.key] = PriceTick.fromJson(entry.value as Map<String, dynamic>);
+          newPrices[entry.key] =
+              PriceTick.fromJson(entry.value as Map<String, dynamic>);
         }
         state = state.copyWith(
           prices: newPrices,

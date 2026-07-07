@@ -35,11 +35,17 @@ Widget _wrap(
         routes: [
           GoRoute(path: '/', builder: (_, __) => screen),
           GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-          GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-          GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
-          GoRoute(path: '/dashboard', builder: (_, __) => const Scaffold(body: Text('Dashboard'))),
           GoRoute(
-              path: '/onboarding', builder: (_, __) => const Scaffold(body: Text('Onboarding'))),
+              path: '/register', builder: (_, __) => const RegisterScreen()),
+          GoRoute(
+              path: '/forgot-password',
+              builder: (_, __) => const ForgotPasswordScreen()),
+          GoRoute(
+              path: '/dashboard',
+              builder: (_, __) => const Scaffold(body: Text('Dashboard'))),
+          GoRoute(
+              path: '/onboarding',
+              builder: (_, __) => const Scaffold(body: Text('Onboarding'))),
         ],
       );
 
@@ -57,7 +63,8 @@ Widget _wrap(
 
 void main() {
   group('LoginScreen', () {
-    testWidgets('renders email, password fields and Sign In button', (tester) async {
+    testWidgets('renders email, password fields and Sign In button',
+        (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -104,7 +111,9 @@ void main() {
   // ─────────────────────────────────────────────
 
   group('RegisterScreen', () {
-    testWidgets('renders name, email, password fields and Create Account button', (tester) async {
+    testWidgets(
+        'renders name, email, password fields and Create Account button',
+        (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -128,7 +137,8 @@ void main() {
 
       // Fill all fields
       await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
-      await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
+      await tester.enterText(
+          find.byType(TextFormField).at(1), 'test@example.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'Password123!');
 
       await tester.tap(find.text('Create Account'));
@@ -143,7 +153,8 @@ void main() {
   // ─────────────────────────────────────────────
 
   group('ForgotPasswordScreen', () {
-    testWidgets('renders email field and Send Reset Code button', (tester) async {
+    testWidgets('renders email field and Send Reset Code button',
+        (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -170,7 +181,8 @@ void main() {
       expect(find.text('Enter your email'), findsOneWidget);
     });
 
-    testWidgets('advances to step 2 after successful OTP request', (tester) async {
+    testWidgets('advances to step 2 after successful OTP request',
+        (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -179,10 +191,12 @@ void main() {
       when(() => mock.requestPasswordReset(any()))
           .thenAnswer((_) async => const Result.success('Code sent'));
 
-      await tester.pumpWidget(_wrap(const ForgotPasswordScreen(), authRepo: mock));
+      await tester
+          .pumpWidget(_wrap(const ForgotPasswordScreen(), authRepo: mock));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('reset_email_field')), 'user@example.com');
+      await tester.enterText(
+          find.byKey(const Key('reset_email_field')), 'user@example.com');
       await tester.tap(find.byKey(const Key('send_reset_code_button')));
       await tester.pumpAndSettle();
 
@@ -200,18 +214,23 @@ void main() {
       when(() => mock.requestPasswordReset(any()))
           .thenAnswer((_) async => const Result.success('Code sent'));
 
-      await tester.pumpWidget(_wrap(const ForgotPasswordScreen(), authRepo: mock));
+      await tester
+          .pumpWidget(_wrap(const ForgotPasswordScreen(), authRepo: mock));
       await tester.pumpAndSettle();
 
       // Step 1 — enter email
-      await tester.enterText(find.byKey(const Key('reset_email_field')), 'user@example.com');
+      await tester.enterText(
+          find.byKey(const Key('reset_email_field')), 'user@example.com');
       await tester.tap(find.byKey(const Key('send_reset_code_button')));
       await tester.pumpAndSettle();
 
       // Step 2 — enter mismatched passwords
-      await tester.enterText(find.byKey(const Key('reset_code_field')), '123456');
-      await tester.enterText(find.byKey(const Key('reset_new_password_field')), 'Password1!');
-      await tester.enterText(find.byKey(const Key('reset_confirm_password_field')), 'Different1!');
+      await tester.enterText(
+          find.byKey(const Key('reset_code_field')), '123456');
+      await tester.enterText(
+          find.byKey(const Key('reset_new_password_field')), 'Password1!');
+      await tester.enterText(
+          find.byKey(const Key('reset_confirm_password_field')), 'Different1!');
 
       await tester.tap(find.byKey(const Key('confirm_reset_button')));
       await tester.pumpAndSettle();

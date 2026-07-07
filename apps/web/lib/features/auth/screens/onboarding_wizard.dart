@@ -11,10 +11,12 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
   const OnboardingWizardScreen({super.key});
 
   @override
-  ConsumerState<OnboardingWizardScreen> createState() => _OnboardingWizardScreenState();
+  ConsumerState<OnboardingWizardScreen> createState() =>
+      _OnboardingWizardScreenState();
 }
 
-class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen> {
+class _OnboardingWizardScreenState
+    extends ConsumerState<OnboardingWizardScreen> {
   final PageController _pageController = PageController();
   final LocalAuthentication _auth = LocalAuthentication();
   int _currentPage = 0;
@@ -38,12 +40,14 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   Future<void> _setupBiometrics() async {
     try {
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+      final bool canAuthenticate =
+          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
 
       if (!canAuthenticate) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Biometrics not supported on this device')),
+            const SnackBar(
+                content: Text('Biometrics not supported on this device')),
           );
         }
         return;
@@ -58,7 +62,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         setState(() => _isBiometricsEnabled = true);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Biometric access enabled successfully!')),
+            const SnackBar(
+                content: Text('Biometric access enabled successfully!')),
           );
         }
       }
@@ -166,7 +171,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                   ),
                   child: Text(
                     backupCodes.join('\n'),
-                    style: const TextStyle(fontFamily: 'monospace', color: Colors.greenAccent),
+                    style: const TextStyle(
+                        fontFamily: 'monospace', color: Colors.greenAccent),
                   ),
                 ),
               ],
@@ -217,7 +223,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: theme.brightness == Brightness.dark ? AppTheme.darkBgGradient : null,
+          gradient: theme.brightness == Brightness.dark
+              ? AppTheme.darkBgGradient
+              : null,
         ),
         child: Column(
           children: [
@@ -225,7 +233,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacingLg, vertical: AppTheme.spacingMd),
+                    horizontal: AppTheme.spacingLg,
+                    vertical: AppTheme.spacingMd),
                 child: Row(
                   children: List.generate(3, (index) {
                     final active = index <= _currentPage;
@@ -324,7 +333,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           const SizedBox(height: 24),
           Text(
             'Meet WealthAI',
-            style: theme.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w900),
+            style: theme.textTheme.headlineLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -356,7 +366,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   }
 
   Widget _buildTourCard(ThemeData theme,
-      {required IconData icon, required String title, required String description}) {
+      {required IconData icon,
+      required String title,
+      required String description}) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.spacingMd),
@@ -376,11 +388,12 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text(description,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(160))),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha(160))),
                 ],
               ),
             ),
@@ -399,7 +412,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           const SizedBox(height: 20),
           Text(
             'Secure your account',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
           Text(
@@ -414,7 +428,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             theme,
             icon: Icons.fingerprint,
             title: 'Biometric unlock',
-            description: 'Quickly unlock the application using Face ID or fingerprint scans.',
+            description:
+                'Quickly unlock the application using Face ID or fingerprint scans.',
             statusText: _isBiometricsEnabled ? 'Enabled' : 'Not setup',
             onTap: _setupBiometrics,
             enabled: _isBiometricsEnabled,
@@ -426,7 +441,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             theme,
             icon: Icons.vpn_key_outlined,
             title: 'Register passkey credential',
-            description: 'Sign in securely without passwords using hardware authenticators.',
+            description:
+                'Sign in securely without passwords using hardware authenticators.',
             statusText: _isPasskeyRegistered ? 'Registered' : 'Setup now',
             onTap: _registerPasskey,
             enabled: _isPasskeyRegistered,
@@ -438,9 +454,11 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             theme,
             icon: Icons.security,
             title: 'TOTP Two-Factor Authenticator',
-            description: 'Require a verification code from Google Authenticator / 1Password.',
-            statusText:
-                _isTotpEnabled ? 'Enabled' : (_totpSecret.isNotEmpty ? 'Enter code' : 'Setup TOTP'),
+            description:
+                'Require a verification code from Google Authenticator / 1Password.',
+            statusText: _isTotpEnabled
+                ? 'Enabled'
+                : (_totpSecret.isNotEmpty ? 'Enter code' : 'Setup TOTP'),
             onTap: _isTotpEnabled
                 ? null
                 : () {
@@ -462,11 +480,13 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Enter code from your Authenticator app to enable:',
+                  const Text(
+                      'Enter code from your Authenticator app to enable:',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Text('Secret key: $_totpSecret',
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
+                      style: const TextStyle(
+                          fontFamily: 'monospace', fontSize: 13)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -477,7 +497,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                           decoration: const InputDecoration(
                             hintText: '6-digit verification code',
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                           ),
                         ),
                       ),
@@ -511,8 +532,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color:
-              enabled ? theme.colorScheme.primary.withAlpha(128) : theme.colorScheme.outlineVariant,
+          color: enabled
+              ? theme.colorScheme.primary.withAlpha(128)
+              : theme.colorScheme.outlineVariant,
           width: enabled ? 2 : 1,
         ),
       ),
@@ -521,7 +543,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         contentPadding: const EdgeInsets.all(16),
         leading: Icon(icon,
             size: 36,
-            color: enabled ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+            color: enabled
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,7 +564,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
               child: Text(
                 statusText,
                 style: TextStyle(
-                  color: enabled ? Colors.green : theme.colorScheme.onSurfaceVariant,
+                  color: enabled
+                      ? Colors.green
+                      : theme.colorScheme.onSurfaceVariant,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -562,7 +588,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           const SizedBox(height: 20),
           Text(
             'Link your wealth portfolio',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
           Text(

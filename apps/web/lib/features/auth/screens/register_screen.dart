@@ -54,7 +54,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       res.when(
         success: (tokens) {
           // Update global auth state → router redirect handles navigation.
-          ref.read(authStateProvider.notifier).setAuthenticated(onboarded: false);
+          ref
+              .read(authStateProvider.notifier)
+              .setAuthenticated(onboarded: false);
         },
         failure: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +74,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: theme.brightness == Brightness.dark ? AppTheme.darkBgGradient : null,
+          gradient: theme.brightness == Brightness.dark
+              ? AppTheme.darkBgGradient
+              : null,
         ),
         child: Center(
           child: SingleChildScrollView(
@@ -97,7 +101,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 36),
+                    child: const Icon(Icons.auto_awesome,
+                        color: Colors.white, size: 36),
                   ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
                   const SizedBox(height: AppTheme.spacingLg),
 
@@ -129,8 +134,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             labelText: 'Full Name',
                             prefixIcon: Icon(Icons.person_outlined),
                           ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Please enter your name' : null,
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Please enter your name'
+                              : null,
                         ).animate().fadeIn(delay: 300.ms),
                         const SizedBox(height: AppTheme.spacingMd),
                         TextFormField(
@@ -161,9 +167,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               icon: Icon(_obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
                             ),
-                            helperText: 'Min 8 chars, upper, lower, digit, special char',
+                            helperText:
+                                'Min 8 chars, upper, lower, digit, special char',
                           ),
                           validator: (v) {
                             if (v == null || v.length < 8) {
@@ -175,7 +183,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         const SizedBox(height: AppTheme.spacingMd),
                         CheckboxListTile(
                           value: _agreedToTerms,
-                          onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
+                          onChanged: (v) =>
+                              setState(() => _agreedToTerms = v ?? false),
                           title: Text(
                             'I agree to Terms of Service and Privacy Policy',
                             style: theme.textTheme.bodySmall,
@@ -203,7 +212,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Already have an account?', style: theme.textTheme.bodyMedium),
+                            Text('Already have an account?',
+                                style: theme.textTheme.bodyMedium),
                             TextButton(
                               onPressed: () => context.go('/login'),
                               child: const Text('Sign In'),

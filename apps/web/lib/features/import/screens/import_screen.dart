@@ -21,7 +21,8 @@ class ImportScreen extends ConsumerStatefulWidget {
   ConsumerState<ImportScreen> createState() => _ImportScreenState();
 }
 
-class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerProviderStateMixin {
+class _ImportScreenState extends ConsumerState<ImportScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   PlatformFile? _pickedFile;
   final _passwordController = TextEditingController();
@@ -99,7 +100,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
             widget.portfolioId,
             _pickedFile!.bytes!,
             _pickedFile!.name,
-            password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+            password: _passwordController.text.isNotEmpty
+                ? _passwordController.text
+                : null,
           )
         : await repo.importBrokerReport(
             widget.portfolioId,
@@ -123,7 +126,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Import Complete'),
-            content: Text('Successfully imported ${data.imported} holdings positions!'),
+            content: Text(
+                'Successfully imported ${data.imported} holdings positions!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -216,9 +220,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      Text('â€¢ Type: EQUITIES, MUTUAL_FUNDS', style: TextStyle(fontSize: 12)),
-                      Text('â€¢ Purpose: Wealth Analytics', style: TextStyle(fontSize: 12)),
-                      Text('â€¢ Validity: 3 Years', style: TextStyle(fontSize: 12)),
+                      Text('â€¢ Type: EQUITIES, MUTUAL_FUNDS',
+                          style: TextStyle(fontSize: 12)),
+                      Text('â€¢ Purpose: Wealth Analytics',
+                          style: TextStyle(fontSize: 12)),
+                      Text('â€¢ Validity: 3 Years',
+                          style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
@@ -254,8 +261,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) =>
-          _AAProgressOverlay(consentHandle: consentHandle, portfolioId: widget.portfolioId),
+      builder: (ctx) => _AAProgressOverlay(
+          consentHandle: consentHandle, portfolioId: widget.portfolioId),
     ).then((result) {
       if (result != null && result is int) {
         ref.invalidate(portfoliosProvider);
@@ -268,8 +275,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           barrierDismissible: false,
           builder: (successCtx) => AlertDialog(
             title: const Text('Link Successful!'),
-            content:
-                Text('Successfully linked and imported $result holdings via Account Aggregator!'),
+            content: Text(
+                'Successfully linked and imported $result holdings via Account Aggregator!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -340,7 +347,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                     ),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                      style: const TextStyle(
+                          color: Colors.redAccent, fontSize: 13),
                     ),
                   ),
                 ),
@@ -357,7 +365,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Upload & Import'),
                 ),
@@ -403,9 +412,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.table_chart_outlined, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+        Icon(Icons.table_chart_outlined,
+            size: 80, color: theme.colorScheme.primary.withAlpha(128)),
         const SizedBox(height: 16),
-        Text('Import Broker CSV/Excel Report', style: theme.textTheme.titleMedium),
+        Text('Import Broker CSV/Excel Report',
+            style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
           'Select the holdings report CSV file exported from Zerodha Kite, Groww, or other brokers.',
@@ -426,7 +437,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 20),
-          Icon(Icons.sync_alt, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+          Icon(Icons.sync_alt,
+              size: 80, color: theme.colorScheme.primary.withAlpha(128)),
           const SizedBox(height: 16),
           Center(
             child: Text(
@@ -498,8 +510,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          border:
-              Border.all(color: theme.colorScheme.primary.withAlpha(128), style: BorderStyle.solid),
+          border: Border.all(
+              color: theme.colorScheme.primary.withAlpha(128),
+              style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(16),
           color: theme.colorScheme.primaryContainer.withAlpha(20),
         ),
@@ -522,8 +535,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
               if (hasFile)
                 Text(
                   '${(_pickedFile!.size / 1024).toStringAsFixed(1)} KB',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(128)),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withAlpha(128)),
                 ),
             ],
           ),
@@ -580,7 +593,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                 color: (_camsError ? Colors.red : Colors.green).withAlpha(25),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: (_camsError ? Colors.red : Colors.green).withAlpha(100),
+                  color:
+                      (_camsError ? Colors.red : Colors.green).withAlpha(100),
                 ),
               ),
               child: Text(
@@ -593,7 +607,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
             ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: _camsLoading || _pickedFile == null ? null : _handleCamsUpload,
+            onPressed:
+                _camsLoading || _pickedFile == null ? null : _handleCamsUpload,
             icon: _camsLoading
                 ? const SizedBox(
                     width: 16,
@@ -604,7 +619,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
             label: Text(_camsLoading ? 'Importingâ€¦' : 'Import Mutual Funds'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
           const SizedBox(height: 20),
@@ -626,7 +642,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           _pickedFile!.bytes!,
           filename: _pickedFile!.name,
         ),
-        if (_camsPasswordCtrl.text.isNotEmpty) 'password': _camsPasswordCtrl.text,
+        if (_camsPasswordCtrl.text.isNotEmpty)
+          'password': _camsPasswordCtrl.text,
       });
       final resp = await dio.post(
         '${ApiConstants.apiPrefix}/portfolios/${widget.portfolioId}/import/cams-kfin',
@@ -639,7 +656,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
       if (mounted) {
         setState(() {
           _camsError = false;
-          _camsResult = 'âœ“ Imported $imported schemes ($amcs AMCs) from $fmt statement.';
+          _camsResult =
+              'âœ“ Imported $imported schemes ($amcs AMCs) from $fmt statement.';
         });
         ref.invalidate(portfoliosProvider);
         ref.invalidate(holdingsProvider);
@@ -680,7 +698,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: configured ? Colors.green.withAlpha(120) : Colors.orange.withAlpha(120),
+                color: configured
+                    ? Colors.green.withAlpha(120)
+                    : Colors.orange.withAlpha(120),
               ),
             ),
             child: Column(
@@ -695,7 +715,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                     ),
                     const SizedBox(width: 8),
                     Text('Email Configuration',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     const Spacer(),
                     TextButton(
                       onPressed: _loadEmailConfig,
@@ -705,11 +726,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                 ),
                 if (_emailConfig != null) ...[
                   const SizedBox(height: 8),
+                  _emailConfigRow(theme, 'Status',
+                      configured ? 'Configured âœ“' : 'Not configured âœ—'),
                   _emailConfigRow(
-                      theme, 'Status', configured ? 'Configured âœ“' : 'Not configured âœ—'),
-                  _emailConfigRow(theme, 'Host', _emailConfig!['host'] as String? ?? '-'),
-                  _emailConfigRow(theme, 'Email', _emailConfig!['email'] as String? ?? '-'),
-                  _emailConfigRow(theme, 'Folder', _emailConfig!['folder'] as String? ?? 'INBOX'),
+                      theme, 'Host', _emailConfig!['host'] as String? ?? '-'),
+                  _emailConfigRow(
+                      theme, 'Email', _emailConfig!['email'] as String? ?? '-'),
+                  _emailConfigRow(theme, 'Folder',
+                      _emailConfig!['folder'] as String? ?? 'INBOX'),
                 ] else
                   const LinearProgressIndicator(),
                 if (!configured)
@@ -718,8 +742,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                     child: Text(
                       'Set EMAIL_IMAP_HOST, EMAIL_ADDRESS, EMAIL_PASSWORD\n'
                       'environment variables to enable email auto-import.',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: Colors.orange, fontStyle: FontStyle.italic),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.orange, fontStyle: FontStyle.italic),
                     ),
                   ),
                 if (configured)
@@ -733,7 +757,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                               height: 14,
                               child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.wifi_tethering, size: 16),
-                      label: Text(_emailTesting ? 'Testingâ€¦' : 'Test Connection'),
+                      label: Text(
+                          _emailTesting ? 'Testingâ€¦' : 'Test Connection'),
                     ),
                   ),
               ],
@@ -750,7 +775,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text('Scan Settings',
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _emailSinceDateCtrl,
@@ -778,7 +804,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (_emailError ? Colors.red : Colors.green).withAlpha(25),
+                      color: (_emailError ? Colors.red : Colors.green)
+                          .withAlpha(25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -793,12 +820,16 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                   onPressed: !configured || _emailLoading ? null : _scanEmail,
                   icon: _emailLoading
                       ? const SizedBox(
-                          width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.email_outlined),
-                  label: Text(_emailLoading ? 'Scanning mailboxâ€¦' : 'Scan & Import'),
+                  label: Text(
+                      _emailLoading ? 'Scanning mailboxâ€¦' : 'Scan & Import'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ],
@@ -816,13 +847,17 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Scan Summary',
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  _emailConfigRow(
-                      theme, 'Emails scanned', '${_emailScanSummary!["emails_scanned"] ?? 0}'),
-                  _emailConfigRow(theme, 'PDFs found', '${_emailScanSummary!["pdfs_found"] ?? 0}'),
-                  _emailConfigRow(theme, 'Imported', '${_emailScanSummary!["imported"] ?? 0}'),
-                  _emailConfigRow(theme, 'Skipped', '${_emailScanSummary!["skipped"] ?? 0}'),
+                  _emailConfigRow(theme, 'Emails scanned',
+                      '${_emailScanSummary!["emails_scanned"] ?? 0}'),
+                  _emailConfigRow(theme, 'PDFs found',
+                      '${_emailScanSummary!["pdfs_found"] ?? 0}'),
+                  _emailConfigRow(theme, 'Imported',
+                      '${_emailScanSummary!["imported"] ?? 0}'),
+                  _emailConfigRow(theme, 'Skipped',
+                      '${_emailScanSummary!["skipped"] ?? 0}'),
                 ],
               ),
             ),
@@ -840,12 +875,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
           SizedBox(
             width: 100,
             child: Text(label,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(130))),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withAlpha(130))),
           ),
           Expanded(
             child: Text(value,
-                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -855,7 +891,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
   Future<void> _loadEmailConfig() async {
     try {
       final dio = ref.read(dioProvider);
-      final resp = await dio.get('${ApiConstants.apiPrefix}/import/email-config');
+      final resp =
+          await dio.get('${ApiConstants.apiPrefix}/import/email-config');
       if (mounted) {
         setState(() => _emailConfig = resp.data as Map<String, dynamic>);
       }
@@ -895,7 +932,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerPr
       final dio = ref.read(dioProvider);
       final formData = FormData.fromMap({
         'since_date': _emailSinceDateCtrl.text,
-        if (_emailPdfPwdCtrl.text.isNotEmpty) 'pdf_password': _emailPdfPwdCtrl.text,
+        if (_emailPdfPwdCtrl.text.isNotEmpty)
+          'pdf_password': _emailPdfPwdCtrl.text,
       });
       final resp = await dio.post(
         '${ApiConstants.apiPrefix}/portfolios/${widget.portfolioId}/import/email-scan',
@@ -981,7 +1019,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
         });
       } else if (_ticks == 2) {
         setState(() {
-          _statusMessage = 'Decrypting Equities & Mutual Funds XML materials...';
+          _statusMessage =
+              'Decrypting Equities & Mutual Funds XML materials...';
           _progress = 0.75;
         });
       }
@@ -1047,7 +1086,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
               Text(
                 _statusMessage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               const SizedBox(height: 12),
               LinearProgressIndicator(value: _progress),

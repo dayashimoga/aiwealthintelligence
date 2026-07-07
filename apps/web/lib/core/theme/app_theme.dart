@@ -220,13 +220,15 @@ class AppTheme {
     );
   }
 
-  static AppBarTheme _appBarTheme(ColorScheme colorScheme, Brightness brightness) {
+  static AppBarTheme _appBarTheme(
+      ColorScheme colorScheme, Brightness brightness) {
     return AppBarTheme(
       elevation: 0,
       scrolledUnderElevation: 0.5,
       centerTitle: false,
-      backgroundColor:
-          brightness == Brightness.dark ? const Color(0xFF0D0D14) : colorScheme.surface,
+      backgroundColor: brightness == Brightness.dark
+          ? const Color(0xFF0D0D14)
+          : colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
       titleTextStyle: GoogleFonts.inter(
         fontSize: 20,
@@ -247,7 +249,9 @@ class AppTheme {
               : Colors.black.withAlpha(13),
         ),
       ),
-      color: brightness == Brightness.dark ? const Color(0xFF1A1A26) : colorScheme.surface,
+      color: brightness == Brightness.dark
+          ? const Color(0xFF1A1A26)
+          : colorScheme.surface,
     );
   }
 
@@ -321,7 +325,8 @@ class AppTheme {
       backgroundColor: colorScheme.surface,
       indicatorColor: colorScheme.primaryContainer,
       selectedIconTheme: IconThemeData(color: colorScheme.onPrimaryContainer),
-      unselectedIconTheme: IconThemeData(color: colorScheme.onSurface.withAlpha(153)),
+      unselectedIconTheme:
+          IconThemeData(color: colorScheme.onSurface.withAlpha(153)),
     );
   }
 

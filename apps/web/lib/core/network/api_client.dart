@@ -57,7 +57,8 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     // Skip auth for login/register
-    if (options.path.contains('/auth/login') || options.path.contains('/auth/register')) {
+    if (options.path.contains('/auth/login') ||
+        options.path.contains('/auth/register')) {
       return handler.next(options);
     }
 
@@ -99,7 +100,8 @@ class AuthInterceptor extends Interceptor {
 
             // Retry original request
             final retryOptions = err.requestOptions;
-            retryOptions.headers['Authorization'] = 'Bearer ${data['access_token']}';
+            retryOptions.headers['Authorization'] =
+                'Bearer ${data['access_token']}';
 
             final retryDio = _ref.read(dioProvider);
             final retryResponse = await retryDio.fetch(retryOptions);

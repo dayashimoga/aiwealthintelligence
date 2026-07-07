@@ -66,7 +66,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     final portfolioId = ref.read(selectedPortfolioIdProvider);
 
     setState(() {
-      _bubbles.add(_Bubble(text: text, isUser: true, timestamp: DateTime.now()));
+      _bubbles
+          .add(_Bubble(text: text, isUser: true, timestamp: DateTime.now()));
       _isLoading = true;
     });
     _msgCtrl.clear();
@@ -121,7 +122,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+              child:
+                  const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
             ),
             const SizedBox(width: 10),
             const Text('AI Copilot Chat'),
@@ -225,7 +227,8 @@ class _ChatBubble extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
             _AvatarBubble(theme: theme),
@@ -233,10 +236,12 @@ class _ChatBubble extends StatelessWidget {
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: isUser
                         ? theme.colorScheme.primary
@@ -256,7 +261,9 @@ class _ChatBubble extends StatelessWidget {
                   child: Text(
                     bubble.text,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isUser ? Colors.white : (bubble.isError ? AppTheme.lossRed : null),
+                      color: isUser
+                          ? Colors.white
+                          : (bubble.isError ? AppTheme.lossRed : null),
                       height: 1.45,
                     ),
                   ),
@@ -280,7 +287,8 @@ class _ChatBubble extends StatelessWidget {
                     spacing: 6,
                     children: bubble.referencedHoldings
                         .map((h) => Chip(
-                              label: Text(h, style: const TextStyle(fontSize: 10)),
+                              label:
+                                  Text(h, style: const TextStyle(fontSize: 10)),
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
                             ))
@@ -299,7 +307,8 @@ class _ChatBubble extends StatelessWidget {
                               label: Text(s, style: theme.textTheme.labelSmall),
                               onPressed: () {},
                               side: BorderSide(
-                                color: theme.colorScheme.primary.withOpacity(0.35),
+                                color:
+                                    theme.colorScheme.primary.withOpacity(0.35),
                               ),
                             ))
                         .toList(),
@@ -475,7 +484,8 @@ class _InputBar extends StatelessWidget {
                   ),
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerHighest,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
               ),
             ),
@@ -494,16 +504,20 @@ class _InputBar extends StatelessWidget {
                           theme.colorScheme.secondary,
                         ],
                       ),
-                color: isLoading ? theme.colorScheme.outline.withOpacity(0.3) : null,
+                color: isLoading
+                    ? theme.colorScheme.outline.withOpacity(0.3)
+                    : null,
               ),
               child: IconButton(
                 icon: isLoading
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
-                    : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    : const Icon(Icons.send_rounded,
+                        color: Colors.white, size: 20),
                 onPressed: isLoading ? null : () => onSend(controller.text),
               ),
             ),
