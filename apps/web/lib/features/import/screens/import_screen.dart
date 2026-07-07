@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -775,10 +776,9 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
       _camsResult = null;
     });
     try {
-      final client = ref.read(apiClientProvider);
-      final dio = client.dio;
-      final formData = dio.FormData.fromMap({
-        'file': dio.MultipartFile.fromBytes(
+      final dio = ref.read(dioProvider);
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(
           _pickedFile!.bytes!,
           filename: _pickedFile!.name,
         ),
@@ -1032,9 +1032,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
 
   Future<void> _loadEmailConfig() async {
     try {
-      final client = ref.read(apiClientProvider);
-      final resp = await client.dio
-          .get('${ApiConstants.apiPrefix}/import/email-config');
+      final dio = ref.read(dioProvider);
+      final resp = await dio.get('${ApiConstants.apiPrefix}/import/email-config');
       if (mounted) {
         setState(() => _emailConfig = resp.data as Map<String, dynamic>);
       }
@@ -1044,9 +1043,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
   Future<void> _testEmailConn() async {
     setState(() => _emailTesting = true);
     try {
-      final client = ref.read(apiClientProvider);
-      await client.dio
-          .post('${ApiConstants.apiPrefix}/import/email-config/test');
+      final dio = ref.read(dioProvider);
+      await dio.post('${ApiConstants.apiPrefix}/import/email-config/test');
       if (mounted) {
         setState(() {
           _emailError = false;
@@ -1072,9 +1070,8 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
       _emailScanSummary = null;
     });
     try {
-      final client = ref.read(apiClientProvider);
-      final dio = client.dio;
-      final formData = dio.FormData.fromMap({
+      final dio = ref.read(dioProvider);
+      final formData = FormData.fromMap({
         'since_date': _emailSinceDateCtrl.text,
         if (_emailPdfPwdCtrl.text.isNotEmpty)
           'pdf_password': _emailPdfPwdCtrl.text,
