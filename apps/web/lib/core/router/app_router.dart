@@ -18,14 +18,68 @@ import '../../features/copilot/screens/copilot_screen.dart';
 import '../../features/copilot/screens/portfolio_doctor_screen.dart';
 import '../../features/copilot/screens/scenario_screen.dart';
 import '../../features/copilot/screens/advanced_analysis_screen.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/shell_scaffold.dart';
 
-/// Global router provider.
+/// Splash / loading screen shown while checking stored token.
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Global router provider with auth guard redirect.
 final routerProvider = Provider<GoRouter>((ref) {
+  // Listen to auth state so router refreshes when it changes.
+  final authNotifier = ref.watch(authStateProvider.notifier);
+
   return GoRouter(
-    initialLocation: '/dashboard',
-    debugLogDiagnostics: true,
+    initialLocation: '/splash',
+    debugLogDiagnostics: false,
+    refreshListenable: _AuthNotifierListenable(ref),
+    redirect: (context, state) {
+      final authStatus = ref.read(authStateProvider);
+      final location = state.matchedLocation;
+
+      // While loading, always go to splash.
+      if (authStatus == AuthStatus.loading) {
+        return location == '/splash' ? null : '/splash';
+      }
+
+      final isOnAuthRoute = location == '/login' ||
+          location == '/register' ||
+          location == '/splash';
+
+      // Unauthenticated — send to login (unless already there).
+      if (authStatus == AuthStatus.unauthenticated) {
+        return isOnAuthRoute ? null : '/login';
+      }
+
+      // Needs onboarding — send to onboarding wizard.
+      if (authStatus == AuthStatus.onboarding) {
+        return location == '/onboarding' ? null : '/onboarding';
+      }
+
+      // Authenticated — redirect away from auth routes.
+      if (authStatus == AuthStatus.authenticated && isOnAuthRoute) {
+        return '/dashboard';
+      }
+
+      return null;
+    },
     routes: [
+      // Splash
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const _SplashScreen(),
+      ),
+
       // Auth routes (no shell)
       GoRoute(
         path: '/login',
@@ -158,3 +212,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+/// Listenable that triggers router refresh when auth state changes.
+class _AuthNotifierListenable extends ChangeNotifier {
+  _AuthNotifierListenable(this._ref) {
+    _ref.listen<AuthStatus>(authStateProvider, (_, __) {
+      notifyListeners();
+    });
+  }
+
+  final Ref _ref;
+}

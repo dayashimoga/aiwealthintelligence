@@ -54,7 +54,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         """Handle Pydantic validation errors with user-friendly messages."""
         errors = []
         for error in exc.errors():
-            loc = " → ".join(str(l) for l in error["loc"] if l != "body")
+            loc = " → ".join(str(part) for part in error["loc"] if part != "body")
             errors.append({"field": loc, "message": error["msg"], "type": error["type"]})
 
         return JSONResponse(

@@ -10,6 +10,7 @@ import '../../../core/models/models.dart';
 import '../../../core/providers/portfolio_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common_widgets.dart';
+import 'package:go_router/go_router.dart';
 
 /// Main dashboard screen showing portfolio overview, analytics, and AI insights.
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -100,7 +101,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.notifications_outlined),
-                    onPressed: () {},
+                    onPressed: () => context.go('/settings'),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -141,9 +142,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               const SizedBox(height: AppTheme.spacingLg),
                               ElevatedButton.icon(
-                                onPressed: () {
-                                  // Navigates or prompts setup
-                                },
+                                onPressed: () => context.go('/portfolios'),
                                 icon: const Icon(Icons.add),
                                 label: const Text('Create Portfolio'),
                               ),
@@ -494,7 +493,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Text('Holdings Positions',
                           style: theme.textTheme.titleMedium),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () => context.go('/portfolios'),
                         child: const Text('View All'),
                       ),
                     ],
