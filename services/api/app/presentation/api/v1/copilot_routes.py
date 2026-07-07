@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import UTC
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.ai.ai_copilot import (
     generate_daily_brief,
@@ -29,9 +30,6 @@ from app.presentation.schemas.api_schemas import (
     ScenarioSimulationResponse,
 )
 from app.shared.exceptions import NotFoundError
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()

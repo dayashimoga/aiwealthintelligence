@@ -35,9 +35,6 @@ class _SplashScreen extends StatelessWidget {
 
 /// Global router provider with auth guard redirect.
 final routerProvider = Provider<GoRouter>((ref) {
-  // Listen to auth state so router refreshes when it changes.
-  final authNotifier = ref.watch(authStateProvider.notifier);
-
   return GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: false,

@@ -6,10 +6,11 @@ import csv
 import io
 import uuid
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, File, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Holding, Portfolio
 from app.infrastructure.analytics.portfolio_analytics_engine import PortfolioAnalyticsEngine
@@ -33,9 +34,6 @@ from app.presentation.schemas.api_schemas import (
     UpdatePortfolioRequest,
 )
 from app.shared.exceptions import NotFoundError, ValidationError
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()

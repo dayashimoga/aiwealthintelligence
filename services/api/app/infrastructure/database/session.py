@@ -35,7 +35,14 @@ class DatabaseSessionManager:
         self._sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
     def init(self, database_url: str) -> None:
-        """Initialize database engine and session factory."""
+        """Initialize database engine and session factory.
+
+        Idempotent: if already initialised with the same URL, this is a no-op.
+        This prevents the FastAPI lifespan from replacing a test-injected engine.
+        """
+        if self._engine is not None:
+            return  # Already initialised — skip to preserve test engines.
+
         settings = get_settings()
         global engine
 

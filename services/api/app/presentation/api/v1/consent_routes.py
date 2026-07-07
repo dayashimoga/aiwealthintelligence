@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Holding
 from app.infrastructure.database.session import get_db_session
@@ -24,9 +25,6 @@ from app.presentation.schemas.api_schemas import (
     ErrorResponse,
 )
 from app.shared.exceptions import NotFoundError, ValidationError
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()

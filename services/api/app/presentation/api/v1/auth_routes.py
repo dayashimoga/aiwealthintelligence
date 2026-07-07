@@ -6,12 +6,13 @@ import random
 import string
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
 
 import pyotp
 import structlog
 from fastapi import APIRouter, Body, Depends
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.domain.entities import User
@@ -46,9 +47,6 @@ from app.shared.security import (
     validate_password_strength,
     verify_password,
 )
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()

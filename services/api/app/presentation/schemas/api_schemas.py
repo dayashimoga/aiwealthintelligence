@@ -6,13 +6,11 @@ for all API endpoints. They are separate from domain entities.
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 # ============================================================
 # Common

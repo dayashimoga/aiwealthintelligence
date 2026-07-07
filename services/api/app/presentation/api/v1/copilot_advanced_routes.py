@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.analytics.advanced_analytics import AdvancedAnalyticsEngine
 from app.infrastructure.database.session import get_db_session
@@ -15,9 +16,6 @@ from app.infrastructure.repositories.sqlalchemy_repos import (
 from app.presentation.middleware.auth_dependency import get_current_user_id
 from app.presentation.schemas.api_schemas import AdvancedAnalysisResponse
 from app.shared.exceptions import NotFoundError
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
