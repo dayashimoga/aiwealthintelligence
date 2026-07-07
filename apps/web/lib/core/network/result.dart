@@ -8,8 +8,7 @@ sealed class Result<T> {
   const factory Result.success(T data) = Success<T>;
 
   /// Create a failure result.
-  const factory Result.failure(String message, {int? statusCode}) =
-      Failure<T>;
+  const factory Result.failure(String message, {int? statusCode}) = Failure<T>;
 
   /// Map the result to another type.
   R when<R>({
@@ -31,9 +30,9 @@ sealed class Result<T> {
 
   /// Get the data if success, or null.
   T? get dataOrNull => switch (this) {
-    Success<T>(data: final data) => data,
-    Failure<T>() => null,
-  };
+        Success<T>(data: final data) => data,
+        Failure<T>() => null,
+      };
 }
 
 /// A successful result.

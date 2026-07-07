@@ -1,28 +1,122 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
+import '../../../core/providers/portfolio_providers.dart';
+import '../../../core/models/models.dart';
+import '../../../core/repositories/repositories.dart';
+import '../../../core/services/market_price_stream.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common_widgets.dart';
 
-/// Market intelligence screen showing news, sector rankings, and market overview.
-class MarketScreen extends StatelessWidget {
+/// Market intelligence screen showing live news, sector rankings, and macro calendars.
+/// Auto-refreshes every 30 seconds.
+class MarketScreen extends ConsumerStatefulWidget {
   const MarketScreen({super.key});
+
+  @override
+  ConsumerState<MarketScreen> createState() => _MarketScreenState();
+}
+
+class _MarketScreenState extends ConsumerState<MarketScreen> {
+  Timer? _refreshTimer;
+  DateTime _lastRefreshed = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh market data every 30 seconds.
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        ref.invalidate(marketOverviewProvider);
+        setState(() => _lastRefreshed = DateTime.now());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  String get _lastRefreshedLabel {
+    final fmt = DateFormat('HH:mm:ss');
+    return 'Updated ${fmt.format(_lastRefreshed)}';
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final marketAsync = ref.watch(marketOverviewProvider);
+    final priceState = ref.watch(marketPriceStreamProvider);
+    final isLive = priceState.isConnected;
+
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Market Intelligence'),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Market Intelligence'),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isLive ? AppTheme.profitGreen : Colors.grey,
+                    ),
+                  )
+                      .animate(onPlay: (c) => isLive ? c.repeat() : null)
+                      .scaleXY(
+                        begin: 0.8,
+                        end: 1.2,
+                        duration: 800.ms,
+                        curve: Curves.easeInOut,
+                      )
+                      .then()
+                      .scaleXY(begin: 1.2, end: 0.8, duration: 800.ms),
+                  const SizedBox(width: 4),
+                  Text(
+                    isLive ? 'Live' : _lastRefreshedLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: isLive
+                          ? AppTheme.profitGreen
+                          : theme.colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh now',
+              onPressed: () {
+                ref.invalidate(marketOverviewProvider);
+                setState(() => _lastRefreshed = DateTime.now());
+              },
+            ),
+          ],
           bottom: const TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: 'News', icon: Icon(Icons.newspaper, size: 18)),
               Tab(text: 'Sectors', icon: Icon(Icons.category, size: 18)),
               Tab(text: 'Calendar', icon: Icon(Icons.calendar_month, size: 18)),
+              Tab(
+                  text: 'Watchlist',
+                  icon: Icon(Icons.bookmark_outlined, size: 18)),
             ],
           ),
         ),
@@ -30,25 +124,67 @@ class MarketScreen extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: isDark ? AppTheme.darkBgGradient : null,
           ),
-          child: TabBarView(
-            children: [
-              _buildNewsTab(context),
-              _buildSectorsTab(context),
-              _buildCalendarTab(context),
-            ],
+          child: marketAsync.when(
+            data: (overview) {
+              return TabBarView(
+                children: [
+                  _buildNewsTab(context, overview),
+                  _buildSectorsTab(context, overview),
+                  _buildCalendarTab(context, overview),
+                  _buildWatchlistTab(context),
+                ],
+              );
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            error: (err, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacingLg),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 64, color: AppTheme.lossRed),
+                    const SizedBox(height: 16),
+                    Text('Failed loading market feeds',
+                        style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Text(err.toString(),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.invalidate(marketOverviewProvider);
+                        setState(() => _lastRefreshed = DateTime.now());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNewsTab(BuildContext context) {
+  Widget _buildNewsTab(BuildContext context, MarketOverview overview) {
     final theme = Theme.of(context);
+    final newsList = overview.news;
+
     return ListView.builder(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
-      itemCount: _newsItems.length,
+      itemCount: newsList.length + 1,
       itemBuilder: (context, index) {
-        final news = _newsItems[index];
+        if (index == 0) {
+          // Render Live Index Bar at the top of the news feed
+          return _buildIndexHeader(context, overview);
+        }
+
+        final news = newsList[index - 1];
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
@@ -62,78 +198,234 @@ class MarketScreen extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _sentimentColor(news['sentiment'] as String).withAlpha(26),
+                          color: _sentimentColor(news.sentiment).withAlpha(26),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          (news['sentiment'] as String).toUpperCase(),
+                          news.sentiment.toUpperCase(),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: _sentimentColor(news['sentiment'] as String),
+                            color: _sentimentColor(news.sentiment),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(news['source'] as String, style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(128),
-                      )),
+                      Text(
+                        news.source,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha(128),
+                        ),
+                      ),
                       const Spacer(),
-                      Text(news['time'] as String, style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(100),
-                        fontSize: 11,
-                      )),
+                      Text(
+                        news.publishedAt != null
+                            ? '${DateTime.now().difference(news.publishedAt!).inHours}h ago'
+                            : 'Just now',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha(100),
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Text(news['title'] as String, style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  )),
-                  const SizedBox(height: 6),
-                  Text(news['summary'] as String, style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(153),
-                    height: 1.4,
-                  ), maxLines: 3, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    children: (news['sectors'] as List<String>).map((s) =>
-                      Chip(
-                        label: Text(s, style: const TextStyle(fontSize: 10)),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ).toList(),
+                  Text(
+                    news.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    news.summary,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withAlpha(153),
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (news.sectors.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      children: news.sectors
+                          .map((s) => Chip(
+                                label: Text(s,
+                                    style: const TextStyle(fontSize: 10)),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                padding: EdgeInsets.zero,
+                                labelPadding:
+                                    const EdgeInsets.symmetric(horizontal: 6),
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
-        ).animate().fadeIn(delay: Duration(milliseconds: index * 100)).slideY(begin: 0.03);
+        )
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: index * 100))
+            .slideY(begin: 0.03);
       },
     );
   }
 
-  Widget _buildSectorsTab(BuildContext context) {
+  Widget _buildIndexHeader(BuildContext context, MarketOverview overview) {
+    final indices = overview.indexPerformance;
+
+    return Container(
+      height: 90,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          // Nifty 50 widget
+          if (indices.containsKey('NIFTY50'))
+            _indexCard(
+              context,
+              'NIFTY 50',
+              indices['NIFTY50']['price']?.toString() ?? '0.0',
+              (indices['NIFTY50']['change_pct'] as num?)?.toDouble() ?? 0.0,
+            ),
+          // Sensex widget
+          if (indices.containsKey('SENSEX'))
+            _indexCard(
+              context,
+              'SENSEX',
+              indices['SENSEX']['price']?.toString() ?? '0.0',
+              (indices['SENSEX']['change_pct'] as num?)?.toDouble() ?? 0.0,
+            ),
+          // CPI Inflation
+          _macroCard(
+            context,
+            'Inflation (CPI)',
+            '${overview.macroIndicators['inflation_rate']?.toStringAsFixed(1) ?? '4.8'}%',
+            Icons.trending_down,
+            Colors.blueAccent,
+          ),
+          // GDP Growth
+          _macroCard(
+            context,
+            'GDP Growth',
+            '+${overview.macroIndicators['gdp_growth']?.toStringAsFixed(1) ?? '6.2'}%',
+            Icons.bolt,
+            Colors.amber,
+          ),
+          // Repo Rate
+          _macroCard(
+            context,
+            'RBI Repo Rate',
+            '${overview.macroIndicators['repo_rate']?.toStringAsFixed(2) ?? '6.50'}%',
+            Icons.account_balance,
+            Colors.teal,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _indexCard(
+      BuildContext context, String name, String price, double changePct) {
     final theme = Theme.of(context);
+    final isPositive = changePct >= 0;
+    final color = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
+
+    return Card(
+      margin: const EdgeInsets.only(right: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(name,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(price,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(width: 8),
+                Text(
+                  '${isPositive ? "+" : ""}${changePct.toStringAsFixed(2)}%',
+                  style: TextStyle(
+                      color: color, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _macroCard(BuildContext context, String title, String value,
+      IconData icon, Color color) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(right: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: color.withAlpha(26),
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(title,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: Colors.grey, fontSize: 10)),
+                Text(value,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectorsTab(BuildContext context, MarketOverview overview) {
+    final theme = Theme.of(context);
+    final sectorRankings = overview.sectorRankings;
+
     return ListView.builder(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
-      itemCount: _sectorData.length,
+      itemCount: sectorRankings.length,
       itemBuilder: (context, index) {
-        final sector = _sectorData[index];
-        final perf = sector['perf1d'] as double;
+        final sector = sectorRankings[index];
+        final perf = sector.performance1d;
         final isPositive = perf >= 0;
+
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: Container(
-              width: 40, height: 40,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: (isPositive ? AppTheme.profitGreen : AppTheme.lossRed).withAlpha(26),
+                color: (isPositive ? AppTheme.profitGreen : AppTheme.lossRed)
+                    .withAlpha(26),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -146,14 +438,14 @@ class MarketScreen extends StatelessWidget {
                 ),
               ),
             ),
-            title: Text(sector['name'] as String, style: theme.textTheme.titleSmall),
+            title: Text(sector.sector, style: theme.textTheme.titleSmall),
             subtitle: Row(
               children: [
-                _perfChip('1D', sector['perf1d'] as double),
+                _perfChip('1D', sector.performance1d),
                 const SizedBox(width: 8),
-                _perfChip('1W', sector['perf1w'] as double),
+                _perfChip('1W', sector.performance1w),
                 const SizedBox(width: 8),
-                _perfChip('1M', sector['perf1m'] as double),
+                _perfChip('1M', sector.performance1m),
               ],
             ),
             trailing: Icon(
@@ -166,35 +458,81 @@ class MarketScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCalendarTab(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget _buildCalendarTab(BuildContext context, MarketOverview overview) {
+    final repoRateStr =
+        '${overview.macroIndicators['repo_rate']?.toStringAsFixed(2) ?? '6.50'}%';
+    final inflationStr =
+        '${overview.macroIndicators['inflation_rate']?.toStringAsFixed(2) ?? '4.80'}%';
+
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       children: [
         _calendarSection(context, 'Upcoming Earnings', Icons.bar_chart, [
           {'date': 'Jul 10', 'event': 'TCS Q1 Results', 'est': 'EPS Est: ₹65'},
-          {'date': 'Jul 12', 'event': 'Infosys Q1 Results', 'est': 'EPS Est: ₹42'},
-          {'date': 'Jul 15', 'event': 'HDFC Bank Q1 Results', 'est': 'EPS Est: ₹22'},
-          {'date': 'Jul 18', 'event': 'Reliance Q1 Results', 'est': 'EPS Est: ₹38'},
+          {
+            'date': 'Jul 12',
+            'event': 'Infosys Q1 Results',
+            'est': 'EPS Est: ₹42'
+          },
+          {
+            'date': 'Jul 15',
+            'event': 'HDFC Bank Q1 Results',
+            'est': 'EPS Est: ₹22'
+          },
+          {
+            'date': 'Jul 18',
+            'event': 'Reliance Q1 Results',
+            'est': 'EPS Est: ₹38'
+          },
         ]),
         const SizedBox(height: AppTheme.spacingMd),
-        _calendarSection(context, 'Economic Events', Icons.public, [
-          {'date': 'Jul 5', 'event': 'RBI Policy Decision', 'est': 'Expected: Hold at 6.5%'},
-          {'date': 'Jul 8', 'event': 'India CPI Inflation', 'est': 'Forecast: 4.8%'},
-          {'date': 'Jul 12', 'event': 'US CPI Data', 'est': 'Forecast: 3.1%'},
-          {'date': 'Jul 25', 'event': 'India Union Budget', 'est': 'Key event'},
+        _calendarSection(
+            context, 'Economic Events (Live Indicators)', Icons.public, [
+          {
+            'date': 'Jul 5',
+            'event': 'RBI Policy Rate Update',
+            'est': 'Current Repo Rate: $repoRateStr'
+          },
+          {
+            'date': 'Jul 8',
+            'event': 'India CPI Inflation (WB)',
+            'est': 'World Bank Stats: $inflationStr'
+          },
+          {
+            'date': 'Jul 12',
+            'event': 'US Federal Funds Rate',
+            'est': 'Fed Target: 5.25% - 5.50%'
+          },
+          {
+            'date': 'Jul 25',
+            'event': 'India Union Budget',
+            'est': 'Key budget event allocation details'
+          },
         ]),
         const SizedBox(height: AppTheme.spacingMd),
         _calendarSection(context, 'Corporate Actions', Icons.business_center, [
-          {'date': 'Jul 6', 'event': 'INFY: Dividend ₹18/share', 'est': 'Ex-date'},
-          {'date': 'Jul 10', 'event': 'ITC: Dividend ₹6.75/share', 'est': 'Ex-date'},
-          {'date': 'Jul 15', 'event': 'Nykaa: Stock Split 1:5', 'est': 'Record date'},
+          {
+            'date': 'Jul 6',
+            'event': 'INFY: Dividend ₹18/share',
+            'est': 'Ex-date payout schedule'
+          },
+          {
+            'date': 'Jul 10',
+            'event': 'ITC: Dividend ₹6.75/share',
+            'est': 'Ex-date payout schedule'
+          },
+          {
+            'date': 'Jul 15',
+            'event': 'Nykaa: Stock Split 1:5',
+            'est': 'Record allocation date'
+          },
         ]),
       ],
     );
   }
 
-  Widget _calendarSection(BuildContext context, String title, IconData icon, List<Map<String, String>> events) {
+  Widget _calendarSection(BuildContext context, String title, IconData icon,
+      List<Map<String, String>> events) {
     final theme = Theme.of(context);
     return GlassCard(
       child: Column(
@@ -204,40 +542,49 @@ class MarketScreen extends StatelessWidget {
             children: [
               Icon(icon, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(title,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 12),
           ...events.map((e) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 48,
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withAlpha(77),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(e['date']!, textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 10)),
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withAlpha(77),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(e['date']!,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600, fontSize: 10)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(e['event']!,
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(fontWeight: FontWeight.w600)),
+                          Text(e['est']!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color:
+                                    theme.colorScheme.onSurface.withAlpha(128),
+                                fontSize: 11,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(e['event']!, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-                      Text(e['est']!, style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(128), fontSize: 11,
-                      )),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms);
@@ -257,28 +604,273 @@ class MarketScreen extends StatelessWidget {
 
   Color _sentimentColor(String sentiment) {
     switch (sentiment) {
-      case 'positive': return AppTheme.profitGreen;
-      case 'negative': return AppTheme.lossRed;
-      default: return AppTheme.warningAmber;
+      case 'positive':
+        return AppTheme.profitGreen;
+      case 'negative':
+        return AppTheme.lossRed;
+      default:
+        return AppTheme.warningAmber;
     }
   }
 
-  static final _newsItems = [
-    {'title': 'RBI Holds Rates at 6.5%, Signals Data-Dependent Approach', 'summary': 'The Reserve Bank of India maintained its repo rate at 6.5% for the eighth consecutive meeting, citing easing inflation but cautioning about food price risks.', 'sentiment': 'neutral', 'source': 'Economic Times', 'time': '2h ago', 'sectors': ['Financial Services', 'Banking']},
-    {'title': 'IT Stocks Rally on Strong US Jobs Data', 'summary': 'Indian IT stocks surged 2-3% after US non-farm payrolls data beat expectations, signaling robust demand for technology services.', 'sentiment': 'positive', 'source': 'Moneycontrol', 'time': '4h ago', 'sectors': ['Information Technology']},
-    {'title': 'Crude Oil Rises Above \$85, Energy Stocks Under Pressure', 'summary': 'Brent crude climbed above \$85/barrel on supply concerns from OPEC+ production cuts, putting pressure on OMC margins.', 'sentiment': 'negative', 'source': 'LiveMint', 'time': '6h ago', 'sectors': ['Energy', 'Oil & Gas']},
-    {'title': 'FIIs Turn Net Buyers After 3 Months of Selling', 'summary': 'Foreign institutional investors pumped ₹5,200 crore into Indian equities this week, reversing a three-month selling trend.', 'sentiment': 'positive', 'source': 'Business Standard', 'time': '8h ago', 'sectors': ['Market Wide']},
-  ];
+  Widget _buildWatchlistTab(BuildContext context) {
+    final theme = Theme.of(context);
+    final watchlistsAsync = ref.watch(watchlistsProvider);
 
-  static final _sectorData = [
-    {'name': 'Information Technology', 'perf1d': 2.1, 'perf1w': 3.5, 'perf1m': 5.8},
-    {'name': 'Financial Services', 'perf1d': 1.5, 'perf1w': 2.2, 'perf1m': 4.1},
-    {'name': 'Pharmaceuticals', 'perf1d': 0.8, 'perf1w': 1.9, 'perf1m': 6.2},
-    {'name': 'Automobile', 'perf1d': 0.5, 'perf1w': 1.1, 'perf1m': 3.8},
-    {'name': 'Consumer Goods', 'perf1d': 0.3, 'perf1w': 0.8, 'perf1m': 2.5},
-    {'name': 'Infrastructure', 'perf1d': -0.2, 'perf1w': 0.5, 'perf1m': 1.9},
-    {'name': 'Metals & Mining', 'perf1d': -0.8, 'perf1w': -1.2, 'perf1m': -2.1},
-    {'name': 'Real Estate', 'perf1d': -1.2, 'perf1w': -2.5, 'perf1m': -3.4},
-    {'name': 'Energy', 'perf1d': -1.5, 'perf1w': -3.1, 'perf1m': -5.2},
-  ];
+    return watchlistsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.lossRed),
+            const SizedBox(height: 12),
+            Text('Failed to load watchlists',
+                style: theme.textTheme.titleMedium),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.invalidate(watchlistsProvider),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (watchlists) {
+        if (watchlists.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.bookmark_add_outlined,
+                    size: 64,
+                    color: theme.colorScheme.primary.withOpacity(0.5)),
+                const SizedBox(height: 16),
+                Text('No watchlists yet', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Text('Create a watchlist to track your favourite symbols',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.55),
+                    ),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create Watchlist'),
+                  onPressed: () => _showCreateWatchlistDialog(context),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(AppTheme.spacingMd),
+          itemCount: watchlists.length + 1, // +1 for create button
+          itemBuilder: (context, index) {
+            if (index == watchlists.length) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 32),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Watchlist'),
+                  onPressed: () => _showCreateWatchlistDialog(context),
+                ),
+              );
+            }
+
+            final wl = watchlists[index];
+            return _WatchlistCard(
+              watchlist: wl,
+              onSymbolRemoved: (symbol) async {
+                await ref
+                    .read(watchlistRepositoryProvider)
+                    .removeSymbol(wl.id, symbol);
+                ref.invalidate(watchlistsProvider);
+              },
+              onSymbolAdded: (symbol) async {
+                await ref
+                    .read(watchlistRepositoryProvider)
+                    .addSymbol(wl.id, symbol: symbol);
+                ref.invalidate(watchlistsProvider);
+              },
+            ).animate().fadeIn(delay: Duration(milliseconds: index * 80));
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showCreateWatchlistDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Watchlist'),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Watchlist name',
+            hintText: 'e.g. Tech Picks',
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Create')),
+        ],
+      ),
+    );
+
+    if (confirmed == true && nameCtrl.text.trim().isNotEmpty) {
+      await ref
+          .read(watchlistRepositoryProvider)
+          .createWatchlist(name: nameCtrl.text.trim());
+      ref.invalidate(watchlistsProvider);
+    }
+  }
+}
+
+/// Card widget for a single watchlist with inline symbol management.
+class _WatchlistCard extends StatefulWidget {
+  const _WatchlistCard({
+    required this.watchlist,
+    required this.onSymbolRemoved,
+    required this.onSymbolAdded,
+  });
+
+  final WatchlistItem watchlist;
+  final Future<void> Function(String symbol) onSymbolRemoved;
+  final Future<void> Function(String symbol) onSymbolAdded;
+
+  @override
+  State<_WatchlistCard> createState() => _WatchlistCardState();
+}
+
+class _WatchlistCardState extends State<_WatchlistCard> {
+  final _addCtrl = TextEditingController();
+  bool _adding = false;
+
+  @override
+  void dispose() {
+    _addCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.bookmark, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  widget.watchlist.name,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                '${widget.watchlist.symbols.length} symbols',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Symbol chips
+          if (widget.watchlist.symbols.isEmpty)
+            Text('No symbols yet — add one below',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.45),
+                  fontStyle: FontStyle.italic,
+                ))
+          else
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: widget.watchlist.symbols
+                  .map((symbol) => Chip(
+                        key: Key('chip_${symbol}_${widget.watchlist.id}'),
+                        label: Text(symbol,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 12)),
+                        deleteIcon: const Icon(Icons.close, size: 14),
+                        onDeleted: () => widget.onSymbolRemoved(symbol),
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        backgroundColor:
+                            theme.colorScheme.primaryContainer.withOpacity(0.4),
+                      ))
+                  .toList(),
+            ),
+
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+
+          // Inline add symbol
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _addCtrl,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    hintText: 'Add symbol (e.g. RELIANCE)',
+                    hintStyle: theme.textTheme.bodySmall,
+                    isDense: true,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onSubmitted: (_) => _submitAdd(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _adding ? null : _submitAdd,
+                style: FilledButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: _adding
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Add'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitAdd() async {
+    final symbol = _addCtrl.text.trim().toUpperCase();
+    if (symbol.isEmpty) return;
+    setState(() => _adding = true);
+    await widget.onSymbolAdded(symbol);
+    _addCtrl.clear();
+    if (mounted) setState(() => _adding = false);
+  }
 }

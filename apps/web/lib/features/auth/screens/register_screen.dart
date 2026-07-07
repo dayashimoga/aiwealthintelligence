@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/repositories/repositories.dart';
 
 /// Registration screen with multi-step form.
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -39,11 +42,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+
+    final res = await ref.read(authRepositoryProvider).register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          fullName: _nameController.text.trim(),
+        );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/dashboard');
+      res.when(
+        success: (tokens) {
+          // Update global auth state → router redirect handles navigation.
+          ref
+              .read(authStateProvider.notifier)
+              .setAuthenticated(onboarded: false);
+        },
+        failure: (error, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        },
+      );
     }
   }
 
@@ -118,9 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? 'Please enter your name'
                               : null,
                         ).animate().fadeIn(delay: 300.ms),
-
                         const SizedBox(height: AppTheme.spacingMd),
-
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -138,9 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ).animate().fadeIn(delay: 400.ms),
-
                         const SizedBox(height: AppTheme.spacingMd),
-
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -164,9 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ).animate().fadeIn(delay: 500.ms),
-
                         const SizedBox(height: AppTheme.spacingMd),
-
                         CheckboxListTile(
                           value: _agreedToTerms,
                           onChanged: (v) =>
@@ -178,9 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controlAffinity: ListTileControlAffinity.leading,
                           contentPadding: EdgeInsets.zero,
                         ).animate().fadeIn(delay: 600.ms),
-
                         const SizedBox(height: AppTheme.spacingLg),
-
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -196,9 +208,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 : const Text('Create Account'),
                           ),
                         ).animate().fadeIn(delay: 700.ms),
-
                         const SizedBox(height: AppTheme.spacingLg),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

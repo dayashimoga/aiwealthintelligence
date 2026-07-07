@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 
 @pytest.mark.unit
@@ -302,3 +304,22 @@ class TestCSVImport:
         assert data["imported"] == 1
         assert data["skipped"] >= 1
         assert len(data["errors"]) >= 1
+
+    async def test_import_broker_report(
+        self,
+        client: AsyncClient,
+        auth_headers: dict[str, str],
+        sample_portfolio: dict[str, Any],
+    ) -> None:
+        """Import holdings from a broker CSV file through the route."""
+        csv_content = "Instrument,ISIN,Qty.,Avg. cost,LTP\nTCS,INE467B01029,10,3400.00,3800.00\n"
+        response = await client.post(
+            f"/api/v1/portfolios/{sample_portfolio['id']}/import/broker",
+            headers=auth_headers,
+            files={"file": ("zerodha.csv", csv_content, "text/csv")},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["imported"] == 1
+        assert data["skipped"] == 0
+        assert len(data["errors"]) == 0

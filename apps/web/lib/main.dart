@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'core/network/hive_cache.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/theme_provider.dart';
@@ -11,6 +12,7 @@ void main() async {
 
   // Initialize Hive for offline storage
   await Hive.initFlutter();
+  await HiveCacheManager.init();
 
   runApp(
     const ProviderScope(

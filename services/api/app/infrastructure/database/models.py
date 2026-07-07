@@ -6,7 +6,7 @@ They are infrastructure concerns and should not contain business logic.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     JSON,
@@ -33,13 +33,13 @@ class TimestampMixin:
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 
@@ -63,15 +63,20 @@ class UserModel(TimestampMixin, Base):
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     avatar_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     preferences: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    last_login_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    google_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    apple_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    totp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    backup_codes: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    is_onboarded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    passkeys: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    trusted_devices: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    portfolios: Mapped[list["PortfolioModel"]] = relationship(
+    portfolios: Mapped[list[PortfolioModel]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="selectin"
     )
-    watchlists: Mapped[list["WatchlistModel"]] = relationship(
+    watchlists: Mapped[list[WatchlistModel]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -94,11 +99,11 @@ class PortfolioModel(TimestampMixin, Base):
     import_source: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
 
     # Relationships
-    user: Mapped["UserModel"] = relationship(back_populates="portfolios")
-    holdings: Mapped[list["HoldingModel"]] = relationship(
+    user: Mapped[UserModel] = relationship(back_populates="portfolios")
+    holdings: Mapped[list[HoldingModel]] = relationship(
         back_populates="portfolio", cascade="all, delete-orphan", lazy="selectin"
     )
-    transactions: Mapped[list["TransactionModel"]] = relationship(
+    transactions: Mapped[list[TransactionModel]] = relationship(
         back_populates="portfolio", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -118,8 +123,18 @@ class HoldingModel(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     asset_type: Mapped[str] = mapped_column(
         Enum(
-            "stock", "mutual_fund", "etf", "bond", "gold", "crypto",
-            "real_estate", "fixed_deposit", "ppf", "nps", "cash", "other",
+            "stock",
+            "mutual_fund",
+            "etf",
+            "bond",
+            "gold",
+            "crypto",
+            "real_estate",
+            "fixed_deposit",
+            "ppf",
+            "nps",
+            "cash",
+            "other",
             name="asset_type",
         ),
         nullable=False,
@@ -138,11 +153,11 @@ class HoldingModel(TimestampMixin, Base):
     buy_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    portfolio: Mapped["PortfolioModel"] = relationship(back_populates="holdings")
-    transactions: Mapped[list["TransactionModel"]] = relationship(
+    portfolio: Mapped[PortfolioModel] = relationship(back_populates="holdings")
+    transactions: Mapped[list[TransactionModel]] = relationship(
         back_populates="holding", cascade="all, delete-orphan", lazy="selectin"
     )
-    recommendations: Mapped[list["AIRecommendationModel"]] = relationship(
+    recommendations: Mapped[list[AIRecommendationModel]] = relationship(
         back_populates="holding", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -176,13 +191,13 @@ class TransactionModel(TimestampMixin, Base):
     notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
     transaction_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
 
     # Relationships
-    holding: Mapped["HoldingModel"] = relationship(back_populates="transactions")
-    portfolio: Mapped["PortfolioModel"] = relationship(back_populates="transactions")
+    holding: Mapped[HoldingModel] = relationship(back_populates="transactions")
+    portfolio: Mapped[PortfolioModel] = relationship(back_populates="transactions")
 
     __table_args__ = (
         Index("ix_transactions_date", "transaction_date"),
@@ -202,7 +217,12 @@ class AIRecommendationModel(TimestampMixin, Base):
     symbol: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     action: Mapped[str] = mapped_column(
         Enum(
-            "strong_buy", "buy", "hold", "reduce", "sell", "exit",
+            "strong_buy",
+            "buy",
+            "hold",
+            "reduce",
+            "sell",
+            "exit",
             name="recommendation_action",
         ),
         nullable=False,
@@ -219,15 +239,13 @@ class AIRecommendationModel(TimestampMixin, Base):
     model_version: Mapped[str] = mapped_column(String(50), nullable=False, default="")
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    holding: Mapped["HoldingModel"] = relationship(back_populates="recommendations")
+    holding: Mapped[HoldingModel] = relationship(back_populates="recommendations")
 
 
 class MarketNewsModel(Base):
@@ -246,13 +264,13 @@ class MarketNewsModel(Base):
     symbols: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     published_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
 
@@ -271,7 +289,7 @@ class WatchlistModel(TimestampMixin, Base):
     alerts: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
     # Relationships
-    user: Mapped["UserModel"] = relationship(back_populates="watchlists")
+    user: Mapped[UserModel] = relationship(back_populates="watchlists")
 
 
 class AuditLogModel(Base):
@@ -289,7 +307,87 @@ class AuditLogModel(Base):
     user_agent: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
+
+
+class NotificationModel(TimestampMixin, Base):
+    """In-app notification for smart alerts and reports."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    category: Mapped[str] = mapped_column(
+        Enum(
+            "price_alert",
+            "rebalance",
+            "dividend",
+            "report",
+            "tax",
+            "goal",
+            "security",
+            "system",
+            name="notification_category",
+        ),
+        nullable=False,
+        default="system",
+    )
+    priority: Mapped[str] = mapped_column(
+        Enum("low", "medium", "high", "critical", name="notification_priority"),
+        nullable=False,
+        default="medium",
+    )
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    extra_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_notifications_user_read", "user_id", "is_read"),
+        Index("ix_notifications_category", "category"),
+    )
+
+
+class GoalModel(TimestampMixin, Base):
+    """Financial goal tracking for goal/retirement planning."""
+
+    __tablename__ = "goals"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    goal_type: Mapped[str] = mapped_column(
+        Enum(
+            "retirement",
+            "emergency_fund",
+            "house",
+            "education",
+            "wedding",
+            "vacation",
+            "car",
+            "wealth_building",
+            "custom",
+            name="goal_type",
+        ),
+        nullable=False,
+        default="custom",
+    )
+    target_amount: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
+    current_amount: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
+    monthly_contribution: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
+    target_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expected_return_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=12.0)
+    inflation_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=6.0)
+    linked_portfolio_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+    __table_args__ = (Index("ix_goals_user_active", "user_id", "is_active"),)

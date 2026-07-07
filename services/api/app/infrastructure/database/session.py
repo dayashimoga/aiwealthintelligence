@@ -7,8 +7,7 @@ Supports both SQLite (development) and PostgreSQL (production).
 from __future__ import annotations
 
 import contextlib
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
@@ -19,6 +18,9 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.config import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 
 class DatabaseSessionManager:
@@ -33,8 +35,16 @@ class DatabaseSessionManager:
         self._sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
     def init(self, database_url: str) -> None:
-        """Initialize database engine and session factory."""
+        """Initialize database engine and session factory.
+
+        Idempotent: if already initialised with the same URL, this is a no-op.
+        This prevents the FastAPI lifespan from replacing a test-injected engine.
+        """
+        if self._engine is not None:
+            return  # Already initialised — skip to preserve test engines.
+
         settings = get_settings()
+        global engine
 
         engine_kwargs: dict[str, Any] = {
             "echo": settings.APP_DEBUG and settings.APP_ENV == "development",
@@ -58,6 +68,7 @@ class DatabaseSessionManager:
                 database_url += "&check_same_thread=False"
 
         self._engine = create_async_engine(database_url, **engine_kwargs)
+        engine = self._engine
         self._sessionmaker = async_sessionmaker(
             bind=self._engine,
             autocommit=False,
@@ -67,11 +78,23 @@ class DatabaseSessionManager:
 
     async def close(self) -> None:
         """Close database engine and all connections."""
+        global engine
         if self._engine is None:
             return
         await self._engine.dispose()
         self._engine = None
         self._sessionmaker = None
+        engine = None
+
+    async def create_all(self) -> None:
+        """Create all database tables."""
+        if self._engine is None:
+            msg = "DatabaseSessionManager is not initialized"
+            raise RuntimeError(msg)
+        from app.infrastructure.database.models import Base
+
+        async with self._engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     @contextlib.asynccontextmanager
     async def connect(self) -> AsyncIterator[AsyncConnection]:

@@ -1,0 +1,61 @@
+# Cloudflare Pages configuration for WealthAI Flutter Web deployment.
+#
+# Usage:
+#   wrangler pages deploy apps/web/build/web --project-name=wealthai
+#
+# Environment variables are set in the Cloudflare Pages dashboard under:
+#   Settings > Environment variables
+#
+# CI/CD: see .github/workflows/deploy.yml (deploy-web job uses wrangler-action@v3)
+
+name = "wealthai"
+compatibility_date = "2024-01-01"
+
+# ─────────────────────────────────────────────
+# Pages project settings
+# ─────────────────────────────────────────────
+
+[env.production]
+name = "wealthai"
+
+[env.preview]
+name = "wealthai"
+
+# ─────────────────────────────────────────────
+# Headers (OWASP best practices for Flutter web SPA)
+# ─────────────────────────────────────────────
+
+[[rules]]
+  # Match all routes — serve from build/web
+  type = "rewrite"
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security & caching headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' wss: https:; worker-src 'self' blob:"
+
+[[headers]]
+  # Flutter service worker & app shell — no-cache for freshness
+  for = "/flutter_service_worker.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  # Flutter canvaskit & compiled WASM — long-lived cache
+  for = "/canvaskit/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  # Flutter build assets (hashed filenames)
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

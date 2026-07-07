@@ -28,7 +28,7 @@ class ShellScaffold extends StatelessWidget {
       icon: Icons.auto_awesome_outlined,
       selectedIcon: Icons.auto_awesome,
       label: 'AI Copilot',
-      path: '/ai-chat',
+      path: '/copilot',
     ),
     _NavDestination(
       icon: Icons.trending_up_outlined,
@@ -71,8 +71,7 @@ class ShellScaffold extends StatelessWidget {
             NavigationRail(
               extended: isDesktop,
               selectedIndex: selectedIndex,
-              onDestinationSelected: (i) =>
-                  _onDestinationSelected(context, i),
+              onDestinationSelected: (i) => _onDestinationSelected(context, i),
               leading: Padding(
                 padding: EdgeInsets.symmetric(
                   vertical: AppTheme.spacingMd,
@@ -129,7 +128,8 @@ class ShellScaffold extends StatelessWidget {
               gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            child:
+                const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Text(

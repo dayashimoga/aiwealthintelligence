@@ -1,280 +1,112 @@
-# Architecture Decision Records
+# WealthAI — Architecture
 
-## ADR-001: Clean Architecture with DDD
+## System Overview
 
-**Status**: Accepted  
-**Date**: 2026-07-03
-
-### Context
-We need an architecture that supports:
-- Modular monolith that can migrate to microservices
-- Testability without infrastructure dependencies
-- Clear separation of concerns
-- Future extensibility
-
-### Decision
-Adopt Clean Architecture with Domain-Driven Design:
-- **Domain Layer**: Pure Python entities with business logic, no framework dependencies
-- **Application Layer**: Use cases orchestrating domain operations
-- **Infrastructure Layer**: SQLAlchemy, AI providers, external APIs
-- **Presentation Layer**: FastAPI routes, Pydantic schemas, middleware
-
-### Consequences
-- More initial boilerplate (repositories, mappers)
-- Easy to test domain logic in isolation
-- Swappable infrastructure (SQLite → PostgreSQL, OpenAI → Ollama)
-- Clear boundaries enable future service extraction
-
----
-
-## ADR-002: Flutter for Cross-Platform
-
-**Status**: Accepted  
-**Date**: 2026-07-03
-
-### Context
-Need to deploy on Web, Android, and iOS from a single codebase.
-
-### Decision
-Use Flutter with Material 3, Riverpod for state management, GoRouter for navigation.
-
-### Consequences
-- Single codebase for all platforms
-- Material 3 provides consistent, modern UI
-- Riverpod enables testable, predictable state management
-- GoRouter provides declarative, deep-link-ready routing
-
----
-
-## ADR-003: AI Provider Abstraction
-
-**Status**: Accepted  
-**Date**: 2026-07-03
-
-### Context
-Need to support multiple AI providers without vendor lock-in.
-
-### Decision
-Abstract AI providers behind a common interface (`AIProvider`):
-- `OpenAICompatibleProvider`: OpenAI, Groq, Together
-- `OllamaProvider`: Local LLM support
-
-### Consequences
-- Easy to add new providers
-- User can choose cloud or local AI
-- Consistent recommendation output regardless of provider
-- Testable with mock providers
-
----
-
-## ADR-004: SQLite for Development, PostgreSQL for Production
-
-**Status**: Accepted  
-**Date**: 2026-07-03
-
-### Context
-Need zero-cost initial deployment while supporting future scale.
-
-### Decision
-Use SQLite (via aiosqlite) for development and PostgreSQL (via asyncpg) for production. Database abstraction through SQLAlchemy ORM ensures portability.
-
-### Consequences
-- Zero infrastructure cost for development
-- Production-ready with PostgreSQL + pgvector
-- No schema changes needed between environments
-
----
-
-## ADR-005: JWT Authentication with RBAC
-
-**Status**: Accepted  
-**Date**: 2026-07-03
-
-### Context
-Need stateless authentication for API and mobile apps.
-
-### Decision
-JWT with access tokens (30min) and refresh tokens (30 days).
-Role-Based Access Control with admin, user, and premium roles.
-
-### Consequences
-- Stateless, scalable authentication
-- Refresh tokens enable seamless UX
-- RBAC enables premium features gating
-
----
-
-# System Architecture Diagram
-
-```mermaid
-graph TB
-    subgraph "Frontend"
-        FW[Flutter Web]
-        FA[Flutter Android]
-        FI[Flutter iOS]
-    end
-
-    subgraph "API Gateway"
-        API[FastAPI]
-        AUTH[Auth Middleware]
-        RATE[Rate Limiter]
-        SEC[Security Headers]
-    end
-
-    subgraph "Domain Layer"
-        UC[Use Cases]
-        ENT[Entities]
-        REPO[Repository Interfaces]
-        EVT[Domain Events]
-    end
-
-    subgraph "Infrastructure"
-        DB[(PostgreSQL + pgvector)]
-        CACHE[(Redis)]
-        AI[AI Provider]
-        MKT[Market Data]
-    end
-
-    subgraph "AI Providers"
-        OAI[OpenAI]
-        GRQ[Groq]
-        OLL[Ollama]
-    end
-
-    subgraph "Observability"
-        LOG[Structured Logging]
-        PROM[Prometheus]
-        GRAF[Grafana]
-    end
-
-    FW --> API
-    FA --> API
-    FI --> API
-    API --> AUTH
-    API --> RATE
-    API --> SEC
-    AUTH --> UC
-    UC --> ENT
-    UC --> REPO
-    UC --> EVT
-    REPO --> DB
-    REPO --> CACHE
-    UC --> AI
-    AI --> OAI
-    AI --> GRQ
-    AI --> OLL
-    UC --> MKT
-    API --> LOG
-    LOG --> PROM
-    PROM --> GRAF
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      WealthAI Platform                           │
+├─────────────────┬───────────────────────┬───────────────────────┤
+│  Flutter App    │   FastAPI Backend      │   Infrastructure      │
+│  (iOS/Android/  │   (Python 3.11+)      │                       │
+│   Web/Desktop)  │                        │                       │
+├─────────────────┼───────────────────────┼───────────────────────┤
+│ Presentation    │ Presentation Layer     │ PostgreSQL (prod)     │
+│  - Screens      │  - FastAPI routes      │ SQLite (dev/test)     │
+│  - Riverpod     │  - Pydantic schemas    │ Redis (cache)         │
+│    providers    │  - Middleware          │ yFinance (prices)     │
+│  - GoRouter     │                        │ OpenAI (GPT-4o)       │
+├─────────────────┼───────────────────────┼───────────────────────┤
+│ Domain          │ Domain Layer           │ APScheduler           │
+│  - Models       │  - Entities            │  (background sync)    │
+│  - Repositories │  - Repository ABCs     │                       │
+│  - Network      │  - Domain events       │                       │
+├─────────────────┼───────────────────────┼───────────────────────┤
+│ Data            │ Infrastructure Layer   │ Docker                │
+│  - Repositories │  - SQLAlchemy repos    │  Dockerfile.api       │
+│    (Dio HTTP)   │  - Redis cache         │  Dockerfile.android   │
+│  - Hive cache   │  - AI providers        │  Dockerfile.flutter   │
+│  - Secure store │  - Market data         │                       │
+│                 │  - Importers           │                       │
+└─────────────────┴───────────────────────┴───────────────────────┘
 ```
 
-# ER Diagram
+## Flutter App Architecture
 
-```mermaid
-erDiagram
-    USERS {
-        string id PK
-        string email UK
-        string hashed_password
-        string full_name
-        string role
-        boolean is_active
-        boolean is_verified
-        datetime created_at
-    }
+### State Management — Riverpod
+- `StateNotifierProvider` for mutable state (auth, theme)
+- `StreamProvider` for live data with Hive cache fallback
+- `FutureProvider.family` for parameterized async data
+- `Provider` for pure dependency injection
 
-    PORTFOLIOS {
-        string id PK
-        string user_id FK
-        string name
-        string currency
-        string import_source
-        datetime created_at
-    }
-
-    HOLDINGS {
-        string id PK
-        string portfolio_id FK
-        string symbol
-        string name
-        string asset_type
-        decimal quantity
-        decimal average_buy_price
-        decimal current_price
-        string sector
-        datetime created_at
-    }
-
-    TRANSACTIONS {
-        string id PK
-        string holding_id FK
-        string portfolio_id FK
-        string transaction_type
-        decimal quantity
-        decimal price
-        datetime transaction_date
-    }
-
-    AI_RECOMMENDATIONS {
-        string id PK
-        string holding_id FK
-        string action
-        decimal confidence
-        string reasoning
-        json explainability
-        datetime generated_at
-    }
-
-    WATCHLISTS {
-        string id PK
-        string user_id FK
-        string name
-        json symbols
-    }
-
-    AUDIT_LOGS {
-        string id PK
-        string user_id FK
-        string action
-        string resource_type
-        json details
-        datetime timestamp
-    }
-
-    USERS ||--o{ PORTFOLIOS : owns
-    USERS ||--o{ WATCHLISTS : has
-    PORTFOLIOS ||--o{ HOLDINGS : contains
-    PORTFOLIOS ||--o{ TRANSACTIONS : records
-    HOLDINGS ||--o{ TRANSACTIONS : tracks
-    HOLDINGS ||--o{ AI_RECOMMENDATIONS : receives
-    USERS ||--o{ AUDIT_LOGS : generates
+### Auth Flow
+```
+App Start → /splash → AuthNotifier._checkStoredToken()
+  ├─ No token → /login
+  ├─ Token invalid → clear tokens → /login
+  ├─ Token valid, not onboarded → /onboarding
+  └─ Token valid, onboarded → /dashboard
 ```
 
-# Deployment Architecture
+### Caching Strategy
+- Hive boxes for offline-first data (portfolios, holdings, analytics)
+- FlutterSecureStorage for JWT tokens (AES-256 encrypted on Android)
+- 2-minute TTL for most data, 30-second for market quotes
 
-```mermaid
-graph LR
-    subgraph "Cloudflare"
-        CF[Cloudflare Pages]
-        CDN[CDN Edge]
-    end
+### Navigation
+- GoRouter with `redirect` callback driven by `AuthStatus`
+- `ShellRoute` for main app with `ShellScaffold` (nav bar/rail)
+- Deep linking ready (all routes are named)
 
-    subgraph "GitHub"
-        GH[GitHub Actions]
-        GHR[GitHub Releases]
-    end
+## Backend Architecture
 
-    subgraph "Infrastructure"
-        API[FastAPI Container]
-        DB[(PostgreSQL)]
-        RD[(Redis)]
-    end
+### Clean Architecture Layers
+```
+app/
+├── domain/          # Pure Python, no framework deps
+│   ├── entities.py  # Dataclasses with business rules
+│   ├── repositories.py  # Abstract repo interfaces
+│   └── events.py    # Domain events
+├── infrastructure/  # Concrete implementations
+│   ├── database/    # SQLAlchemy models + session
+│   ├── ai/          # OpenAI provider + copilot
+│   ├── analytics/   # Portfolio engine + advanced analytics
+│   ├── market/      # yFinance + news + price cache
+│   ├── importers/   # CAS PDF + broker CSV parsers
+│   ├── repositories/ # SQLAlchemy + Redis implementations
+│   ├── scheduler/   # APScheduler background jobs
+│   └── services/    # Email, notification, Setu AA
+├── presentation/    # FastAPI
+│   ├── api/v1/      # Route handlers
+│   ├── middleware/  # Auth, error, rate limit, security
+│   └── schemas/     # Pydantic I/O schemas
+└── shared/          # Cross-cutting: security, exceptions, observability
+```
 
-    GH -->|Deploy| CF
-    GH -->|Build| GHR
-    CF --> CDN
-    CDN -->|API Calls| API
-    API --> DB
-    API --> RD
+### Database Schema (SQLAlchemy)
+- `users` — auth credentials, MFA, OAuth tokens, device list
+- `portfolios` — user portfolios with metadata
+- `holdings` — positions with live price cache
+- `transactions` — trade history for XIRR calculation
+- `ai_recommendations` — cached AI outputs
+- `market_news` — cached news with sentiment
+- `notifications` — in-app notification queue
+- `watchlists` + `watchlist_symbols` — user watchlists
+- `financial_goals` — goal planning with SIP calculator
+- `passkey_credentials` — WebAuthn passkeys
+
+### Security
+- JWT (HS256) with 30min access / 7d refresh token rotation
+- Argon2/bcrypt password hashing
+- ECDH key exchange for Setu Account Aggregator
+- Rate limiting: 100 req/min per IP (SlowAPI)
+- OWASP headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- Audit logging via structlog
+
+## CI/CD Pipeline
+```
+Push/PR → GitHub Actions
+  ├─ backend: ruff format/check → mypy → bandit → pytest (>90% cov)
+  ├─ frontend: dart format → flutter analyze → flutter test → build web/apk/aab
+  ├─ security: Trivy SBOM scan
+  └─ docker: build API image + SBOM
 ```

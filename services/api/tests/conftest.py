@@ -1,27 +1,42 @@
 """Test configuration and fixtures for the API test suite.
 
 Provides async test client, database session, and common fixtures.
+
+Architecture note:
+    The `client` fixture initialises the global `sessionmanager` with an
+    in-memory SQLite database BEFORE starting the AsyncClient (which triggers
+    the FastAPI lifespan).  This way every route that depends on `get_db_session`
+    uses the same in-memory database as our test helpers — no dependency-override
+    magic required and no session-isolation issues.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
-from typing import Any
+import os
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+# Tell the app to use an in-memory SQLite DB for all tests.
+# Must be set BEFORE importing any app modules.
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ.setdefault("APP_ENV", "development")
+os.environ.setdefault("APP_DEBUG", "false")
+os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-ci-only-not-production")
+os.environ.setdefault("AI_API_KEY", "test-key")
+os.environ.setdefault("REDIS_URL", "")
 
 from app.infrastructure.database.models import Base
-from app.infrastructure.database.session import get_db_session
+from app.infrastructure.database.session import sessionmanager
 from app.main import app
-from app.shared.security import create_access_token, hash_password
-
-
-# Use in-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
 @pytest.fixture(scope="session")
@@ -34,117 +49,164 @@ def event_loop():
 
 @pytest_asyncio.fixture
 async def db_session() -> AsyncIterator[AsyncSession]:
-    """Create a fresh database session for each test."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    """Provide a direct database session for tests that inspect DB state.
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    Uses the same sessionmanager as the application, so committed data is visible.
+    """
 
-    session_factory = async_sessionmaker(
-        bind=engine,
-        autocommit=False,
-        autoflush=False,
-        expire_on_commit=False,
-    )
+    # Ensure sessionmanager is initialised.
+    if sessionmanager._engine is None:
+        sessionmanager.init("sqlite+aiosqlite:///:memory:")
+        await sessionmanager.create_all()
 
-    async with session_factory() as session:
+    async with sessionmanager.session() as session:
         yield session
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-    await engine.dispose()
 
 
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    """Create an async test client with overridden DB session."""
+async def client() -> AsyncClient:
+    """Create an async test client backed by a fresh in-memory SQLite DB.
 
-    async def override_db_session() -> AsyncIterator[AsyncSession]:
-        yield db_session
-
-    app.dependency_overrides[get_db_session] = override_db_session
+    Strategy:
+    1. Initialise sessionmanager with the test SQLite URL.
+    2. Create all tables.
+    3. Start the AsyncClient (this triggers FastAPI lifespan; because
+       sessionmanager is already initialised, the lifespan's init call is
+       effectively a no-op on the same URL).
+    4. Yield the client.
+    5. Drop all tables and close the engine.
+    """
+    test_url = "sqlite+aiosqlite:///:memory:"
+    sessionmanager.init(test_url)
+    await sessionmanager.create_all()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-    app.dependency_overrides.clear()
+    async with sessionmanager._engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await sessionmanager.close()
 
 
 @pytest_asyncio.fixture
-async def auth_headers(db_session: AsyncSession) -> dict[str, str]:
-    """Create a test user and return auth headers."""
-    from app.infrastructure.database.models import UserModel
+async def auth_headers(client: AsyncClient) -> dict[str, str]:
+    """Register a test user via the real API and return auth headers.
 
-    user = UserModel(
-        id="test-user-id",
-        email="test@wealthai.app",
-        hashed_password=hash_password("Test@1234"),
-        full_name="Test User",
-        role="user",
-        is_active=True,
-        is_verified=True,
+    Because the client and this fixture share the same sessionmanager
+    database, subsequent authenticated requests see the registered user.
+    """
+    register_resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "test@wealthai.app",
+            "password": "Test@1234",
+            "full_name": "Test User",
+        },
     )
-    db_session.add(user)
-    await db_session.commit()
+    # If user already exists (fixture reuse edge-case), log in instead.
+    if register_resp.status_code == 409:
+        login_resp = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "test@wealthai.app", "password": "Test@1234"},
+        )
+        assert login_resp.status_code == 200, (
+            f"Login failed: {login_resp.status_code} {login_resp.text}"
+        )
+        token = login_resp.json()["access_token"]
+    else:
+        assert register_resp.status_code == 201, (
+            f"Register failed: {register_resp.status_code} {register_resp.text}"
+        )
+        token = register_resp.json()["access_token"]
 
-    token = create_access_token(
-        user_id="test-user-id",
-        email="test@wealthai.app",
-        role="user",
-    )
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest_asyncio.fixture
 async def sample_portfolio(
-    db_session: AsyncSession, auth_headers: dict[str, str]
+    client: AsyncClient,
+    auth_headers: dict[str, str],
 ) -> dict[str, Any]:
-    """Create a sample portfolio for testing."""
-    from app.infrastructure.database.models import PortfolioModel
-
-    portfolio = PortfolioModel(
-        id="test-portfolio-id",
-        user_id="test-user-id",
-        name="Test Portfolio",
-        description="A test portfolio",
-        currency="INR",
-        import_source="manual",
+    """Create a sample portfolio via the API and return its JSON."""
+    resp = await client.post(
+        "/api/v1/portfolios",
+        json={"name": "Test Portfolio", "description": "A test portfolio"},
+        headers=auth_headers,
     )
-    db_session.add(portfolio)
-    await db_session.commit()
-
-    return {"id": "test-portfolio-id", "name": "Test Portfolio"}
+    assert resp.status_code == 201, f"Portfolio create failed: {resp.status_code} {resp.text}"
+    return resp.json()
 
 
 @pytest_asyncio.fixture
 async def sample_holding(
-    db_session: AsyncSession, sample_portfolio: dict[str, Any]
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    sample_portfolio: dict[str, Any],
 ) -> dict[str, Any]:
-    """Create a sample holding for testing."""
-    from app.infrastructure.database.models import HoldingModel
-
-    holding = HoldingModel(
-        id="test-holding-id",
-        portfolio_id="test-portfolio-id",
-        symbol="RELIANCE",
-        name="Reliance Industries Ltd",
-        asset_type="stock",
-        exchange="NSE",
-        currency="INR",
-        quantity=10,
-        average_buy_price=2500.0,
-        current_price=2800.0,
-        sector="Energy",
-        industry="Oil & Gas",
-        country="India",
+    """Create a sample holding via the API and return its JSON."""
+    portfolio_id = sample_portfolio["id"]
+    resp = await client.post(
+        f"/api/v1/portfolios/{portfolio_id}/holdings",
+        json={
+            "symbol": "RELIANCE",
+            "name": "Reliance Industries Ltd",
+            "asset_type": "stock",
+            "exchange": "NSE",
+            "quantity": 10,
+            "average_buy_price": 2500.0,
+            "current_price": 2800.0,
+            "sector": "Energy",
+            "industry": "Oil & Gas",
+            "country": "India",
+        },
+        headers=auth_headers,
     )
-    db_session.add(holding)
-    await db_session.commit()
-
+    assert resp.status_code == 201, f"Holding create failed: {resp.status_code} {resp.text}"
+    data = resp.json()
     return {
-        "id": "test-holding-id",
+        "id": data["id"],
         "symbol": "RELIANCE",
-        "portfolio_id": "test-portfolio-id",
+        "portfolio_id": portfolio_id,
     }
+
+
+@pytest_asyncio.fixture
+async def auth_client(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+) -> AsyncClient:
+    """A pre-authenticated async client — sends Authorization header automatically."""
+
+    class _AuthenticatedClient:
+        """Wrapper that injects auth headers into every request."""
+
+        def __init__(self, inner: AsyncClient, headers: dict[str, str]) -> None:
+            self._inner = inner
+            self._headers = headers
+
+        def _merge(self, kwargs: dict) -> dict:
+            existing = kwargs.pop("headers", {})
+            if isinstance(existing, dict):
+                kwargs["headers"] = {**existing, **self._headers}
+            else:
+                # httpx also accepts list of tuples
+                kwargs["headers"] = {**self._headers}
+            return kwargs
+
+        async def get(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.get(url, **self._merge(kwargs))
+
+        async def post(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.post(url, **self._merge(kwargs))
+
+        async def delete(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.delete(url, **self._merge(kwargs))
+
+        async def put(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.put(url, **self._merge(kwargs))
+
+        async def patch(self, url: str, **kwargs: Any) -> Any:
+            return await self._inner.patch(url, **self._merge(kwargs))
+
+    return _AuthenticatedClient(client, auth_headers)  # type: ignore[return-value]

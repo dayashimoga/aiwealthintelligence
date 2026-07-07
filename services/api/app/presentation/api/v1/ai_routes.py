@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from typing import Annotated, Any
 
 import structlog
@@ -61,13 +62,19 @@ async def get_recommendation(
 
     # Count sector concentration
     sector_count = sum(1 for h in all_holdings if h.sector == holding.sector)
-    sector_concentration = f"{sector_count} of {len(all_holdings)} holdings in {holding.sector or 'Unknown'}"
+    sector_concentration = (
+        f"{sector_count} of {len(all_holdings)} holdings in {holding.sector or 'Unknown'}"
+    )
 
     holding_data: dict[str, Any] = {
         "symbol": holding.symbol,
         "name": holding.name,
-        "asset_type": holding.asset_type if isinstance(holding.asset_type, str) else holding.asset_type.value,
-        "exchange": holding.exchange if isinstance(holding.exchange, str) else holding.exchange.value,
+        "asset_type": holding.asset_type
+        if isinstance(holding.asset_type, str)
+        else holding.asset_type.value,
+        "exchange": holding.exchange
+        if isinstance(holding.exchange, str)
+        else holding.exchange.value,
         "sector": holding.sector,
         "industry": holding.industry,
         "quantity": float(holding.quantity),
@@ -87,7 +94,7 @@ async def get_recommendation(
     provider = get_ai_provider()
     result = await generate_recommendation(provider, holding_data, portfolio_context)
 
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     return AIRecommendationResponse(
         id=holding_id,
@@ -99,10 +106,11 @@ async def get_recommendation(
         evidence=result.get("evidence", []),
         expected_return=float(result.get("expected_return", 0)),
         risk_level=result.get("risk_level", "moderate"),
+        risk_description=result.get("risk_description", "No detailed risk analysis compiled."),
         investment_horizon=result.get("investment_horizon", "6-12 months"),
         alternative_suggestions=result.get("alternative_suggestions", []),
         explainability=result.get("explainability", {}),
-        generated_at=datetime.now(timezone.utc),
+        generated_at=datetime.now(UTC),
     )
 
 

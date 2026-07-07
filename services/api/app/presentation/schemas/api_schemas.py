@@ -8,10 +8,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
 
 # ============================================================
 # Common
@@ -89,8 +88,89 @@ class UserResponse(BaseModel):
     full_name: str
     role: str
     is_verified: bool
+    mfa_enabled: bool
+    is_onboarded: bool
     avatar_url: str = ""
     created_at: datetime
+    passkeys: list[dict] = Field(default_factory=list)
+    trusted_devices: list[dict] = Field(default_factory=list)
+
+
+class OAuthLoginRequest(BaseModel):
+    """OAuth login/registration request."""
+
+    email: EmailStr
+    token: str
+    provider: Literal["google", "apple"]
+    full_name: str | None = None
+
+
+class SendOTPRequest(BaseModel):
+    """Send OTP request."""
+
+    email: EmailStr
+
+
+class VerifyOTPRequest(BaseModel):
+    """Verify OTP request."""
+
+    email: EmailStr
+    code: str
+
+
+class PasswordResetRequestSchema(BaseModel):
+    """Request a password reset OTP to be sent to the user's email."""
+
+    email: EmailStr
+
+
+class PasswordResetConfirmSchema(BaseModel):
+    """Confirm password reset using the OTP code and a new password."""
+
+    email: EmailStr
+    code: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class TOTPSetupResponse(BaseModel):
+    """TOTP MFA setup response."""
+
+    secret: str
+    provisioning_uri: str
+
+
+class TOTPVerifyRequest(BaseModel):
+    """TOTP verification request."""
+
+    code: str
+    backup_code: str | None = None
+
+
+class DeviceResponse(BaseModel):
+    """Registered device response."""
+
+    device_id: str
+    name: str
+    registered_at: datetime
+
+
+class PasskeyOptionsResponse(BaseModel):
+    """Passkey credentials options response."""
+
+    challenge: str
+    user_id: str | None = None
+    rp_name: str
+    rp_id: str
+
+
+class PasskeyVerifyRequest(BaseModel):
+    """Passkey verification request."""
+
+    credential_id: str
+    client_data_json: str
+    authenticator_data: str
+    signature: str
+    client_extensions: dict[str, Any] = Field(default_factory=dict)
 
 
 # ============================================================
@@ -238,6 +318,7 @@ class PortfolioAnalyticsResponse(BaseModel):
     total_current_value: float
     total_gain_loss: float
     total_gain_loss_pct: float
+    holding_count: int = 0
     xirr: float | None = None
     cagr: float | None = None
     max_drawdown: float | None = None
@@ -249,6 +330,7 @@ class PortfolioAnalyticsResponse(BaseModel):
     asset_allocation: dict[str, float] = Field(default_factory=dict)
     sector_allocation: dict[str, float] = Field(default_factory=dict)
     country_allocation: dict[str, float] = Field(default_factory=dict)
+    tax_estimate: dict[str, float] | None = None
     calculated_at: datetime
 
 
@@ -269,6 +351,7 @@ class AIRecommendationResponse(BaseModel):
     evidence: list[str]
     expected_return: float
     risk_level: str
+    risk_description: str
     investment_horizon: str
     alternative_suggestions: list[str]
     explainability: dict[str, str] = Field(default_factory=dict)
@@ -330,4 +413,149 @@ class MarketOverviewResponse(BaseModel):
 
     news: list[MarketNewsResponse]
     sector_rankings: list[SectorRankingResponse]
+    macro_indicators: dict[str, float] = Field(default_factory=dict)
+    index_performance: dict[str, dict[str, Any]] = Field(default_factory=dict)
     updated_at: datetime
+
+
+# ============================================================
+# Copilot
+# ============================================================
+
+
+class DailyBriefResponse(BaseModel):
+    """Daily AI brief response."""
+
+    summary: str
+    market_sentiment: str
+    top_gainers: list[dict[str, Any]] = Field(default_factory=list)
+    top_losers: list[dict[str, Any]] = Field(default_factory=list)
+    actionable_insights: list[str] = Field(default_factory=list)
+    generated_at: datetime
+
+
+class ScenarioSimulationAction(BaseModel):
+    """Action to simulate in a portfolio scenario."""
+
+    symbol: str
+    action: str  # "buy", "sell"
+    quantity: float
+    price: float | None = None
+
+
+class ScenarioSimulationRequest(BaseModel):
+    """Scenario simulation request."""
+
+    portfolio_id: str
+    actions: list[ScenarioSimulationAction]
+
+
+class ScenarioMetrics(BaseModel):
+    """Metrics for original or simulated state in scenario analysis."""
+
+    total_value: float
+    xirr: float | None = None
+    diversification_score: float = 0
+    risk_score: float = 0
+
+
+class ScenarioSimulationResponse(BaseModel):
+    """Scenario simulation response."""
+
+    original_metrics: ScenarioMetrics
+    simulated_metrics: ScenarioMetrics
+    impact_summary: str
+    recommendations: list[str] = Field(default_factory=list)
+
+
+class PortfolioIssue(BaseModel):
+    """An issue identified in portfolio doctor health checks."""
+
+    severity: str  # "high", "medium", "low"
+    title: str
+    description: str
+    recommendation: str
+
+
+class PortfolioDoctorResponse(BaseModel):
+    """Portfolio doctor health check response."""
+
+    health_score: int
+    issues: list[PortfolioIssue]
+    diversification_hhi: float = 0
+    sector_concentration_pct: float = 0
+    cash_drag_pct: float = 0
+
+
+class ConsentRequest(BaseModel):
+    """Account Aggregator consent request parameters."""
+
+    phone_number: str
+    aggregator_id: str
+
+
+class ConsentInitiateResponse(BaseModel):
+    """Account Aggregator consent initiation response."""
+
+    consent_handle: str
+    redirect_url: str
+
+
+class ConsentStatusResponse(BaseModel):
+    """Account Aggregator consent status tracking response."""
+
+    consent_handle: str
+    status: str  # "PENDING", "APPROVED", "FAILED", "COMPLETED"
+    holdings_count: int = 0
+    message: str = ""
+
+
+# ============================================================
+# Advanced Wealth Intelligence Analytics
+# ============================================================
+
+
+class StressScenarioResult(BaseModel):
+    scenario_name: str
+    scenario_description: str
+    estimated_new_value: float
+    change_value: float
+    change_percentage: float
+    impact_level: str  # "high_positive", "positive", "neutral", "negative", "high_negative"
+
+
+class TaxHarvestingOpportunity(BaseModel):
+    symbol: str
+    name: str
+    quantity: float
+    current_price: float
+    average_buy_price: float
+    unrealized_loss: float
+    potential_tax_savings: float
+    holding_period_days: int
+    asset_type: str
+
+
+class BehavioralBias(BaseModel):
+    bias_name: str
+    severity: str  # "high", "medium", "low"
+    description: str
+    remedy: str
+
+
+class GoalProgress(BaseModel):
+    goal_name: str
+    target_amount: float
+    current_amount: float
+    progress_percentage: float
+    status: str  # "on_track", "behind", "ahead"
+
+
+class AdvancedAnalysisResponse(BaseModel):
+    portfolio_id: str
+    stress_test: list[StressScenarioResult]
+    tax_harvesting: list[TaxHarvestingOpportunity]
+    total_potential_tax_savings: float
+    behavioral_biases: list[BehavioralBias]
+    goals: list[GoalProgress]
+    calculated_at: datetime

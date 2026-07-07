@@ -17,6 +17,11 @@ jobs:
   deploy-web:
     name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
+    # Only deploy on push to main, and only when CF secrets are configured
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      vars.CLOUDFLARE_DEPLOYMENT_ENABLED == 'true'
     defaults:
       run:
         working-directory: apps/web
@@ -42,7 +47,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/web/build/web --project-name=wealthai --branch=${{ github.head_ref || github.ref_name }}
+          command: pages deploy build/web --project-name=wealthai --branch=${{ github.head_ref || github.ref_name }}
 
   # ===================================
   # Build Android
@@ -131,7 +136,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [deploy-web, build-android]
+    needs: [build-android]
     if: github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')
 
     permissions:

@@ -1,8 +1,12 @@
+import 'dart:developer' show log;
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api_constants.dart';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Provides a configured Dio HTTP client with auth interceptor.
 final dioProvider = Provider<Dio>((ref) {
@@ -16,11 +20,13 @@ final dioProvider = Provider<Dio>((ref) {
     },
   ));
 
+  dio.interceptors.add(ConnectivityInterceptor());
   dio.interceptors.add(AuthInterceptor(ref));
+  dio.interceptors.add(RetryInterceptor(dio));
   dio.interceptors.add(LogInterceptor(
     requestBody: true,
     responseBody: true,
-    logPrint: (obj) => print('[API] $obj'),
+    logPrint: (obj) => log('[API] $obj', name: 'DioHttp'),
   ));
 
   return dio;
@@ -110,5 +116,61 @@ class AuthInterceptor extends Interceptor {
     }
 
     handler.next(err);
+  }
+}
+
+/// Interceptor that checks connectivity before launching requests.
+class ConnectivityInterceptor extends Interceptor {
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult.contains(ConnectivityResult.none)) {
+      return handler.reject(
+        DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionError,
+          error: 'No internet connection',
+        ),
+      );
+    }
+    handler.next(options);
+  }
+}
+
+/// Interceptor that retries failed GET requests on timeouts.
+class RetryInterceptor extends Interceptor {
+  RetryInterceptor(this.dio);
+
+  final Dio dio;
+  final int maxRetries = 3;
+  final int delayMs = 1500;
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final options = err.requestOptions;
+    final isGet = options.method.toUpperCase() == 'GET';
+    final isTimeout = err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.sendTimeout ||
+        err.type == DioExceptionType.receiveTimeout;
+
+    if (isGet && isTimeout) {
+      final retries = (options.extra['retries'] as int? ?? 0);
+      if (retries < maxRetries) {
+        options.extra['retries'] = retries + 1;
+        log('[API] Retrying request: ${options.path} (Attempt ${retries + 1} of $maxRetries)',
+            name: 'RetryInterceptor');
+        await Future.delayed(Duration(milliseconds: delayMs * (retries + 1)));
+        try {
+          final response = await dio.fetch(options);
+          return handler.resolve(response);
+        } on DioException catch (retryErr) {
+          return super.onError(retryErr, handler);
+        }
+      }
+    }
+    super.onError(err, handler);
   }
 }

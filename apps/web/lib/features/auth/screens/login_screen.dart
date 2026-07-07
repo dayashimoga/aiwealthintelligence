@@ -1,23 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/repositories/repositories.dart';
 
 /// Login screen with glassmorphism design.
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _localAuth = LocalAuthentication();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _biometricsAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (mounted) {
+        setState(() => _biometricsAvailable = canCheck && isSupported);
+      }
+    } catch (_) {
+      // Biometrics not available on this device/platform.
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    try {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Sign in to WealthAI',
+        options: const AuthenticationOptions(biometricOnly: false),
+      );
+      if (authenticated && mounted) {
+        // Biometrics unlocked stored token — revalidate with backend.
+        ref.read(authStateProvider.notifier).revalidate();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Biometric auth failed: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -31,12 +74,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Simulate login - replace with actual API call
-    await Future.delayed(const Duration(seconds: 1));
+    final res = await ref.read(authRepositoryProvider).login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/dashboard');
+      res.when(
+        success: (tokens) async {
+          final profileRes =
+              await ref.read(authRepositoryProvider).getProfile();
+          profileRes.when(
+            success: (user) {
+              // Update global auth state — router redirect handles navigation.
+              ref.read(authStateProvider.notifier).setAuthenticated(
+                    onboarded: user.isOnboarded,
+                  );
+            },
+            failure: (err, _) {
+              ref.read(authStateProvider.notifier).setAuthenticated(
+                    onboarded: false,
+                  );
+            },
+          );
+        },
+        failure: (error, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        },
+      );
     }
   }
 
@@ -156,7 +224,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            key: const Key('forgot_password_link'),
+                            onPressed: () => context.go('/forgot-password'),
                             child: const Text('Forgot password?'),
                           ),
                         ),
@@ -224,6 +293,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ).animate().fadeIn(delay: 600.ms),
+
+                        // Biometric login button (shown only when available)
+                        if (_biometricsAvailable) ...[
+                          const SizedBox(height: AppTheme.spacingMd),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _handleBiometricLogin,
+                              icon: const Icon(Icons.fingerprint, size: 22),
+                              label: const Text('Use Biometrics'),
+                            ),
+                          ).animate().fadeIn(delay: 650.ms),
+                        ],
 
                         const SizedBox(height: AppTheme.spacingLg),
 

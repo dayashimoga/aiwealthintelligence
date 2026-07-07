@@ -7,19 +7,20 @@ Following the Dependency Inversion Principle, domain depends on abstractions, no
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from app.domain.entities import (
-    AIRecommendation,
-    Holding,
-    MarketNews,
-    Portfolio,
-    PortfolioAnalytics,
-    PortfolioIntelligence,
-    Transaction,
-    User,
-    Watchlist,
-)
+if TYPE_CHECKING:
+    from app.domain.entities import (
+        AIRecommendation,
+        Holding,
+        MarketNews,
+        Portfolio,
+        PortfolioAnalytics,
+        PortfolioIntelligence,
+        Transaction,
+        User,
+        Watchlist,
+    )
 
 
 class UserRepository(ABC):
@@ -46,6 +47,14 @@ class UserRepository(ABC):
         """Soft-delete a user."""
 
     @abstractmethod
+    async def get_by_google_id(self, google_id: str) -> User | None:
+        """Get user by Google OAuth ID."""
+
+    @abstractmethod
+    async def get_by_apple_id(self, apple_id: str) -> User | None:
+        """Get user by Apple OAuth ID."""
+
+    @abstractmethod
     async def list_users(
         self, skip: int = 0, limit: int = 50, filters: dict[str, Any] | None = None
     ) -> list[User]:
@@ -64,9 +73,7 @@ class PortfolioRepository(ABC):
         """Get portfolio by ID, scoped to user."""
 
     @abstractmethod
-    async def list_by_user(
-        self, user_id: str, skip: int = 0, limit: int = 50
-    ) -> list[Portfolio]:
+    async def list_by_user(self, user_id: str, skip: int = 0, limit: int = 50) -> list[Portfolio]:
         """List all portfolios for a user."""
 
     @abstractmethod
@@ -214,7 +221,5 @@ class AnalyticsEngine(ABC):
         """Calculate XIRR from transaction history."""
 
     @abstractmethod
-    async def calculate_portfolio_intelligence(
-        self, portfolio: Portfolio
-    ) -> PortfolioIntelligence:
+    async def calculate_portfolio_intelligence(self, portfolio: Portfolio) -> PortfolioIntelligence:
         """Analyze portfolio for issues and improvements."""

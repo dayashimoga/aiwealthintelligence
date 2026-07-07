@@ -2,37 +2,79 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import asyncio
+from datetime import UTC, datetime
 
+import structlog
+import yfinance as yf
 from fastapi import APIRouter
 
+from app.infrastructure.market.news_fetcher import fetch_and_analyze_news
+from app.infrastructure.market.price_cache import cache_repo
 from app.presentation.schemas.api_schemas import (
     MarketNewsResponse,
     MarketOverviewResponse,
     SectorRankingResponse,
 )
 
+logger = structlog.get_logger(__name__)
 router = APIRouter()
 
 
-# Indian market sectors
-INDIAN_SECTORS = [
-    "Information Technology",
-    "Financial Services",
-    "Healthcare",
-    "Consumer Goods",
-    "Automobile",
-    "Energy",
-    "Metals & Mining",
-    "Infrastructure",
-    "Pharmaceuticals",
-    "Telecom",
-    "Real Estate",
-    "Chemicals",
-    "Media & Entertainment",
-    "Textiles",
-    "Power",
-]
+# Indian market sectors mapped to Yahoo Finance indices
+SECTOR_MAP = {
+    "Information Technology": "^CNXIT",
+    "Financial Services": "^CNXFIN",
+    "Healthcare": "^CNXPHARMA",
+    "Consumer Goods": "^CNXFMCG",
+    "Automobile": "^CNXAUTO",
+    "Energy": "^CNXENERGY",
+    "Metals & Mining": "^CNXMETAL",
+    "Infrastructure": "NIFTY_INFRA.NS",
+    "Pharmaceuticals": "^CNXPHARMA",
+    "Telecom": "^CNXMEDIA",
+    "Real Estate": "^CNXREALTY",
+    "Chemicals": "^CNXCOMMOD",
+    "Media & Entertainment": "^CNXMEDIA",
+    "Textiles": "^CNXFMCG",
+    "Power": "^CNXENERGY",
+}
+
+
+async def _fetch_sector_perf(sector: str, sym: str) -> SectorRankingResponse:
+    """Fetch performance for a single sector index."""
+    try:
+        ticker = yf.Ticker(sym)
+        # Fetch 1 year of daily history to cover all timeframes
+        hist = await asyncio.to_thread(lambda: ticker.history(period="1y"))
+        if hist.empty or len(hist) < 2:
+            return SectorRankingResponse(sector=sector)
+
+        close = hist["Close"]
+        current = float(close.iloc[-1])
+
+        def get_change_pct(days: int) -> float:
+            if len(close) >= days + 1:
+                prev = float(close.iloc[-(days + 1)])
+                return round(((current - prev) / prev) * 100, 2)
+            # Default to first available if not enough history
+            prev = float(close.iloc[0])
+            return round(((current - prev) / prev) * 100, 2)
+
+        # Indian trading days: 1d=1, 1w=5, 1m=20, 3m=60, 1y=250
+        return SectorRankingResponse(
+            sector=sector,
+            performance_1d=get_change_pct(1),
+            performance_1w=get_change_pct(5),
+            performance_1m=get_change_pct(20),
+            performance_3m=get_change_pct(60),
+            performance_1y=get_change_pct(250),
+            top_gainers=[],
+            top_losers=[],
+        )
+    except Exception as e:
+        logger.debug("sector_fetch_failed", sector=sector, symbol=sym, error=str(e))
+        return SectorRankingResponse(sector=sector)
 
 
 @router.get("/news", response_model=list[MarketNewsResponse])
@@ -46,12 +88,39 @@ async def get_market_news(
     Returns curated market news, optionally filtered by sector.
     Each news item includes AI-generated summary and sentiment analysis.
     """
-    # In production, this fetches from news APIs and applies AI summarization.
-    # For now, return the structure showing the expected data format.
-    # The actual news fetching will be done by background workers.
+    cache_key = f"market:news:{sector or 'all'}"
+    cached = await cache_repo.get(cache_key)
+    if cached:
+        return [MarketNewsResponse(**item) for item in cached[skip : skip + limit]]
 
-    # Return current market structure (will be populated by market data workers)
-    return []
+    # Fetch fresh news and perform AI analysis
+    try:
+        news_items = await fetch_and_analyze_news(symbol=None, limit=10)
+
+        # Serialize to dict for cache
+        serialized = []
+        for item in news_items:
+            serialized.append(
+                {
+                    "id": item.id,
+                    "title": item.title,
+                    "summary": item.summary,
+                    "source": item.source,
+                    "url": item.url,
+                    "sentiment": item.sentiment,
+                    "relevance_score": float(item.relevance_score),
+                    "sectors": item.sectors,
+                    "symbols": item.symbols,
+                    "published_at": item.published_at.isoformat(),
+                }
+            )
+
+        # Cache for 15 minutes (900 seconds)
+        await cache_repo.set(cache_key, serialized, ttl=900)
+        return [MarketNewsResponse(**item) for item in serialized[skip : skip + limit]]
+    except Exception as e:
+        logger.warning("news_route_failed", error=str(e))
+        return []
 
 
 @router.get("/sectors", response_model=list[SectorRankingResponse])
@@ -60,21 +129,24 @@ async def get_sector_rankings() -> list[SectorRankingResponse]:
 
     Returns sectors ranked by performance across multiple timeframes.
     """
-    # In production, this is populated by market data workers.
-    # Returns the API contract structure.
-    return [
-        SectorRankingResponse(
-            sector=sector,
-            performance_1d=0,
-            performance_1w=0,
-            performance_1m=0,
-            performance_3m=0,
-            performance_1y=0,
-            top_gainers=[],
-            top_losers=[],
-        )
-        for sector in INDIAN_SECTORS
-    ]
+    cache_key = "market:sectors"
+    cached = await cache_repo.get(cache_key)
+    if cached:
+        return [SectorRankingResponse(**item) for item in cached]
+
+    try:
+        tasks = [_fetch_sector_perf(sect, sym) for sect, sym in SECTOR_MAP.items()]
+        rankings = await asyncio.gather(*tasks)
+
+        # Convert Pydantic models to dict for caching
+        serialized = [item.model_dump() for item in rankings]
+
+        # Cache for 5 minutes (300 seconds)
+        await cache_repo.set(cache_key, serialized, ttl=300)
+        return rankings
+    except Exception as e:
+        logger.warning("sectors_route_failed", error=str(e))
+        return [SectorRankingResponse(sector=s) for s in SECTOR_MAP]
 
 
 @router.get("/overview", response_model=MarketOverviewResponse)
@@ -84,18 +156,17 @@ async def get_market_overview() -> MarketOverviewResponse:
     Combines news, sector rankings, and market indicators
     into a single dashboard-ready response.
     """
+    from app.infrastructure.market.market_data_service import market_data_service
+
+    news = await get_market_news(limit=5)
+    sectors = await get_sector_rankings()
+    macro = await market_data_service.get_macro_indicators()
+    indices = await market_data_service.get_index_performance()
+
     return MarketOverviewResponse(
-        news=[],
-        sector_rankings=[
-            SectorRankingResponse(
-                sector=sector,
-                performance_1d=0,
-                performance_1w=0,
-                performance_1m=0,
-                performance_3m=0,
-                performance_1y=0,
-            )
-            for sector in INDIAN_SECTORS
-        ],
-        updated_at=datetime.now(timezone.utc),
+        news=news,
+        sector_rankings=sectors,
+        macro_indicators=macro,
+        index_performance=indices,
+        updated_at=datetime.now(UTC),
     )

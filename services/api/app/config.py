@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     APP_ENV: Literal["development", "staging", "production"] = "development"
     APP_DEBUG: bool = True
     APP_SECRET_KEY: str = "change-me-to-a-random-secret-key-min-32-chars"
-    APP_HOST: str = "0.0.0.0"
+    APP_HOST: str = "0.0.0.0"  # nosec B104 — intentional: container/Docker binding
     APP_PORT: int = 8000
     APP_WORKERS: int = 4
     APP_LOG_LEVEL: str = "INFO"
@@ -60,6 +60,31 @@ class Settings(BaseSettings):
     # Cloudflare
     CLOUDFLARE_ACCOUNT_ID: str = ""
     CLOUDFLARE_API_TOKEN: str = ""
+
+    # SMTP Configuration
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = "noreply@wealthai.com"
+    SMTP_USE_TLS: bool = True
+
+    # Email CAS Auto-Import (IMAP)
+    EMAIL_IMAP_HOST: str = ""  # e.g. imap.gmail.com
+    EMAIL_IMAP_PORT: int = 993
+    EMAIL_ADDRESS: str = ""  # mailbox to poll
+    EMAIL_PASSWORD: str = ""  # app password / OAuth token
+    EMAIL_CAS_FOLDER: str = "INBOX"  # IMAP folder to scan
+    EMAIL_PDF_PASSWORD: str = ""  # CAS PDF decryption password (PAN-based)
+
+    # Third Party Authentication
+    GOOGLE_CLIENT_ID: str = ""
+    APPLE_CLIENT_ID: str = ""
+
+    # Setu Account Aggregator
+    SETU_AA_CLIENT_ID: str = ""
+    SETU_AA_CLIENT_SECRET: str = ""
+    SETU_AA_BASE_URL: str = "https://fiiu-api.setu.co"
 
     # Market Data
     MARKET_DATA_PROVIDER: Literal["yahoo", "alpha_vantage", "polygon"] = "yahoo"

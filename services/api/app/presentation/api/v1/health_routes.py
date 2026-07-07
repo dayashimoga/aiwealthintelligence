@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -25,5 +25,5 @@ async def health_check() -> HealthResponse:
         status="healthy",
         version="0.1.0",
         environment=settings.APP_ENV,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )

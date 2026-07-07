@@ -8,18 +8,17 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Any
-
 
 # ============================================================
 # Enums
 # ============================================================
 
 
-class AssetType(str, Enum):
+class AssetType(StrEnum):
     """Supported asset types in the platform."""
 
     STOCK = "stock"
@@ -36,7 +35,7 @@ class AssetType(str, Enum):
     OTHER = "other"
 
 
-class Currency(str, Enum):
+class Currency(StrEnum):
     """Supported currencies."""
 
     INR = "INR"
@@ -45,7 +44,7 @@ class Currency(str, Enum):
     GBP = "GBP"
 
 
-class Exchange(str, Enum):
+class Exchange(StrEnum):
     """Supported stock exchanges."""
 
     NSE = "NSE"
@@ -55,7 +54,7 @@ class Exchange(str, Enum):
     OTHER = "OTHER"
 
 
-class RecommendationAction(str, Enum):
+class RecommendationAction(StrEnum):
     """AI recommendation actions."""
 
     STRONG_BUY = "strong_buy"
@@ -66,7 +65,7 @@ class RecommendationAction(str, Enum):
     EXIT = "exit"
 
 
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     """Risk classification levels."""
 
     VERY_LOW = "very_low"
@@ -76,7 +75,7 @@ class RiskLevel(str, Enum):
     VERY_HIGH = "very_high"
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     """User roles for RBAC."""
 
     ADMIN = "admin"
@@ -84,7 +83,7 @@ class UserRole(str, Enum):
     PREMIUM = "premium"
 
 
-class PortfolioImportSource(str, Enum):
+class PortfolioImportSource(StrEnum):
     """Portfolio import sources."""
 
     MANUAL = "manual"
@@ -147,19 +146,26 @@ class User:
     mfa_enabled: bool = False
     avatar_url: str = ""
     preferences: dict[str, Any] = field(default_factory=dict)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    google_id: str | None = None
+    apple_id: str | None = None
+    totp_secret: str | None = None
+    backup_codes: list[str] = field(default_factory=list)
+    is_onboarded: bool = False
+    passkeys: list[dict[str, Any]] = field(default_factory=list)
+    trusted_devices: list[dict[str, Any]] = field(default_factory=list)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     last_login_at: datetime | None = None
 
     def verify(self) -> None:
         """Mark user as verified."""
         self.is_verified = True
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def update_last_login(self) -> None:
         """Update last login timestamp."""
-        self.last_login_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_login_at = datetime.now(UTC)
+        self.updated_at = datetime.now(UTC)
 
 
 @dataclass
@@ -174,8 +180,8 @@ class Portfolio:
     currency: Currency = Currency.INR
     import_source: PortfolioImportSource = PortfolioImportSource.MANUAL
     holdings: list[Holding] = field(default_factory=list)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def total_invested(self) -> Decimal:
@@ -231,8 +237,8 @@ class Holding:
     isin: str = ""
     notes: str = ""
     buy_date: datetime | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def invested_value(self) -> Decimal:
@@ -270,8 +276,8 @@ class Transaction:
     fees: Decimal = Decimal("0")
     tax: Decimal = Decimal("0")
     notes: str = ""
-    transaction_date: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    transaction_date: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def total_amount(self) -> Decimal:
@@ -298,7 +304,7 @@ class AIRecommendation:
     investment_horizon: str = ""  # e.g., "6-12 months"
     alternative_suggestions: list[str] = field(default_factory=list)
     explainability: AIExplainability | None = None
-    generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = None
     model_version: str = ""
 
@@ -339,7 +345,7 @@ class PortfolioAnalytics:
     asset_allocation: dict[str, Decimal] = field(default_factory=dict)
     sector_allocation: dict[str, Decimal] = field(default_factory=dict)
     country_allocation: dict[str, Decimal] = field(default_factory=dict)
-    calculated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    calculated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -359,7 +365,7 @@ class PortfolioIntelligence:
     interest_rate_risks: list[dict[str, Any]] = field(default_factory=list)
     suggestions: list[str] = field(default_factory=list)
     overall_health: str = ""
-    generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -375,8 +381,8 @@ class MarketNews:
     relevance_score: Decimal = Decimal("0")
     sectors: list[str] = field(default_factory=list)
     symbols: list[str] = field(default_factory=list)
-    published_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    fetched_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    published_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    fetched_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -388,5 +394,5 @@ class Watchlist:
     name: str = "My Watchlist"
     symbols: list[str] = field(default_factory=list)
     alerts: list[dict[str, Any]] = field(default_factory=list)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
