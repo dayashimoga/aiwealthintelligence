@@ -5,6 +5,19 @@ All notable changes are documented here. Format: `[version] date — description
 
 ---
 
+## [0.4.0] — 2026-07-07 — Sprint 2: Auth State Wiring, Market Auto-Refresh, Performance Chart
+
+### Added
+- `portfolio_detail_screen.dart` — `_PerformanceChart` widget: fl_chart `LineChart` with smooth S-curve growth path, Total Return % + CAGR KPI chips, gradient fill below line. Animates in with fadeIn + slideY.
+- `market_screen.dart` — `Timer.periodic(30s)` auto-refresh via `ref.invalidate(marketOverviewProvider)`. Last-updated timestamp subtitle in AppBar. Manual refresh `IconButton`.
+
+### Fixed
+- `register_screen.dart` — success handler now calls `authStateProvider.notifier.setAuthenticated(onboarded: false)`; router redirect moves to `/onboarding` declaratively.
+- `onboarding_wizard.dart` — `_finishOnboarding` now calls `authStateProvider.notifier.completeOnboarding()`; router redirect moves to `/dashboard`. Removed unused `go_router` import.
+- `settings_screen.dart` — Sign Out and Delete Account both route through `authStateProvider.notifier.logout()` which clears tokens + sets `AuthStatus.unauthenticated`; router redirect fires automatically.
+
+---
+
 ## [0.3.0] — 2026-07-07 — Sprint 1: Runtime Stability & CI Green
 
 ### Added

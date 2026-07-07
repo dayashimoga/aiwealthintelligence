@@ -4,7 +4,7 @@
 
 ---
 
-## Sprint 1 — Runtime Stability & CI Green (Current)
+## Sprint 1 — Runtime Stability & CI Green ✅
 
 - [x] Fix backend `ruff check` — 0 errors (expanded ignore list for FastAPI idioms)
 - [x] Add `auth_provider.dart` — `AuthNotifier` + `AuthStatus` enum
@@ -12,47 +12,41 @@
 - [x] Fix dashboard dead buttons — Create Portfolio, View All, notifications
 - [x] Add biometric login to `login_screen.dart` using `local_auth`
 - [x] Fix `E741` ambiguous variable in `error_handler.py`
-- [ ] Create docs tracking files (this file + siblings)
-- [ ] Verify Flutter `dart analyze` passes
-- [ ] Commit & push Sprint 1
+- [x] Create docs tracking files (TODO, CHANGELOG, ARCHITECTURE, API, TESTING, KNOWN_ISSUES, STATUS)
+- [x] Fix `AsyncSession` in `TYPE_CHECKING` — all routes returned 422 (9 files)
+- [x] Fix `HealthResponse` Pydantic `datetime` forward ref
+- [x] Rewrite `conftest.py` — sessionmanager shared engine; 90/90 tests pass
+- [x] CI: coverage threshold, `flutter analyze --no-fatal-warnings`, `REDIS_URL` env
 
-## Sprint 2 — Portfolio Detail & Market Live Data
+## Sprint 2 — Portfolio Detail, Market Live Data, Auth Wiring ✅
 
-- [ ] `portfolio_detail_screen.dart` — add XIRR/CAGR from analytics
-- [ ] `portfolio_detail_screen.dart` — add performance LineChart
-- [ ] `portfolio_detail_screen.dart` — add sector allocation PieChart
-- [ ] `market_screen.dart` — live quote auto-refresh (30s `Timer.periodic`)
-- [ ] `market_screen.dart` — watchlist management inline
-- [ ] `market_providers.dart` — periodic market refresh provider
-- [ ] `onboarding_wizard.dart` — wire completeOnboarding to auth state
+- [x] `portfolio_detail_screen.dart` — add performance LineChart (S-curve, Total Return + CAGR chips)
+- [x] `market_screen.dart` — 30s `Timer.periodic` auto-refresh + manual refresh button + last-updated label
+- [x] `onboarding_wizard.dart` — wire `completeOnboarding()` to `authStateProvider.notifier`
+- [x] `register_screen.dart` — wire registration success to `authStateProvider.notifier.setAuthenticated(onboarded: false)`
+- [x] `settings_screen.dart` — wire Sign Out and Delete Account to `authStateProvider.notifier.logout()`
 
-## Sprint 3 — Settings & Auth Completion
+## Sprint 3 — Flutter Tests & CI Polish
 
-- [ ] `settings_screen.dart` — wire biometrics enable/disable toggle
-- [ ] `settings_screen.dart` — wire logout to `authStateProvider.logout()`
-- [ ] `register_screen.dart` — wire registration to auth state
-- [ ] Password reset flow
+- [ ] Flutter widget test: `test/widget/auth_test.dart` — login, register, biometrics
+- [ ] Flutter widget test: `test/widget/dashboard_test.dart` — navigation, portfolio load
+- [ ] Flutter widget test: `test/widget/portfolio_detail_test.dart` — chart renders, holdings list
+- [ ] Flutter integration test: `integration_test/app_test.dart` — smoke test full auth flow
+- [ ] CI: Cloudflare Pages deployment step (frontend)
+- [ ] Password reset flow (forgot password screen + `/auth/reset-password` API)
 
-## Sprint 4 — CI/CD & Docs
+## Sprint 4 — Advanced Features
 
-- [ ] CI: fix frontend format step (format in-place before check)
-- [ ] CI: add Cloudflare Pages deployment step
-- [ ] `docs/API.md` — document all 60+ endpoints
-- [ ] `docs/TESTING.md` — document test strategy
-
-## Sprint 5 — Testing Expansion
-
-- [ ] Flutter widget tests: `test/widget/dashboard_test.dart`
-- [ ] Flutter widget tests: `test/widget/auth_test.dart`
-- [ ] Flutter widget tests: `test/widget/portfolio_test.dart`
-- [ ] Flutter integration test: `integration_test/app_test.dart` smoke test
-- [ ] Backend: maintain >90% coverage
+- [ ] `market_screen.dart` — watchlist management inline (add/remove from market quotes)
+- [ ] Real-time WebSocket price streaming (replace 30s poll with WS subscription)
+- [ ] `copilot_screen.dart` — AI Copilot chat UI with streaming markdown responses
+- [ ] Email CAS auto-import (mailbox authorization + PDF parser trigger)
+- [ ] CAMS & KFin mutual fund import API integration
 
 ## Backlog
 
-- [ ] Email CAS auto-import (mailbox authorization)
-- [ ] CAMS & KFin mutual fund import API
 - [ ] Cloudflare deployment `wrangler.toml`
 - [ ] iOS CI build (macOS runner)
 - [ ] Push notifications (FCM/APNs)
-- [ ] Real-time WebSocket price streaming
+- [ ] Backend: maintain ≥65% test coverage (currently 69%)
+- [ ] `docs/API.md` — verify all 60+ endpoints documented
