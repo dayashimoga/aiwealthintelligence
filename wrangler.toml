@@ -1,4 +1,4 @@
-# Cloudflare Pages configuration for WealthAI Flutter Web deployment.
+﻿# Cloudflare Pages configuration for WealthAI Flutter Web deployment.
 #
 # Usage:
 #   wrangler pages deploy apps/web/build/web --project-name=wealthai
@@ -10,10 +10,11 @@
 
 name = "wealthai"
 compatibility_date = "2024-01-01"
+pages_build_output_dir = "apps/web/build/web"
 
-# ─────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Pages project settings
-# ─────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 [env.production]
 name = "wealthai"
@@ -21,12 +22,12 @@ name = "wealthai"
 [env.preview]
 name = "wealthai"
 
-# ─────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Headers (OWASP best practices for Flutter web SPA)
-# ─────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 [[rules]]
-  # Match all routes — serve from build/web
+  # Match all routes â€” serve from build/web
   type = "rewrite"
   from = "/*"
   to = "/index.html"
@@ -43,13 +44,13 @@ name = "wealthai"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' wss: https:; worker-src 'self' blob:"
 
 [[headers]]
-  # Flutter service worker & app shell — no-cache for freshness
+  # Flutter service worker & app shell â€” no-cache for freshness
   for = "/flutter_service_worker.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  # Flutter canvaskit & compiled WASM — long-lived cache
+  # Flutter canvaskit & compiled WASM â€” long-lived cache
   for = "/canvaskit/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
