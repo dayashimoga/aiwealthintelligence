@@ -15,7 +15,6 @@ import 'package:wealthai/core/repositories/repositories.dart';
 import 'package:wealthai/features/auth/screens/login_screen.dart';
 import 'package:wealthai/features/auth/screens/register_screen.dart';
 import 'package:wealthai/features/auth/screens/forgot_password_screen.dart';
-import 'package:wealthai/core/models/models.dart';
 
 // ─────────────────────────────────────────────
 // Mocks

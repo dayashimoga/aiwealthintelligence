@@ -38,6 +38,36 @@ class CopilotScreen extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(AppTheme.spacingMd),
                   children: [
+                    // AI Chat Card (pinned at top)
+                    Card(
+                      child: ListTile(
+                        contentPadding:
+                            const EdgeInsets.all(AppTheme.spacingMd),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary.withAlpha(40),
+                                theme.colorScheme.secondary.withAlpha(40),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.chat_bubble_outline_rounded,
+                              color: theme.colorScheme.primary, size: 28),
+                        ),
+                        title: const Text('Chat with AI Copilot',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text(
+                            'Ask anything about your portfolio — health, risks, recommendations, and more.'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/ai-chat'),
+                      ),
+                    ).animate().fadeIn(delay: 50.ms),
+
+                    const SizedBox(height: AppTheme.spacingSm),
+
                     // Daily Brief Card
                     Text('Daily AI Brief', style: theme.textTheme.titleMedium),
                     const SizedBox(height: AppTheme.spacingSm),
