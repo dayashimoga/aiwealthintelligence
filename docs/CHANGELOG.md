@@ -5,6 +5,74 @@ All notable changes are documented here. Format: `[version] date — description
 
 ---
 
+## [0.7.0] — 2026-07-07 — Sprint 4 (Part 2): Email CAS Auto-Import + CAMS/KFin + Coverage & Bug Fixes
+
+### Added
+
+#### Backend — New Importers
+- `services/api/app/infrastructure/importers/email_cas_importer.py` — IMAP-based CAS auto-import:
+  - Polls mailbox for PDF attachments from trusted sender domains (`nsdl.co.in`, `cdslindia.com`, `camsonline.com`, `kfintech.com`, `karvymfs.com`, `franklintempletonindia.com`)
+  - CAS subject keyword detection ("consolidated account statement", "portfolio statement", …)
+  - Non-blocking via `asyncio.to_thread` wrapping `imaplib.IMAP4_SSL`
+  - Configurable `since_date` scan window; per-PDF graceful error handling
+  - Env config: `EMAIL_IMAP_HOST`, `EMAIL_IMAP_PORT`, `EMAIL_ADDRESS`, `EMAIL_PASSWORD`, `EMAIL_CAS_FOLDER`, `EMAIL_PDF_PASSWORD`
+- `services/api/app/infrastructure/importers/cams_kfin_parser.py` — CAMS & KFintech MF CAS parser:
+  - Auto-detects CAMS vs KFin format via text markers
+  - Extracts investor name, PAN, AMC section headers
+  - Parses scheme lines: ISIN + units/NAV/value from 3/2/1 number patterns
+  - Deduplicates holdings by ISIN across multiple folios (keeps max NAV)
+  - Returns: `format`, `investor_name`, `pan`, `holdings`, `amc_count`, `pages_processed`
+
+#### Backend — New API Endpoints (`import_routes.py`)
+- `POST /api/v1/portfolios/{id}/import/cams-kfin` — Upload CAMS or KFin PDF (auto-detect format, PAN password support)
+- `GET  /api/v1/import/email-config` — IMAP config status (no secrets leaked in response)
+- `POST /api/v1/import/email-config/test` — Test IMAP connection; returns message count in folder
+- `POST /api/v1/portfolios/{id}/import/email-scan` — Trigger mailbox scan + bulk holdings import
+
+#### Backend — Config
+- `config.py` — Added `EMAIL_IMAP_HOST/PORT`, `EMAIL_ADDRESS`, `EMAIL_PASSWORD`, `EMAIL_CAS_FOLDER`, `EMAIL_PDF_PASSWORD` settings
+
+#### Tests
+- `test_importers_advanced.py` — 31 new tests:
+  - `EmailCASImporter`: trusted sender detection, subject matching, header decode, credential validation, full mocked IMAP4_SSL scan cycle (email + PDF), graceful parse-error handling
+  - `CAMSKFinParser`: format detection, PAN extraction, scheme line parsing (3/2/1 numbers), deduplication, mocked pdfplumber CAMS + KFin parse, corrupt PDF error
+  - Import routes: 401 unauthenticated, 400 unconfigured email, 404 invalid portfolio, file extension validation
+- `test_coverage_boost.py` — 55 tests across 6 modules (redis_cache, cas_pdf_parser, watchlist_routes, notification_routes, goal_routes, copilot_advanced_routes)
+- **Total: 154 tests passing, 69.6% coverage** (target ≥65% ✅)
+
+#### Flutter — Import Screen (5 tabs)
+- `import_screen.dart` — Extended from 3 → 5 tabs:
+  - **Tab 4: CAMS/KFin** — PDF file picker + PAN password field + result banner showing format/investor/AMC count
+  - **Tab 5: Email Auto** — IMAP config status card (configured/unconfigured + env hint), IMAP connection test button, since-date + PDF password fields, scan & import button, per-email source breakdown
+  - Preloads email config on screen open via `Future.microtask`
+
+### Fixed
+- `watchlist_routes.py` — `current_user["sub"]` → `current_user["id"]` (6 occurrences) — was causing `KeyError: 'sub'` 500 on all watchlist endpoints
+- `notification_routes.py` — same `"sub"` → `"id"` fix (5 occurrences)
+- `goal_routes.py` — same `"sub"` → `"id"` fix (4 occurrences)
+- `goal_routes.py` — `TypeError` on naive/aware datetime subtraction (`target_date - datetime.now(UTC)`) — fixed by detecting naive `target_date` and using `datetime.utcnow()` for comparison
+- `test_coverage_boost.py` — `LookupError: 'wealth_creation' not in goal_type enum` — changed to valid value `"custom"`
+
+---
+
+## [0.6.0] — 2026-07-07 — Sprint 4 (Part 1): WebSocket Price Streaming + CI/CD
+
+### Added
+- `ws_market_routes.py` — JWT-authenticated WebSocket endpoint `GET /ws/market/prices`:
+  - Streams live price ticks every 5s (configurable 2–60s) via `yfinance`
+  - Dynamic symbol subscription via `{action: "subscribe", symbols: [...]}` messages
+  - Ping/pong heartbeat support; graceful disconnect + per-symbol error handling
+- `market_price_stream.dart` — Flutter `StateNotifier` WS client:
+  - `IOWebSocketChannel` with JWT auth via query param, 5s reconnect backoff, 30s ping timer
+  - `updateSymbols()` for dynamic subscription changes
+- `api_constants.dart` — `wsBaseUrl` getter (converts `http://` → `ws://`, `https://` → `wss://`)
+- `repositories.dart` — `AuthRepository.getAccessToken()` reads from `FlutterSecureStorage`
+- `market_screen.dart` — Live connection status indicator: pulsing green dot (connected) / grey dot (disconnected) in AppBar
+- `wrangler.toml` — Cloudflare Pages config: SPA rewrite rule, OWASP security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `CSP`), cache-control (no-cache for SW, 1-year immutable for assets/canvaskit)
+- `conftest.py` — `auth_client` fixture with proper header merging via `_merge()` helper
+
+---
+
 ## [0.5.0] — 2026-07-07 — Sprint 4: Watchlist Management + AI Copilot Chat
 
 ### Added

@@ -39,19 +39,25 @@
 - [x] `auth_widget_test.dart` — 7 widget tests: login renders/validates/forgot-pw nav, register renders/terms, forgot-pw step1 validate/advance/pw-mismatch
 - [x] `dashboard_widget_test.dart` — 3 widget tests: loading shimmer, portfolio loaded, empty state
 
-## Sprint 4 — Advanced Features
+## Sprint 4 — Advanced Features ✅
 
 - [x] `market_screen.dart` — Watchlist tab: inline add/remove symbols, create watchlist dialog, empty/error states
 - [x] `ai_chat_screen.dart` — AI Copilot real API chat (no mocks), animated typing dots, suggestions/holdings chips
 - [x] Flutter analyzer: fixed all errors (settings math import, test Portfolio fields, StreamProvider overrides)
-- [ ] Real-time WebSocket price streaming (replace 30s poll with WS subscription)
-- [ ] Email CAS auto-import (mailbox authorization + PDF parser trigger)
-- [ ] CAMS & KFin mutual fund import API integration
+- [x] Real-time WebSocket price streaming — `ws_market_routes.py` (FastAPI) + `market_price_stream.dart` (Flutter) with JWT auth, 5s reconnect backoff, ping/pong heartbeat, live dot indicator in MarketScreen AppBar
+- [x] Email CAS auto-import — `email_cas_importer.py`: IMAP polling (nsdl.co.in, cdslindia.com, camsonline.com, kfintech.com), trusted sender + subject detection, async scan, `POST /portfolios/{id}/import/email-scan`
+- [x] CAMS & KFin mutual fund import — `cams_kfin_parser.py`: auto-detects CAMS vs KFin, extracts investor/PAN/AMCs, deduplicates by ISIN, `POST /portfolios/{id}/import/cams-kfin`
+- [x] Import screen extended to 5 tabs: added CAMS/KFin PDF tab + Email auto-scan tab
+- [x] Import API: `GET /import/email-config`, `POST /import/email-config/test`, email-scan trigger
+- [x] Backend coverage: 154 tests passing at 69.6% (target ≥65% ✅)
+- [x] Bug fix: `current_user["sub"]` → `current_user["id"]` in watchlist, notification, goal routes
+- [x] Bug fix: naive/aware datetime subtraction in `goal_routes.py`
+- [x] `wrangler.toml` — Cloudflare Pages config with SPA rewrite + OWASP headers
 
 ## Backlog
 
-- [ ] Cloudflare deployment `wrangler.toml`
+- [x] Cloudflare deployment `wrangler.toml` — ✅ created
 - [ ] iOS CI build (macOS runner)
 - [ ] Push notifications (FCM/APNs)
-- [ ] Backend: maintain ≥65% test coverage (currently 69%)
+- [x] Backend: maintain ≥65% test coverage — currently **69.6%** ✅
 - [ ] `docs/API.md` — verify all 60+ endpoints documented
