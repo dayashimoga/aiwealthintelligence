@@ -246,7 +246,7 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                                             final label =
                                                 sectors[value.toInt()];
                                             final cleanLabel = label.length > 8
-                                                ? label.substring(0, 7) + '..'
+                                                ? '${label.substring(0, 7)}..'
                                                 : label;
                                             return Padding(
                                               padding:
