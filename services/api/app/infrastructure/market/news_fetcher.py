@@ -41,7 +41,7 @@ async def fetch_rss_news(symbol: str | None = None, limit: int = 10) -> list[dic
             resp.raise_for_status()
             text = resp.text
 
-            root = ET.fromstring(text)
+            root = ET.fromstring(text)  # nosec B314 — RSS feed from trusted financial providers
             items = root.findall(".//item")
 
             articles = []

@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     APP_ENV: Literal["development", "staging", "production"] = "development"
     APP_DEBUG: bool = True
     APP_SECRET_KEY: str = "change-me-to-a-random-secret-key-min-32-chars"
-    APP_HOST: str = "0.0.0.0"
+    APP_HOST: str = "0.0.0.0"  # nosec B104 — intentional: container/Docker binding
     APP_PORT: int = 8000
     APP_WORKERS: int = 4
     APP_LOG_LEVEL: str = "INFO"
