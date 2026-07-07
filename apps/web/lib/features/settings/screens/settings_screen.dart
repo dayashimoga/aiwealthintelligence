@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/portfolio_providers.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/repositories/repositories.dart';
@@ -261,10 +262,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         title: const Text('Sign Out',
                             style: TextStyle(color: AppTheme.lossRed)),
                         onTap: () async {
-                          await ref.read(authRepositoryProvider).logout();
-                          if (context.mounted) {
-                            GoRouter.of(context).go('/login');
-                          }
+                          await ref
+                              .read(authStateProvider.notifier)
+                              .logout();
+                          // router redirect fires automatically via AuthStatus
                         },
                       ),
                       const Divider(height: 1),
@@ -851,8 +852,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context)
                           .showSnackBar(SnackBar(content: Text(msg)));
-                      GoRouter.of(context).go('/login');
                     }
+                    // Clear auth state — router redirects to /login.
+                    ref.read(authStateProvider.notifier).logout();
                   },
                   failure: (err, _) {
                     if (context.mounted) {

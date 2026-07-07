@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/repositories/repositories.dart';
 
@@ -203,7 +203,8 @@ class _OnboardingWizardScreenState
     res.when(
       success: (msg) {
         setState(() => _isLoading = false);
-        context.go('/dashboard');
+        // Update global auth state — router redirect moves to /dashboard.
+        ref.read(authStateProvider.notifier).completeOnboarding();
       },
       failure: (err, _) {
         setState(() => _isLoading = false);

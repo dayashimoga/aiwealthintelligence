@@ -1,18 +1,53 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/providers/portfolio_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common_widgets.dart';
 
-/// Market intelligence screen showing live news, sector rankings, indices, and macro calendars.
-class MarketScreen extends ConsumerWidget {
+/// Market intelligence screen showing live news, sector rankings, and macro calendars.
+/// Auto-refreshes every 30 seconds.
+class MarketScreen extends ConsumerStatefulWidget {
   const MarketScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MarketScreen> createState() => _MarketScreenState();
+}
+
+class _MarketScreenState extends ConsumerState<MarketScreen> {
+  Timer? _refreshTimer;
+  DateTime _lastRefreshed = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh market data every 30 seconds.
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        ref.invalidate(marketOverviewProvider);
+        setState(() => _lastRefreshed = DateTime.now());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  String get _lastRefreshedLabel {
+    final fmt = DateFormat('HH:mm:ss');
+    return 'Updated ${fmt.format(_lastRefreshed)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -22,7 +57,28 @@ class MarketScreen extends ConsumerWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Market Intelligence'),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Market Intelligence'),
+              Text(
+                _lastRefreshedLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh now',
+              onPressed: () {
+                ref.invalidate(marketOverviewProvider);
+                setState(() => _lastRefreshed = DateTime.now());
+              },
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'News', icon: Icon(Icons.newspaper, size: 18)),
@@ -65,7 +121,10 @@ class MarketScreen extends ConsumerWidget {
                         style: theme.textTheme.bodySmall),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () => ref.invalidate(marketOverviewProvider),
+                      onPressed: () {
+                        ref.invalidate(marketOverviewProvider);
+                        setState(() => _lastRefreshed = DateTime.now());
+                      },
                       child: const Text('Retry'),
                     ),
                   ],

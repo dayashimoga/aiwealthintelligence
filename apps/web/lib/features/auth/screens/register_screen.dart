@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/repositories/repositories.dart';
 
@@ -52,7 +53,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _isLoading = false);
       res.when(
         success: (tokens) {
-          context.go('/onboarding');
+          // Update global auth state → router redirect handles navigation.
+          ref
+              .read(authStateProvider.notifier)
+              .setAuthenticated(onboarded: false);
         },
         failure: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(

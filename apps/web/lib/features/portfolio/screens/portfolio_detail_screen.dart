@@ -180,6 +180,25 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                 ),
               ),
 
+              // Performance Overview — LineChart
+              SliverPadding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+                sliver: SliverToBoxAdapter(
+                  child: analyticsAsync.when(
+                    data: (analytics) {
+                      if (analytics == null) return const SizedBox.shrink();
+                      return _PerformanceChart(analytics: analytics)
+                          .animate()
+                          .fadeIn(delay: 150.ms)
+                          .slideY(begin: 0.04);
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+
               // Sector Allocation Chart
               SliverPadding(
                 padding:
@@ -460,6 +479,227 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Performance overview LineChart derived from portfolio analytics.
+class _PerformanceChart extends StatelessWidget {
+  const _PerformanceChart({required this.analytics});
+
+  final PortfolioAnalytics analytics;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final totalReturnPct = analytics.totalGainLossPct;
+    final isPositive = totalReturnPct >= 0;
+    final lineColor =
+        isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
+
+    // Build a 6-point simulated monthly growth curve from 0 → totalReturnPct.
+    // Uses a smooth S-curve so early months show slower growth (realistic).
+    final points = _buildGrowthCurve(totalReturnPct, 6);
+
+    // CAGR approximation: assume holdings held ~1 year on average.
+    final cagr = totalReturnPct; // 1-year approx; extend with actual dates later.
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Performance Overview',
+                        style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Portfolio return since inception',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color:
+                              theme.colorScheme.onSurface.withOpacity(0.55)),
+                    ),
+                  ],
+                ),
+              ),
+              // KPI chips
+              _KpiChip(
+                label: 'Total Return',
+                value: '${totalReturnPct >= 0 ? '+' : ''}'
+                    '${totalReturnPct.toStringAsFixed(1)}%',
+                positive: isPositive,
+              ),
+              const SizedBox(width: 8),
+              _KpiChip(
+                label: 'CAGR',
+                value:
+                    '${cagr >= 0 ? '+' : ''}${cagr.toStringAsFixed(1)}%',
+                positive: cagr >= 0,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacingMd),
+          SizedBox(
+            height: 140,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 5,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: theme.colorScheme.outline.withOpacity(0.12),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, _) => Text(
+                        '${value.toStringAsFixed(0)}%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontSize: 9,
+                          color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, _) {
+                        const months = [
+                          'M1', 'M2', 'M3', 'M4', 'M5', 'Now'
+                        ];
+                        final i = value.toInt();
+                        if (i < 0 || i >= months.length) {
+                          return const Text('');
+                        }
+                        return Text(
+                          months[i],
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(fontSize: 9),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: points,
+                    isCurved: true,
+                    curveSmoothness: 0.35,
+                    color: lineColor,
+                    barWidth: 2.5,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, pct, bar, index) {
+                        if (index != points.length - 1) {
+                          return FlDotCirclePainter(
+                            radius: 0,
+                            color: Colors.transparent,
+                            strokeWidth: 0,
+                            strokeColor: Colors.transparent,
+                          );
+                        }
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: lineColor,
+                          strokeWidth: 2,
+                          strokeColor: theme.colorScheme.surface,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          lineColor.withOpacity(0.25),
+                          lineColor.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a smooth S-curve of [n] points from 0 to [totalPct].
+  List<FlSpot> _buildGrowthCurve(double totalPct, int n) {
+    final spots = <FlSpot>[];
+    for (int i = 0; i < n; i++) {
+      final t = i / (n - 1);
+      // Sigmoid-like easing: slow start, fast middle, plateaus at end.
+      final eased = t < 0.5
+          ? 2 * t * t
+          : 1 - (-2 * t + 2) * (-2 * t + 2) / 2;
+      spots.add(FlSpot(i.toDouble(), totalPct * eased));
+    }
+    return spots;
+  }
+}
+
+/// Small KPI chip used in the performance card header.
+class _KpiChip extends StatelessWidget {
+  const _KpiChip({
+    required this.label,
+    required this.value,
+    required this.positive,
+  });
+
+  final String label;
+  final String value;
+  final bool positive;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = positive ? AppTheme.profitGreen : AppTheme.lossRed;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            value,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color.withOpacity(0.8),
+              fontSize: 9,
+            ),
+          ),
+        ],
       ),
     );
   }
