@@ -5,7 +5,18 @@ All notable changes are documented here. Format: `[version] date — description
 
 ---
 
-## [0.4.0] — 2026-07-07 — Sprint 2: Auth State Wiring, Market Auto-Refresh, Performance Chart
+## [0.5.0] — 2026-07-07 — Sprint 4: Watchlist Inline Management
+
+### Added
+- `market_screen.dart` — 4th **Watchlist** tab with inline symbol management:
+  - `_buildWatchlistTab`: loads `watchlistsProvider`, shows all watchlists with empty/error/data states
+  - `_WatchlistCard` stateful widget: symbol Chips with ✕ remove, inline Add symbol TextField + FilledButton
+  - Create New Watchlist dialog (AlertDialog with name input)
+  - All mutations call `WatchlistRepository` methods + `ref.invalidate(watchlistsProvider)` for live sync
+
+---
+
+## [0.4.0] — 2026-07-07 — Sprint 3: Password Reset & Widget Tests
 
 ### Added
 - `portfolio_detail_screen.dart` — `_PerformanceChart` widget: fl_chart `LineChart` with smooth S-curve growth path, Total Return % + CAGR KPI chips, gradient fill below line. Animates in with fadeIn + slideY.

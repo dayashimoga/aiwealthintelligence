@@ -41,9 +41,9 @@
 
 ## Sprint 4 — Advanced Features
 
-- [ ] `market_screen.dart` — watchlist management inline (add/remove from market quotes)
+- [x] `market_screen.dart` — Watchlist tab: inline add/remove symbols, create watchlist dialog, empty/error states
 - [ ] Real-time WebSocket price streaming (replace 30s poll with WS subscription)
-- [ ] `copilot_screen.dart` — AI Copilot chat UI with streaming markdown responses
+- [ ] `copilot_screen.dart` — AI Copilot streaming chat UI with markdown responses
 - [ ] Email CAS auto-import (mailbox authorization + PDF parser trigger)
 - [ ] CAMS & KFin mutual fund import API integration
 

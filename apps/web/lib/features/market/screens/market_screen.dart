@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/providers/portfolio_providers.dart';
 import '../../../core/models/models.dart';
+import '../../../core/repositories/repositories.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common_widgets.dart';
 
@@ -54,7 +55,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final marketAsync = ref.watch(marketOverviewProvider);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Column(
@@ -80,10 +81,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             ),
           ],
           bottom: const TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: 'News', icon: Icon(Icons.newspaper, size: 18)),
               Tab(text: 'Sectors', icon: Icon(Icons.category, size: 18)),
               Tab(text: 'Calendar', icon: Icon(Icons.calendar_month, size: 18)),
+              Tab(text: 'Watchlist', icon: Icon(Icons.bookmark_outlined, size: 18)),
             ],
           ),
         ),
@@ -98,6 +102,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   _buildNewsTab(context, overview),
                   _buildSectorsTab(context, overview),
                   _buildCalendarTab(context, overview),
+                  _buildWatchlistTab(context),
                 ],
               );
             },
@@ -577,5 +582,269 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       default:
         return AppTheme.warningAmber;
     }
+  }
+
+  Widget _buildWatchlistTab(BuildContext context) {
+    final theme = Theme.of(context);
+    final watchlistsAsync = ref.watch(watchlistsProvider);
+
+    return watchlistsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.lossRed),
+            const SizedBox(height: 12),
+            Text('Failed to load watchlists',
+                style: theme.textTheme.titleMedium),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.invalidate(watchlistsProvider),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (watchlists) {
+        if (watchlists.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.bookmark_add_outlined,
+                    size: 64,
+                    color: theme.colorScheme.primary.withOpacity(0.5)),
+                const SizedBox(height: 16),
+                Text('No watchlists yet',
+                    style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Text('Create a watchlist to track your favourite symbols',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.55),
+                    ),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create Watchlist'),
+                  onPressed: () =>
+                      _showCreateWatchlistDialog(context),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(AppTheme.spacingMd),
+          itemCount: watchlists.length + 1, // +1 for create button
+          itemBuilder: (context, index) {
+            if (index == watchlists.length) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 32),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Watchlist'),
+                  onPressed: () => _showCreateWatchlistDialog(context),
+                ),
+              );
+            }
+
+            final wl = watchlists[index];
+            return _WatchlistCard(
+              watchlist: wl,
+              onSymbolRemoved: (symbol) async {
+                await ref
+                    .read(watchlistRepositoryProvider)
+                    .removeSymbol(wl.id, symbol);
+                ref.invalidate(watchlistsProvider);
+              },
+              onSymbolAdded: (symbol) async {
+                await ref
+                    .read(watchlistRepositoryProvider)
+                    .addSymbol(wl.id, symbol: symbol);
+                ref.invalidate(watchlistsProvider);
+              },
+            ).animate().fadeIn(delay: Duration(milliseconds: index * 80));
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showCreateWatchlistDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Watchlist'),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Watchlist name',
+            hintText: 'e.g. Tech Picks',
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Create')),
+        ],
+      ),
+    );
+
+    if (confirmed == true && nameCtrl.text.trim().isNotEmpty) {
+      await ref
+          .read(watchlistRepositoryProvider)
+          .createWatchlist(name: nameCtrl.text.trim());
+      ref.invalidate(watchlistsProvider);
+    }
+  }
+}
+
+/// Card widget for a single watchlist with inline symbol management.
+class _WatchlistCard extends StatefulWidget {
+  const _WatchlistCard({
+    required this.watchlist,
+    required this.onSymbolRemoved,
+    required this.onSymbolAdded,
+  });
+
+  final WatchlistItem watchlist;
+  final Future<void> Function(String symbol) onSymbolRemoved;
+  final Future<void> Function(String symbol) onSymbolAdded;
+
+  @override
+  State<_WatchlistCard> createState() => _WatchlistCardState();
+}
+
+class _WatchlistCardState extends State<_WatchlistCard> {
+  final _addCtrl = TextEditingController();
+  bool _adding = false;
+
+  @override
+  void dispose() {
+    _addCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.bookmark,
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  widget.watchlist.name,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                '${widget.watchlist.symbols.length} symbols',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Symbol chips
+          if (widget.watchlist.symbols.isEmpty)
+            Text('No symbols yet — add one below',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.45),
+                  fontStyle: FontStyle.italic,
+                ))
+          else
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: widget.watchlist.symbols
+                  .map((symbol) => Chip(
+                        key: Key('chip_${symbol}_${widget.watchlist.id}'),
+                        label: Text(symbol,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 12)),
+                        deleteIcon: const Icon(Icons.close, size: 14),
+                        onDeleted: () => widget.onSymbolRemoved(symbol),
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        backgroundColor:
+                            theme.colorScheme.primaryContainer.withOpacity(0.4),
+                      ))
+                  .toList(),
+            ),
+
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+
+          // Inline add symbol
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _addCtrl,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    hintText: 'Add symbol (e.g. RELIANCE)',
+                    hintStyle: theme.textTheme.bodySmall,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onSubmitted: (_) => _submitAdd(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _adding ? null : _submitAdd,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: _adding
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Add'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitAdd() async {
+    final symbol = _addCtrl.text.trim().toUpperCase();
+    if (symbol.isEmpty) return;
+    setState(() => _adding = true);
+    await widget.onSymbolAdded(symbol);
+    _addCtrl.clear();
+    if (mounted) setState(() => _adding = false);
   }
 }
