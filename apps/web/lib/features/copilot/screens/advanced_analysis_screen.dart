@@ -37,8 +37,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
         child: analysisAsync.when(
           data: (analysis) {
             if (analysis == null) {
-              return const Center(
-                  child: Text('No advanced analytics data compiled.'));
+              return const Center(child: Text('No advanced analytics data compiled.'));
             }
 
             return DefaultTabController(
@@ -50,8 +49,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                     child: TabBar(
                       isScrollable: true,
                       labelColor: theme.colorScheme.primary,
-                      unselectedLabelColor:
-                          theme.colorScheme.onSurface.withAlpha(150),
+                      unselectedLabelColor: theme.colorScheme.onSurface.withAlpha(150),
                       indicatorColor: theme.colorScheme.primary,
                       tabs: const [
                         Tab(icon: Icon(Icons.flash_on), text: 'Stress Tests'),
@@ -82,15 +80,12 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 64, color: AppTheme.lossRed),
+                  const Icon(Icons.error_outline, size: 64, color: AppTheme.lossRed),
                   const SizedBox(height: 16),
-                  Text('Failed to compile advanced metrics',
-                      style: theme.textTheme.titleMedium),
+                  Text('Failed to compile advanced metrics', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(err.toString(),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall),
+                      textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => ref.invalidate(advancedAnalysisProvider),
@@ -110,8 +105,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
     final stressList = analysis.stressTest;
 
     if (stressList == null || stressList.isEmpty) {
-      return const Center(
-          child: Text('Add holdings to run stress scenario models.'));
+      return const Center(child: Text('Add holdings to run stress scenario models.'));
     }
 
     return ListView.builder(
@@ -119,8 +113,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
       itemCount: stressList.length,
       itemBuilder: (context, index) {
         final scenario = stressList[index];
-        final changeColor =
-            scenario.changeValue < 0 ? AppTheme.lossRed : AppTheme.profitGreen;
+        final changeColor = scenario.changeValue < 0 ? AppTheme.lossRed : AppTheme.profitGreen;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
@@ -133,8 +126,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         scenario.scenarioName,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                     _buildImpactBadge(scenario.impactLevel),
@@ -143,8 +135,8 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   scenario.scenarioDescription,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(160)),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(160)),
                 ),
                 const Divider(height: 24),
                 Row(
@@ -158,8 +150,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           '₹${scenario.estimatedNewValue.toStringAsFixed(2)}',
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -225,8 +216,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
       ),
       child: Text(
         label,
-        style:
-            TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -282,8 +272,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
 
         Text(
           'Tax Loss Harvesting Opportunities',
-          style: theme.textTheme.titleMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
@@ -305,10 +294,8 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
           )
         else
           ...opportunities.map((opp) {
-            final periodText =
-                opp.holdingPeriodDays > 365 ? 'Long Term' : 'Short Term';
-            final periodColor =
-                opp.holdingPeriodDays > 365 ? Colors.blue : Colors.orange;
+            final periodText = opp.holdingPeriodDays > 365 ? 'Long Term' : 'Short Term';
+            final periodColor = opp.holdingPeriodDays > 365 ? Colors.blue : Colors.orange;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
@@ -320,25 +307,20 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                       children: [
                         Text(
                           opp.symbol,
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(width: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: periodColor.withAlpha(30),
                             borderRadius: BorderRadius.circular(10),
-                            border:
-                                Border.all(color: periodColor.withAlpha(100)),
+                            border: Border.all(color: periodColor.withAlpha(100)),
                           ),
                           child: Text(
                             periodText,
                             style: TextStyle(
-                                color: periodColor,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold),
+                                color: periodColor, fontSize: 9, fontWeight: FontWeight.bold),
                           ),
                         ),
                         const Spacer(),
@@ -359,8 +341,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text('Quantity',
-                                style: TextStyle(
-                                    fontSize: 10, color: Colors.grey)),
+                                style: TextStyle(fontSize: 10, color: Colors.grey)),
                             const SizedBox(height: 2),
                             Text(opp.quantity.toStringAsFixed(0)),
                           ],
@@ -369,8 +350,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text('Avg Cost',
-                                style: TextStyle(
-                                    fontSize: 10, color: Colors.grey)),
+                                style: TextStyle(fontSize: 10, color: Colors.grey)),
                             const SizedBox(height: 2),
                             Text('₹${opp.averageBuyPrice.toStringAsFixed(2)}'),
                           ],
@@ -379,14 +359,12 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             const Text('Unrealized Loss',
-                                style: TextStyle(
-                                    fontSize: 10, color: Colors.grey)),
+                                style: TextStyle(fontSize: 10, color: Colors.grey)),
                             const SizedBox(height: 2),
                             Text(
                               '-₹${opp.unrealizedLoss.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                  color: AppTheme.lossRed,
-                                  fontWeight: FontWeight.bold),
+                                  color: AppTheme.lossRed, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -417,9 +395,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
         final isLow = bias.severity.toLowerCase() == 'low';
         final color = bias.severity.toLowerCase() == 'high'
             ? AppTheme.lossRed
-            : (bias.severity.toLowerCase() == 'medium'
-                ? Colors.orange
-                : AppTheme.profitGreen);
+            : (bias.severity.toLowerCase() == 'medium' ? Colors.orange : AppTheme.profitGreen);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
@@ -430,9 +406,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                 Row(
                   children: [
                     Icon(
-                      isLow
-                          ? Icons.check_circle_outline
-                          : Icons.warning_amber_rounded,
+                      isLow ? Icons.check_circle_outline : Icons.warning_amber_rounded,
                       color: color,
                       size: 24,
                     ),
@@ -440,13 +414,11 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         bias.biasName,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: color.withAlpha(20),
                         borderRadius: BorderRadius.circular(10),
@@ -454,10 +426,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                       ),
                       child: Text(
                         bias.severity.toUpperCase(),
-                        style: TextStyle(
-                            color: color,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold),
+                        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -494,9 +463,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
     final goals = analysis.goals;
 
     if (goals == null || goals.isEmpty) {
-      return const Center(
-          child: Text(
-              'Configure goals in settings to start tracking milestones.'));
+      return const Center(child: Text('Configure goals in settings to start tracking milestones.'));
     }
 
     return ListView.builder(
@@ -520,8 +487,7 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                   children: [
                     Text(
                       goal.goalName,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       '${goal.progressPercentage.toStringAsFixed(1)}% Completed',
@@ -549,13 +515,11 @@ class AdvancedAnalysisScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Current: ₹${goal.currentAmount.toStringAsFixed(0)}',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: Colors.grey),
+                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
                     ),
                     Text(
                       'Target: ₹${goal.targetAmount.toStringAsFixed(0)}',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: Colors.grey),
+                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
                     ),
                   ],
                 ),

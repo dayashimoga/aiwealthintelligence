@@ -87,9 +87,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             }).toList(),
                             onChanged: (val) {
                               if (val != null) {
-                                ref
-                                    .read(selectedPortfolioIdProvider.notifier)
-                                    .state = val;
+                                ref.read(selectedPortfolioIdProvider.notifier).state = val;
                               }
                             },
                           ),
@@ -136,8 +134,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 'Create a portfolio or upload a CAS statement to get started.',
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withAlpha(153),
+                                  color: theme.colorScheme.onSurface.withAlpha(153),
                                 ),
                               ),
                               const SizedBox(height: AppTheme.spacingLg),
@@ -171,17 +168,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error_outline,
-                                size: 60, color: Colors.red),
+                            const Icon(Icons.error_outline, size: 60, color: Colors.red),
                             const SizedBox(height: AppTheme.spacingMd),
-                            Text('Failed to load dashboard',
-                                style: theme.textTheme.titleMedium),
+                            Text('Failed to load dashboard', style: theme.textTheme.titleMedium),
                             const SizedBox(height: AppTheme.spacingSm),
                             Text(err.toString(), textAlign: TextAlign.center),
                             const SizedBox(height: AppTheme.spacingMd),
                             ElevatedButton(
-                              onPressed: () =>
-                                  ref.invalidate(portfoliosProvider),
+                              onPressed: () => ref.invalidate(portfoliosProvider),
                               child: const Text('Retry'),
                             ),
                           ],
@@ -220,8 +214,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 children: [
                   StatCard(
                     label: 'Total Value',
-                    value:
-                        _currencyFormatter.format(analytics.totalCurrentValue),
+                    value: _currencyFormatter.format(analytics.totalCurrentValue),
                     change: gainLossText,
                     changePositive: analytics.totalGainLoss >= 0,
                     icon: Icons.account_balance_wallet,
@@ -236,8 +229,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   StatCard(
                     label: 'AI Health Score',
                     value: '${analytics.aiHealthScore.toStringAsFixed(0)}/100',
-                    change:
-                        analytics.aiHealthScore >= 80 ? 'Good' : 'Needs Review',
+                    change: analytics.aiHealthScore >= 80 ? 'Good' : 'Needs Review',
                     changePositive: analytics.aiHealthScore >= 80,
                     icon: Icons.health_and_safety,
                   ),
@@ -312,9 +304,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: holdingsAsync.when(
             data: (holdings) {
               if (holdings.isEmpty) return const SizedBox.shrink();
-              return WinnersLosersWidget(holdings: holdings)
-                  .animate()
-                  .fadeIn(delay: 250.ms);
+              return WinnersLosersWidget(holdings: holdings).animate().fadeIn(delay: 250.ms);
             },
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
@@ -351,8 +341,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               PieChartData(
                                 sectionsSpace: 2,
                                 centerSpaceRadius: 40,
-                                sections: _buildChartSections(
-                                    analytics.assetAllocation),
+                                sections: _buildChartSections(analytics.assetAllocation),
                               ),
                             ),
                           ),
@@ -360,8 +349,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children:
-                                _buildChartLegend(analytics.assetAllocation),
+                            children: _buildChartLegend(analytics.assetAllocation),
                           ),
                         ],
                       ),
@@ -390,8 +378,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     padding: const EdgeInsets.all(AppTheme.spacingMd),
                     child: Row(
                       children: [
-                        const Icon(Icons.check_circle_outline,
-                            color: Colors.green, size: 28),
+                        const Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
                         const SizedBox(width: 12),
                         Text(
                           'No portfolio issues detected! Healthy asset structure.',
@@ -421,8 +408,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             gradient: AppTheme.primaryGradient,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.auto_awesome,
-                              color: Colors.white, size: 20),
+                          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Text(
@@ -490,8 +476,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Holdings Positions',
-                          style: theme.textTheme.titleMedium),
+                      Text('Holdings Positions', style: theme.textTheme.titleMedium),
                       TextButton(
                         onPressed: () => context.go('/portfolios'),
                         child: const Text('View All'),
@@ -502,9 +487,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ...holdings.take(5).toList().asMap().entries.map(
                         (entry) => _holdingTile(context, entry.value)
                             .animate()
-                            .fadeIn(
-                                delay: Duration(
-                                    milliseconds: 500 + entry.key * 100))
+                            .fadeIn(delay: Duration(milliseconds: 500 + entry.key * 100))
                             .slideX(begin: 0.05),
                       ),
                 ],
@@ -521,8 +504,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ];
   }
 
-  List<PieChartSectionData> _buildChartSections(
-      Map<String, double> allocation) {
+  List<PieChartSectionData> _buildChartSections(Map<String, double> allocation) {
     final colors = [
       const Color(0xFF6C63FF),
       const Color(0xFF00D9A6),
@@ -647,9 +629,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           child: Center(
             child: Text(
-              holding.symbol.length >= 2
-                  ? holding.symbol.substring(0, 2)
-                  : holding.symbol,
+              holding.symbol.length >= 2 ? holding.symbol.substring(0, 2) : holding.symbol,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: theme.colorScheme.primary,
@@ -683,8 +663,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                RecommendationChip(
-                    action: holding.gainLossPct > 10 ? 'hold' : 'buy'),
+                RecommendationChip(action: holding.gainLossPct > 10 ? 'hold' : 'buy'),
                 const SizedBox(width: 6),
                 Text(
                   '${isPositive ? '+' : ''}${holding.gainLossPct.toStringAsFixed(1)}%',
@@ -908,12 +887,9 @@ class _RiskGaugePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(rect, math.pi, math.pi / 4, false, paintGreen);
-    canvas.drawArc(
-        rect, math.pi + (math.pi / 4), math.pi / 4, false, paintBlue);
-    canvas.drawArc(
-        rect, math.pi + (2 * math.pi / 4), math.pi / 4, false, paintOrange);
-    canvas.drawArc(
-        rect, math.pi + (3 * math.pi / 4), math.pi / 4, false, paintRed);
+    canvas.drawArc(rect, math.pi + (math.pi / 4), math.pi / 4, false, paintBlue);
+    canvas.drawArc(rect, math.pi + (2 * math.pi / 4), math.pi / 4, false, paintOrange);
+    canvas.drawArc(rect, math.pi + (3 * math.pi / 4), math.pi / 4, false, paintRed);
 
     final clamped = score.clamp(0.0, 100.0);
     final angle = math.pi + (clamped / 100.0) * math.pi;
@@ -998,14 +974,10 @@ class BenchmarkLineChartWidget extends StatelessWidget {
                 LineChartData(
                   gridData: const FlGridData(show: false),
                   titlesData: const FlTitlesData(
-                    leftTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -1066,8 +1038,7 @@ class BenchmarkLineChartWidget extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -1101,17 +1072,14 @@ class WinnersLosersWidget extends StatelessWidget {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Top Winner',
-                        style: TextStyle(color: Colors.grey, fontSize: 11)),
-                    Icon(Icons.arrow_upward,
-                        color: AppTheme.profitGreen, size: 16),
+                    Text('Top Winner', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                    Icon(Icons.arrow_upward, color: AppTheme.profitGreen, size: 16),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
                   winner.symbol,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -1139,8 +1107,7 @@ class WinnersLosersWidget extends StatelessWidget {
                         style: TextStyle(color: Colors.grey, fontSize: 11)),
                     Icon(
                       hasMultiple ? Icons.arrow_downward : Icons.arrow_upward,
-                      color:
-                          hasMultiple ? AppTheme.lossRed : AppTheme.profitGreen,
+                      color: hasMultiple ? AppTheme.lossRed : AppTheme.profitGreen,
                       size: 16,
                     ),
                   ],
@@ -1148,8 +1115,7 @@ class WinnersLosersWidget extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   hasMultiple ? loser.symbol : '-',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -1158,9 +1124,7 @@ class WinnersLosersWidget extends StatelessWidget {
                       : 'N/A',
                   style: TextStyle(
                     color: hasMultiple
-                        ? (loser.gainLossPct >= 0
-                            ? AppTheme.profitGreen
-                            : AppTheme.lossRed)
+                        ? (loser.gainLossPct >= 0 ? AppTheme.profitGreen : AppTheme.lossRed)
                         : Colors.grey,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -1219,8 +1183,7 @@ class EconomicCalendarWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Economic & Corporate Calendar',
-                  style: theme.textTheme.titleMedium),
+              Text('Economic & Corporate Calendar', style: theme.textTheme.titleMedium),
               const Icon(Icons.calendar_month, color: Colors.grey, size: 20),
             ],
           ),
@@ -1259,8 +1222,8 @@ class EconomicCalendarWidget extends StatelessWidget {
                         children: [
                           Text(
                             ev.title,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
+                            style:
+                                theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
                             ev.date,

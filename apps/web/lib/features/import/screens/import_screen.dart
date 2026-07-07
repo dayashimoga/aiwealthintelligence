@@ -21,8 +21,7 @@ class ImportScreen extends ConsumerStatefulWidget {
   ConsumerState<ImportScreen> createState() => _ImportScreenState();
 }
 
-class _ImportScreenState extends ConsumerState<ImportScreen>
-    with SingleTickerProviderStateMixin {
+class _ImportScreenState extends ConsumerState<ImportScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   PlatformFile? _pickedFile;
   final _passwordController = TextEditingController();
@@ -100,9 +99,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
             widget.portfolioId,
             _pickedFile!.bytes!,
             _pickedFile!.name,
-            password: _passwordController.text.isNotEmpty
-                ? _passwordController.text
-                : null,
+            password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
           )
         : await repo.importBrokerReport(
             widget.portfolioId,
@@ -126,8 +123,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Import Complete'),
-            content: Text(
-                'Successfully imported ${data.imported} holdings positions!'),
+            content: Text('Successfully imported ${data.imported} holdings positions!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -220,12 +216,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      Text('• Type: EQUITIES, MUTUAL_FUNDS',
-                          style: TextStyle(fontSize: 12)),
-                      Text('• Purpose: Wealth Analytics',
-                          style: TextStyle(fontSize: 12)),
-                      Text('• Validity: 3 Years',
-                          style: TextStyle(fontSize: 12)),
+                      Text('â€¢ Type: EQUITIES, MUTUAL_FUNDS', style: TextStyle(fontSize: 12)),
+                      Text('â€¢ Purpose: Wealth Analytics', style: TextStyle(fontSize: 12)),
+                      Text('â€¢ Validity: 3 Years', style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
@@ -261,8 +254,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _AAProgressOverlay(
-          consentHandle: consentHandle, portfolioId: widget.portfolioId),
+      builder: (ctx) =>
+          _AAProgressOverlay(consentHandle: consentHandle, portfolioId: widget.portfolioId),
     ).then((result) {
       if (result != null && result is int) {
         ref.invalidate(portfoliosProvider);
@@ -275,8 +268,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
           barrierDismissible: false,
           builder: (successCtx) => AlertDialog(
             title: const Text('Link Successful!'),
-            content: Text(
-                'Successfully linked and imported $result holdings via Account Aggregator!'),
+            content:
+                Text('Successfully linked and imported $result holdings via Account Aggregator!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -296,7 +289,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isAA = _tabController.index == 2;
+    // Tabs 0 (CAS PDF) and 1 (Broker CSV) use the shared upload button.
+    // Tabs 2 (AA), 3 (CAMS/KFin), 4 (Email) have their own action buttons.
+    final showSharedUploadButton = _tabController.index <= 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -345,12 +340,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
                     ),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(
-                          color: Colors.redAccent, fontSize: 13),
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 13),
                     ),
                   ),
                 ),
-              if (!isAA)
+              if (showSharedUploadButton)
                 ElevatedButton(
                   onPressed: _isUploading ? null : _handleUpload,
                   style: ElevatedButton.styleFrom(
@@ -363,8 +357,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Upload & Import'),
                 ),
@@ -410,11 +403,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.table_chart_outlined,
-            size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+        Icon(Icons.table_chart_outlined, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
         const SizedBox(height: 16),
-        Text('Import Broker CSV/Excel Report',
-            style: theme.textTheme.titleMedium),
+        Text('Import Broker CSV/Excel Report', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
           'Select the holdings report CSV file exported from Zerodha Kite, Groww, or other brokers.',
@@ -435,8 +426,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 20),
-          Icon(Icons.sync_alt,
-              size: 80, color: theme.colorScheme.primary.withAlpha(128)),
+          Icon(Icons.sync_alt, size: 80, color: theme.colorScheme.primary.withAlpha(128)),
           const SizedBox(height: 16),
           Center(
             child: Text(
@@ -508,9 +498,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          border: Border.all(
-              color: theme.colorScheme.primary.withAlpha(128),
-              style: BorderStyle.solid),
+          border:
+              Border.all(color: theme.colorScheme.primary.withAlpha(128), style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(16),
           color: theme.colorScheme.primaryContainer.withAlpha(20),
         ),
@@ -533,14 +522,406 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
               if (hasFile)
                 Text(
                   '${(_pickedFile!.size / 1024).toStringAsFixed(1)} KB',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(128)),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(128)),
                 ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  // â”€â”€â”€ CAMS / KFin tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  final _camsPasswordCtrl = TextEditingController();
+  bool _camsLoading = false;
+  String? _camsResult;
+  bool _camsError = false;
+
+  Widget _buildCamsKFinTab(ThemeData theme) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 20),
+          Icon(Icons.account_balance_outlined,
+              size: 64, color: theme.colorScheme.primary.withAlpha(180)),
+          const SizedBox(height: 12),
+          Text('CAMS / KFintech Mutual Fund CAS',
+              style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text(
+            'Upload your Mutual Fund CAS PDF from CAMS or KFintech.\n'
+            'Format is auto-detected. Password is usually your PAN (e.g. ABCDE1234F).',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
+          ),
+          const SizedBox(height: 24),
+          _buildFilePickerArea(theme, ['pdf']),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _camsPasswordCtrl,
+            obscureText: true,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'PDF Password (PAN in UPPERCASE)',
+              hintText: 'e.g. ABCDE1234F',
+              prefixIcon: Icon(Icons.lock_outline),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_camsResult != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (_camsError ? Colors.red : Colors.green).withAlpha(25),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: (_camsError ? Colors.red : Colors.green).withAlpha(100),
+                ),
+              ),
+              child: Text(
+                _camsResult!,
+                style: TextStyle(
+                  color: _camsError ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _camsLoading || _pickedFile == null ? null : _handleCamsUpload,
+            icon: _camsLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.upload),
+            label: Text(_camsLoading ? 'Importingâ€¦' : 'Import Mutual Funds'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    ).animate().fadeIn();
+  }
+
+  Future<void> _handleCamsUpload() async {
+    if (_pickedFile?.bytes == null) return;
+    setState(() {
+      _camsLoading = true;
+      _camsResult = null;
+    });
+    try {
+      final dio = ref.read(dioProvider);
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(
+          _pickedFile!.bytes!,
+          filename: _pickedFile!.name,
+        ),
+        if (_camsPasswordCtrl.text.isNotEmpty) 'password': _camsPasswordCtrl.text,
+      });
+      final resp = await dio.post(
+        '${ApiConstants.apiPrefix}/portfolios/${widget.portfolioId}/import/cams-kfin',
+        data: formData,
+      );
+      final data = resp.data as Map<String, dynamic>;
+      final imported = data['imported'] ?? 0;
+      final fmt = (data['format'] ?? 'unknown').toString().toUpperCase();
+      final amcs = data['amc_count'] ?? 0;
+      if (mounted) {
+        setState(() {
+          _camsError = false;
+          _camsResult = 'âœ“ Imported $imported schemes ($amcs AMCs) from $fmt statement.';
+        });
+        ref.invalidate(portfoliosProvider);
+        ref.invalidate(holdingsProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _camsError = true;
+          _camsResult = 'Import failed: $e';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _camsLoading = false);
+    }
+  }
+
+  // â”€â”€â”€ Email auto-scan tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  final _emailPdfPwdCtrl = TextEditingController();
+  final _emailSinceDateCtrl = TextEditingController(text: '01-Jan-2024');
+  bool _emailLoading = false;
+  bool _emailTesting = false;
+  String? _emailResult;
+  bool _emailError = false;
+  Map<String, dynamic>? _emailConfig;
+  Map<String, dynamic>? _emailScanSummary;
+
+  Widget _buildEmailScanTab(ThemeData theme) {
+    final configured = _emailConfig?['configured'] == true;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: configured ? Colors.green.withAlpha(120) : Colors.orange.withAlpha(120),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      configured ? Icons.check_circle : Icons.warning_amber,
+                      color: configured ? Colors.green : Colors.orange,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Email Configuration',
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _loadEmailConfig,
+                      child: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+                if (_emailConfig != null) ...[
+                  const SizedBox(height: 8),
+                  _emailConfigRow(
+                      theme, 'Status', configured ? 'Configured âœ“' : 'Not configured âœ—'),
+                  _emailConfigRow(theme, 'Host', _emailConfig!['host'] as String? ?? '-'),
+                  _emailConfigRow(theme, 'Email', _emailConfig!['email'] as String? ?? '-'),
+                  _emailConfigRow(theme, 'Folder', _emailConfig!['folder'] as String? ?? 'INBOX'),
+                ] else
+                  const LinearProgressIndicator(),
+                if (!configured)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      'Set EMAIL_IMAP_HOST, EMAIL_ADDRESS, EMAIL_PASSWORD\n'
+                      'environment variables to enable email auto-import.',
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: Colors.orange, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                if (configured)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: OutlinedButton.icon(
+                      onPressed: _emailTesting ? null : _testEmailConn,
+                      icon: _emailTesting
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.wifi_tethering, size: 16),
+                      label: Text(_emailTesting ? 'Testingâ€¦' : 'Test Connection'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Scan Settings',
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _emailSinceDateCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Scan emails since',
+                    hintText: 'DD-Mon-YYYY',
+                    prefixIcon: Icon(Icons.calendar_today_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _emailPdfPwdCtrl,
+                  obscureText: true,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: const InputDecoration(
+                    labelText: 'PDF Password (optional PAN override)',
+                    prefixIcon: Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (_emailResult != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (_emailError ? Colors.red : Colors.green).withAlpha(25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _emailResult!,
+                      style: TextStyle(
+                        color: _emailError ? Colors.red : Colors.green,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ElevatedButton.icon(
+                  onPressed: !configured || _emailLoading ? null : _scanEmail,
+                  icon: _emailLoading
+                      ? const SizedBox(
+                          width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.email_outlined),
+                  label: Text(_emailLoading ? 'Scanning mailboxâ€¦' : 'Scan & Import'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_emailScanSummary != null && !_emailError) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Scan Summary',
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  _emailConfigRow(
+                      theme, 'Emails scanned', '${_emailScanSummary!["emails_scanned"] ?? 0}'),
+                  _emailConfigRow(theme, 'PDFs found', '${_emailScanSummary!["pdfs_found"] ?? 0}'),
+                  _emailConfigRow(theme, 'Imported', '${_emailScanSummary!["imported"] ?? 0}'),
+                  _emailConfigRow(theme, 'Skipped', '${_emailScanSummary!["skipped"] ?? 0}'),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    ).animate().fadeIn();
+  }
+
+  Widget _emailConfigRow(ThemeData theme, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(label,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(130))),
+          ),
+          Expanded(
+            child: Text(value,
+                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadEmailConfig() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final resp = await dio.get('${ApiConstants.apiPrefix}/import/email-config');
+      if (mounted) {
+        setState(() => _emailConfig = resp.data as Map<String, dynamic>);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _testEmailConn() async {
+    setState(() => _emailTesting = true);
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.post('${ApiConstants.apiPrefix}/import/email-config/test');
+      if (mounted) {
+        setState(() {
+          _emailError = false;
+          _emailResult = 'âœ“ IMAP connection successful.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _emailError = true;
+          _emailResult = 'Connection failed: $e';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _emailTesting = false);
+    }
+  }
+
+  Future<void> _scanEmail() async {
+    setState(() {
+      _emailLoading = true;
+      _emailResult = null;
+      _emailScanSummary = null;
+    });
+    try {
+      final dio = ref.read(dioProvider);
+      final formData = FormData.fromMap({
+        'since_date': _emailSinceDateCtrl.text,
+        if (_emailPdfPwdCtrl.text.isNotEmpty) 'pdf_password': _emailPdfPwdCtrl.text,
+      });
+      final resp = await dio.post(
+        '${ApiConstants.apiPrefix}/portfolios/${widget.portfolioId}/import/email-scan',
+        data: formData,
+      );
+      final data = resp.data as Map<String, dynamic>;
+      if (mounted) {
+        setState(() {
+          _emailError = false;
+          _emailScanSummary = data;
+          _emailResult = 'âœ“ Scanned ${data["emails_scanned"]} emails, '
+              'imported ${data["imported"]} holdings.';
+        });
+        ref.invalidate(portfoliosProvider);
+        ref.invalidate(holdingsProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _emailError = true;
+          _emailResult = 'Scan failed: $e';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _emailLoading = false);
+    }
   }
 }
 
@@ -600,8 +981,7 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
         });
       } else if (_ticks == 2) {
         setState(() {
-          _statusMessage =
-              'Decrypting Equities & Mutual Funds XML materials...';
+          _statusMessage = 'Decrypting Equities & Mutual Funds XML materials...';
           _progress = 0.75;
         });
       }
@@ -667,8 +1047,7 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
               Text(
                 _statusMessage,
                 textAlign: TextAlign.center,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               const SizedBox(height: 12),
               LinearProgressIndicator(value: _progress),
@@ -682,425 +1061,5 @@ class _AAProgressOverlayState extends ConsumerState<_AAProgressOverlay> {
         ),
       ),
     );
-  }
-  // ─── CAMS / KFin tab ─────────────────────────────────────────────────────
-
-  final _camsPasswordCtrl = TextEditingController();
-  bool _camsLoading = false;
-  String? _camsResult;
-  bool _camsError = false;
-
-  Widget _buildCamsKFinTab(ThemeData theme) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 20),
-          Icon(Icons.account_balance_outlined,
-              size: 64, color: theme.colorScheme.primary.withAlpha(180)),
-          const SizedBox(height: 12),
-          Text('CAMS / KFintech Mutual Fund CAS',
-              style: theme.textTheme.titleMedium,
-              textAlign: TextAlign.center),
-          const SizedBox(height: 8),
-          Text(
-            'Upload your Mutual Fund CAS PDF from CAMS or KFintech.\n'
-            'Format is auto-detected. Password is usually your PAN (e.g. ABCDE1234F).',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurface.withAlpha(153)),
-          ),
-          const SizedBox(height: 24),
-          _buildFilePickerArea(theme, ['pdf']),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _camsPasswordCtrl,
-            obscureText: true,
-            textCapitalization: TextCapitalization.characters,
-            decoration: const InputDecoration(
-              labelText: 'PDF Password (PAN in UPPERCASE)',
-              hintText: 'e.g. ABCDE1234F',
-              prefixIcon: Icon(Icons.lock_outline),
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_camsResult != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: (_camsError ? Colors.red : Colors.green).withAlpha(25),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: (_camsError ? Colors.red : Colors.green).withAlpha(100),
-                ),
-              ),
-              child: Text(
-                _camsResult!,
-                style: TextStyle(
-                  color: _camsError ? Colors.red : Colors.green,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _camsLoading ||
-                    (_pickedFile == null)
-                ? null
-                : () => _handleCamsUpload(),
-            icon: _camsLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.upload),
-            label: Text(_camsLoading ? 'Importing…' : 'Import Mutual Funds'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    ).animate().fadeIn();
-  }
-
-  Future<void> _handleCamsUpload() async {
-    if (_pickedFile?.bytes == null) return;
-    setState(() {
-      _camsLoading = true;
-      _camsResult = null;
-    });
-    try {
-      final dio = ref.read(dioProvider);
-      final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(
-          _pickedFile!.bytes!,
-          filename: _pickedFile!.name,
-        ),
-        if (_camsPasswordCtrl.text.isNotEmpty)
-          'password': _camsPasswordCtrl.text,
-      });
-      final resp = await dio.post(
-        '${ApiConstants.apiPrefix}/portfolios/${widget.portfolioId}/import/cams-kfin',
-        data: formData,
-      );
-      final data = resp.data as Map<String, dynamic>;
-      final imported = data['imported'] ?? 0;
-      final fmt = (data['format'] ?? 'unknown').toString().toUpperCase();
-      final amcs = data['amc_count'] ?? 0;
-      setState(() {
-        _camsError = false;
-        _camsResult = '✓ Imported $imported schemes ($amcs AMCs) from $fmt statement.';
-      });
-      ref.invalidate(portfoliosProvider);
-      ref.invalidate(holdingsProvider);
-    } catch (e) {
-      setState(() {
-        _camsError = true;
-        _camsResult = 'Import failed: $e';
-      });
-    } finally {
-      setState(() => _camsLoading = false);
-    }
-  }
-
-  // ─── Email auto-scan tab ──────────────────────────────────────────────────
-
-  final _emailPdfPwdCtrl = TextEditingController();
-  final _emailSinceDateCtrl = TextEditingController(text: '01-Jan-2024');
-  bool _emailLoading = false;
-  bool _emailTesting = false;
-  String? _emailResult;
-  bool _emailError = false;
-  Map<String, dynamic>? _emailConfig;
-  Map<String, dynamic>? _emailScanSummary;
-
-  Widget _buildEmailScanTab(ThemeData theme) {
-    final configured = _emailConfig?['configured'] == true;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Config card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: configured
-                    ? Colors.green.withAlpha(120)
-                    : Colors.orange.withAlpha(120),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      configured ? Icons.check_circle : Icons.warning_amber,
-                      color: configured ? Colors.green : Colors.orange,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text('Email Configuration',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: _loadEmailConfig,
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-                if (_emailConfig != null) ...[
-                  const SizedBox(height: 8),
-                  _emailConfigRow(theme, 'Status',
-                      configured ? 'Configured ✓' : 'Not configured ✗'),
-                  _emailConfigRow(theme, 'Host',
-                      _emailConfig!['host'] ?? '-'),
-                  _emailConfigRow(theme, 'Email',
-                      _emailConfig!['email'] ?? '-'),
-                  _emailConfigRow(theme, 'Folder',
-                      _emailConfig!['folder'] ?? 'INBOX'),
-                ] else
-                  const LinearProgressIndicator(),
-                if (!configured)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      'Set EMAIL_IMAP_HOST, EMAIL_ADDRESS, EMAIL_PASSWORD\n'
-                      'environment variables to enable email auto-import.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.orange,
-                          fontStyle: FontStyle.italic),
-                    ),
-                  ),
-                if (configured)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: OutlinedButton.icon(
-                      onPressed: _emailTesting ? null : _testEmailConn,
-                      icon: _emailTesting
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.wifi_tethering, size: 16),
-                      label: Text(
-                          _emailTesting ? 'Testing…' : 'Test Connection'),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Scan form
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Scan Settings',
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: _emailSinceDateCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Scan emails since',
-                    hintText: 'DD-Mon-YYYY',
-                    prefixIcon: Icon(Icons.calendar_today_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _emailPdfPwdCtrl,
-                  obscureText: true,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    labelText: 'PDF Password (optional PAN override)',
-                    prefixIcon: Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (_emailResult != null)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: (_emailError ? Colors.red : Colors.green)
-                          .withAlpha(25),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      _emailResult!,
-                      style: TextStyle(
-                        color: _emailError ? Colors.red : Colors.green,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ElevatedButton.icon(
-                  onPressed: !configured || _emailLoading
-                      ? null
-                      : _scanEmail,
-                  icon: _emailLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.email_outlined),
-                  label: Text(
-                      _emailLoading ? 'Scanning mailbox…' : 'Scan & Import'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Scan summary
-          if (_emailScanSummary != null && !_emailError) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Scan Summary',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  _emailConfigRow(theme, 'Emails scanned',
-                      '${_emailScanSummary!["emails_scanned"] ?? 0}'),
-                  _emailConfigRow(theme, 'PDFs found',
-                      '${_emailScanSummary!["pdfs_found"] ?? 0}'),
-                  _emailConfigRow(theme, 'Imported',
-                      '${_emailScanSummary!["imported"] ?? 0}'),
-                  _emailConfigRow(theme, 'Skipped',
-                      '${_emailScanSummary!["skipped"] ?? 0}'),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    ).animate().fadeIn();
-  }
-
-  Widget _emailConfigRow(ThemeData theme, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(130))),
-          ),
-          Expanded(
-            child: Text(value,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _loadEmailConfig() async {
-    try {
-      final dio = ref.read(dioProvider);
-      final resp = await dio.get('${ApiConstants.apiPrefix}/import/email-config');
-      if (mounted) {
-        setState(() => _emailConfig = resp.data as Map<String, dynamic>);
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _testEmailConn() async {
-    setState(() => _emailTesting = true);
-    try {
-      final dio = ref.read(dioProvider);
-      await dio.post('${ApiConstants.apiPrefix}/import/email-config/test');
-      if (mounted) {
-        setState(() {
-          _emailError = false;
-          _emailResult = '✓ IMAP connection successful.';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _emailError = true;
-          _emailResult = 'Connection failed: $e';
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _emailTesting = false);
-    }
-  }
-
-  Future<void> _scanEmail() async {
-    setState(() {
-      _emailLoading = true;
-      _emailResult = null;
-      _emailScanSummary = null;
-    });
-    try {
-      final dio = ref.read(dioProvider);
-      final formData = FormData.fromMap({
-        'since_date': _emailSinceDateCtrl.text,
-        if (_emailPdfPwdCtrl.text.isNotEmpty)
-          'pdf_password': _emailPdfPwdCtrl.text,
-      });
-      final resp = await dio.post(
-        '${ApiConstants.apiPrefix}/portfolios/${widget.portfolioId}/import/email-scan',
-        data: formData,
-      );
-      final data = resp.data as Map<String, dynamic>;
-      if (mounted) {
-        setState(() {
-          _emailError = false;
-          _emailScanSummary = data;
-          _emailResult =
-              '✓ Scanned ${data["emails_scanned"]} emails, '
-              'imported ${data["imported"]} holdings.';
-        });
-        ref.invalidate(portfoliosProvider);
-        ref.invalidate(holdingsProvider);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _emailError = true;
-          _emailResult = 'Scan failed: $e';
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _emailLoading = false);
-    }
   }
 }

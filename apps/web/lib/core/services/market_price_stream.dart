@@ -146,8 +146,7 @@ class MarketPriceStreamNotifier extends StateNotifier<MarketPriceState> {
         final data = msg['data'] as Map<String, dynamic>? ?? {};
         final newPrices = Map<String, PriceTick>.from(state.prices);
         for (final entry in data.entries) {
-          newPrices[entry.key] =
-              PriceTick.fromJson(entry.value as Map<String, dynamic>);
+          newPrices[entry.key] = PriceTick.fromJson(entry.value as Map<String, dynamic>);
         }
         state = state.copyWith(
           prices: newPrices,

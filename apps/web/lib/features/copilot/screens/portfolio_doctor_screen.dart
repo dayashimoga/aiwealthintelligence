@@ -30,13 +30,10 @@ class PortfolioDoctorScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(AppTheme.spacingMd),
           child: doctorAsync.when(
             data: (doctor) {
-              if (doctor == null)
-                return const Center(child: Text('No diagnostic data.'));
+              if (doctor == null) return const Center(child: Text('No diagnostic data.'));
               final scoreColor = doctor.healthScore >= 80
                   ? AppTheme.profitGreen
-                  : (doctor.healthScore >= 50
-                      ? AppTheme.warningAmber
-                      : AppTheme.lossRed);
+                  : (doctor.healthScore >= 50 ? AppTheme.warningAmber : AppTheme.lossRed);
 
               return ListView(
                 children: [
@@ -64,8 +61,7 @@ class PortfolioDoctorScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text('Overall Health Rating',
-                              style: theme.textTheme.titleMedium),
+                          Text('Overall Health Rating', style: theme.textTheme.titleMedium),
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -74,8 +70,7 @@ class PortfolioDoctorScreen extends ConsumerWidget {
                                   '${doctor.diversificationHhi.toStringAsFixed(0)}'),
                               _metricItem('Sector Conc.',
                                   '${doctor.sectorConcentrationPct.toStringAsFixed(0)}%'),
-                              _metricItem('Cash Drag',
-                                  '${doctor.cashDragPct.toStringAsFixed(0)}%'),
+                              _metricItem('Cash Drag', '${doctor.cashDragPct.toStringAsFixed(0)}%'),
                             ],
                           ),
                         ],
@@ -96,11 +91,9 @@ class PortfolioDoctorScreen extends ConsumerWidget {
                         padding: const EdgeInsets.all(AppTheme.spacingMd),
                         child: Row(
                           children: const [
-                            Icon(Icons.check_circle,
-                                color: Colors.green, size: 28),
+                            Icon(Icons.check_circle, color: Colors.green, size: 28),
                             SizedBox(width: 12),
-                            Text(
-                                'No problems found. Your portfolio is in optimal shape!'),
+                            Text('No problems found. Your portfolio is in optimal shape!'),
                           ],
                         ),
                       ),
@@ -111,9 +104,7 @@ class PortfolioDoctorScreen extends ConsumerWidget {
                       final isMedium = issue.severity.toLowerCase() == 'medium';
                       final severityColor = isHigh
                           ? AppTheme.lossRed
-                          : (isMedium
-                              ? AppTheme.warningAmber
-                              : AppTheme.infoBlue);
+                          : (isMedium ? AppTheme.warningAmber : AppTheme.infoBlue);
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ExpansionTile(
@@ -123,15 +114,12 @@ class PortfolioDoctorScreen extends ConsumerWidget {
                           ),
                           title: Text(
                             issue.title,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           subtitle: Text(
                             'Severity: ${issue.severity.toUpperCase()}',
                             style: TextStyle(
-                                color: severityColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold),
+                                color: severityColor, fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                           children: [
                             Padding(
@@ -146,19 +134,16 @@ class PortfolioDoctorScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(issue.description,
-                                      style: const TextStyle(
-                                          height: 1.3, fontSize: 13)),
+                                      style: const TextStyle(height: 1.3, fontSize: 13)),
                                   const SizedBox(height: 12),
                                   Text(
                                     'Recommendation:',
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.amber),
+                                        fontWeight: FontWeight.bold, color: Colors.amber),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(issue.recommendation,
-                                      style: const TextStyle(
-                                          height: 1.3, fontSize: 13)),
+                                      style: const TextStyle(height: 1.3, fontSize: 13)),
                                 ],
                               ),
                             )
@@ -170,8 +155,7 @@ class PortfolioDoctorScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, _) =>
-                Center(child: Text('Failed to load diagnosis: $err')),
+            error: (err, _) => Center(child: Text('Failed to load diagnosis: $err')),
           ),
         ),
       ),

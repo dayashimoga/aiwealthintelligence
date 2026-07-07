@@ -109,9 +109,7 @@ class EmailCASImporter:
         self._address = email_address or getattr(settings, "EMAIL_ADDRESS", None)
         self._password = email_password or getattr(settings, "EMAIL_PASSWORD", None)
         self._folder = folder
-        self._pdf_password = pdf_password or getattr(
-            settings, "EMAIL_PDF_PASSWORD", None
-        )
+        self._pdf_password = pdf_password or getattr(settings, "EMAIL_PDF_PASSWORD", None)
 
     def _connect(self) -> imaplib.IMAP4_SSL:
         """Open an authenticated IMAP SSL connection."""
@@ -124,9 +122,7 @@ class EmailCASImporter:
         conn.login(self._address, self._password)
         return conn
 
-    def _fetch_pdf_attachments(
-        self, since_date: str = "01-Jan-2024"
-    ) -> list[dict[str, Any]]:
+    def _fetch_pdf_attachments(self, since_date: str = "01-Jan-2024") -> list[dict[str, Any]]:
         """Synchronous IMAP scan — returns list of PDF attachment dicts.
 
         Each dict has: filename, sender, subject, pdf_bytes, date.
@@ -158,9 +154,7 @@ class EmailCASImporter:
                     subject = _decode_header_value(msg.get("Subject", ""))
 
                     # Apply trust filters
-                    if not _is_trusted_sender(from_addr) and not _has_cas_subject(
-                        subject
-                    ):
+                    if not _is_trusted_sender(from_addr) and not _has_cas_subject(subject):
                         continue
 
                     # Walk MIME parts for PDF attachments
@@ -196,12 +190,11 @@ class EmailCASImporter:
             return results
         finally:
             import contextlib
+
             with contextlib.suppress(Exception):
                 conn.logout()
 
-    async def scan_and_parse(
-        self, since_date: str = "01-Jan-2024"
-    ) -> list[dict[str, Any]]:
+    async def scan_and_parse(self, since_date: str = "01-Jan-2024") -> list[dict[str, Any]]:
         """Scan mailbox for CAS PDFs and return parsed holdings per email.
 
         Returns::
@@ -226,9 +219,7 @@ class EmailCASImporter:
         )
 
         # Run blocking IMAP I/O in a thread
-        attachments = await asyncio.to_thread(
-            self._fetch_pdf_attachments, since_date
-        )
+        attachments = await asyncio.to_thread(self._fetch_pdf_attachments, since_date)
 
         logger.info("email_cas_attachments_found", count=len(attachments))
 

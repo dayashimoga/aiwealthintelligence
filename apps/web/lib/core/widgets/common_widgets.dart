@@ -54,9 +54,7 @@ class GlassCard extends StatelessWidget {
                     ),
                 borderRadius: BorderRadius.circular(borderRadius),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withAlpha(20)
-                      : Colors.white.withAlpha(77),
+                  color: isDark ? Colors.white.withAlpha(20) : Colors.white.withAlpha(77),
                 ),
               ),
               child: child,
@@ -126,21 +124,15 @@ class StatCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  changePositive == true
-                      ? Icons.trending_up
-                      : Icons.trending_down,
+                  changePositive == true ? Icons.trending_up : Icons.trending_down,
                   size: 16,
-                  color: changePositive == true
-                      ? AppTheme.profitGreen
-                      : AppTheme.lossRed,
+                  color: changePositive == true ? AppTheme.profitGreen : AppTheme.lossRed,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   change!,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: changePositive == true
-                        ? AppTheme.profitGreen
-                        : AppTheme.lossRed,
+                    color: changePositive == true ? AppTheme.profitGreen : AppTheme.lossRed,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -172,8 +164,7 @@ class SkeletonLoader extends StatelessWidget {
 
     return Shimmer.fromColors(
       baseColor: isDark ? const Color(0xFF2A2A3A) : const Color(0xFFE0E0E0),
-      highlightColor:
-          isDark ? const Color(0xFF3A3A4A) : const Color(0xFFF5F5F5),
+      highlightColor: isDark ? const Color(0xFF3A3A4A) : const Color(0xFFF5F5F5),
       child: Container(
         width: width,
         height: height,

@@ -194,9 +194,7 @@ class CAMSKFinParser:
         current_amc = "Unknown AMC"
 
         try:
-            with pdfplumber.open(
-                io.BytesIO(self.file_bytes), password=self.password
-            ) as pdf:
+            with pdfplumber.open(io.BytesIO(self.file_bytes), password=self.password) as pdf:
                 for page in pdf.pages:
                     text = page.extract_text()
                     if not text:
@@ -265,9 +263,7 @@ class CAMSKFinParser:
     def _extract_investor_name(self, text: str) -> str | None:
         """Try to extract investor name from statement header."""
         # Common patterns: "Name: JOHN DOE" or "Mr./Ms. JOHN DOE"
-        name_match = re.search(
-            r"(?:Investor\s+Name|Name)\s*:\s*([A-Z][A-Za-z ]{2,50})", text
-        )
+        name_match = re.search(r"(?:Investor\s+Name|Name)\s*:\s*([A-Z][A-Za-z ]{2,50})", text)
         if name_match:
             return name_match.group(1).strip()
         # Try Mr/Mrs prefix

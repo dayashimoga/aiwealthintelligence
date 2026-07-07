@@ -225,8 +225,7 @@ class _ChatBubble extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
             _AvatarBubble(theme: theme),
@@ -234,12 +233,10 @@ class _ChatBubble extends StatelessWidget {
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: isUser
                         ? theme.colorScheme.primary
@@ -253,16 +250,13 @@ class _ChatBubble extends StatelessWidget {
                       bottomRight: Radius.circular(isUser ? 4 : 16),
                     ),
                     border: bubble.isError
-                        ? Border.all(
-                            color: AppTheme.lossRed.withOpacity(0.3))
+                        ? Border.all(color: AppTheme.lossRed.withOpacity(0.3))
                         : null,
                   ),
                   child: Text(
                     bubble.text,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isUser
-                          ? Colors.white
-                          : (bubble.isError ? AppTheme.lossRed : null),
+                      color: isUser ? Colors.white : (bubble.isError ? AppTheme.lossRed : null),
                       height: 1.45,
                     ),
                   ),
@@ -286,8 +280,7 @@ class _ChatBubble extends StatelessWidget {
                     spacing: 6,
                     children: bubble.referencedHoldings
                         .map((h) => Chip(
-                              label: Text(h,
-                                  style: const TextStyle(fontSize: 10)),
+                              label: Text(h, style: const TextStyle(fontSize: 10)),
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
                             ))
@@ -303,12 +296,10 @@ class _ChatBubble extends StatelessWidget {
                     runSpacing: 6,
                     children: bubble.suggestions
                         .map((s) => ActionChip(
-                              label: Text(s,
-                                  style: theme.textTheme.labelSmall),
+                              label: Text(s, style: theme.textTheme.labelSmall),
                               onPressed: () {},
                               side: BorderSide(
-                                color: theme.colorScheme.primary
-                                    .withOpacity(0.35),
+                                color: theme.colorScheme.primary.withOpacity(0.35),
                               ),
                             ))
                         .toList(),
@@ -376,8 +367,7 @@ class _TypingBubble extends StatelessWidget {
           _AvatarBubble(theme: theme),
           const SizedBox(width: 10),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: const BorderRadius.only(
@@ -452,8 +442,7 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           border: Border(
@@ -485,10 +474,8 @@ class _InputBar extends StatelessWidget {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor:
-                      theme.colorScheme.surfaceContainerHighest,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  fillColor: theme.colorScheme.surfaceContainerHighest,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
               ),
             ),
@@ -507,23 +494,17 @@ class _InputBar extends StatelessWidget {
                           theme.colorScheme.secondary,
                         ],
                       ),
-                color: isLoading
-                    ? theme.colorScheme.outline.withOpacity(0.3)
-                    : null,
+                color: isLoading ? theme.colorScheme.outline.withOpacity(0.3) : null,
               ),
               child: IconButton(
                 icon: isLoading
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Icon(Icons.send_rounded,
-                        color: Colors.white, size: 20),
-                onPressed: isLoading
-                    ? null
-                    : () => onSend(controller.text),
+                    : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                onPressed: isLoading ? null : () => onSend(controller.text),
               ),
             ),
           ],

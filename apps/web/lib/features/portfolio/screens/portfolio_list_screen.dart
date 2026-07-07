@@ -30,12 +30,11 @@ class PortfolioListScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppTheme.spacingMd),
         children: [
-          _portfolioCard(context, 'Growth Portfolio', '₹24,50,000', '+15.0%',
-              true, 12, 'portfolio-1'),
-          _portfolioCard(context, 'Dividend Portfolio', '₹8,20,000', '+8.2%',
-              true, 8, 'portfolio-2'),
-          _portfolioCard(context, 'SIP Portfolio', '₹5,60,000', '+22.5%', true,
-              5, 'portfolio-3'),
+          _portfolioCard(
+              context, 'Growth Portfolio', '₹24,50,000', '+15.0%', true, 12, 'portfolio-1'),
+          _portfolioCard(
+              context, 'Dividend Portfolio', '₹8,20,000', '+8.2%', true, 8, 'portfolio-2'),
+          _portfolioCard(context, 'SIP Portfolio', '₹5,60,000', '+22.5%', true, 5, 'portfolio-3'),
         ]
             .asMap()
             .entries
@@ -53,8 +52,8 @@ class PortfolioListScreen extends StatelessWidget {
     );
   }
 
-  Widget _portfolioCard(BuildContext context, String name, String value,
-      String change, bool positive, int holdings, String id) {
+  Widget _portfolioCard(BuildContext context, String name, String value, String change,
+      bool positive, int holdings, String id) {
     final theme = Theme.of(context);
 
     return GlassCard(
@@ -69,8 +68,7 @@ class PortfolioListScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text('$holdings holdings',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -82,13 +80,11 @@ class PortfolioListScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(value,
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w800)),
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 2),
                   Text(change,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            positive ? AppTheme.profitGreen : AppTheme.lossRed,
+                        color: positive ? AppTheme.profitGreen : AppTheme.lossRed,
                         fontWeight: FontWeight.w600,
                       )),
                 ],
@@ -103,18 +99,10 @@ class PortfolioListScreen extends StatelessWidget {
               height: 6,
               child: Row(
                 children: [
-                  Expanded(
-                      flex: 45,
-                      child: Container(color: const Color(0xFF6C63FF))),
-                  Expanded(
-                      flex: 25,
-                      child: Container(color: const Color(0xFF00D9A6))),
-                  Expanded(
-                      flex: 15,
-                      child: Container(color: const Color(0xFFFF6B6B))),
-                  Expanded(
-                      flex: 15,
-                      child: Container(color: const Color(0xFFFFAB00))),
+                  Expanded(flex: 45, child: Container(color: const Color(0xFF6C63FF))),
+                  Expanded(flex: 25, child: Container(color: const Color(0xFF00D9A6))),
+                  Expanded(flex: 15, child: Container(color: const Color(0xFFFF6B6B))),
+                  Expanded(flex: 15, child: Container(color: const Color(0xFFFFAB00))),
                 ],
               ),
             ),

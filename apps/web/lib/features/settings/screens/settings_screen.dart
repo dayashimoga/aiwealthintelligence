@@ -43,8 +43,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         child: profileAsync.when(
           data: (user) {
-            final avatarChar =
-                user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U';
+            final avatarChar = user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U';
 
             return ListView(
               padding: const EdgeInsets.all(AppTheme.spacingMd),
@@ -70,9 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              user.fullName.isNotEmpty
-                                  ? user.fullName
-                                  : 'WealthAI User',
+                              user.fullName.isNotEmpty ? user.fullName : 'WealthAI User',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -80,8 +77,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Text(
                               user.email,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color:
-                                    theme.colorScheme.onSurface.withAlpha(128),
+                                color: theme.colorScheme.onSurface.withAlpha(128),
                               ),
                             ),
                           ],
@@ -109,23 +105,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         trailing: SegmentedButton<ThemeMode>(
                           segments: const [
                             ButtonSegment(
-                                value: ThemeMode.light,
-                                icon: Icon(Icons.light_mode, size: 16)),
+                                value: ThemeMode.light, icon: Icon(Icons.light_mode, size: 16)),
                             ButtonSegment(
-                                value: ThemeMode.system,
-                                icon: Icon(Icons.auto_mode, size: 16)),
+                                value: ThemeMode.system, icon: Icon(Icons.auto_mode, size: 16)),
                             ButtonSegment(
-                                value: ThemeMode.dark,
-                                icon: Icon(Icons.dark_mode, size: 16)),
+                                value: ThemeMode.dark, icon: Icon(Icons.dark_mode, size: 16)),
                           ],
                           selected: {themeMode},
                           onSelectionChanged: (modes) {
-                            ref
-                                .read(themeModeProvider.notifier)
-                                .setThemeMode(modes.first);
+                            ref.read(themeModeProvider.notifier).setThemeMode(modes.first);
                           },
-                          style: const ButtonStyle(
-                              visualDensity: VisualDensity.compact),
+                          style: const ButtonStyle(visualDensity: VisualDensity.compact),
                         ),
                       ),
                     ],
@@ -142,8 +132,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SwitchListTile(
                         secondary: const Icon(Icons.price_change),
                         title: const Text('Price Alerts'),
-                        subtitle:
-                            const Text('Notify on significant price changes'),
+                        subtitle: const Text('Notify on significant price changes'),
                         value: _priceAlerts,
                         onChanged: (v) => setState(() => _priceAlerts = v),
                       ),
@@ -159,8 +148,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SwitchListTile(
                         secondary: const Icon(Icons.newspaper),
                         title: const Text('News Alerts'),
-                        subtitle:
-                            const Text('Relevant market news for holdings'),
+                        subtitle: const Text('Relevant market news for holdings'),
                         value: _newsAlerts,
                         onChanged: (v) => setState(() => _newsAlerts = v),
                       ),
@@ -202,8 +190,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.vpn_key_outlined),
                         title: const Text('Model API Keys'),
-                        subtitle: const Text(
-                            'Configure OpenAI / Anthropic credentials'),
+                        subtitle: const Text('Configure OpenAI / Anthropic credentials'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => _showApiKeysDialog(context),
                       ),
@@ -231,8 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.security),
                         title: const Text('Two-Factor Authentication'),
-                        subtitle: Text(
-                            user.mfaEnabled ? 'Enabled (TOTP)' : 'Disabled'),
+                        subtitle: Text(user.mfaEnabled ? 'Enabled (TOTP)' : 'Disabled'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => _showTotpDialog(context, user),
                       ),
@@ -256,25 +242,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Column(
                     children: [
                       ListTile(
-                        leading:
-                            const Icon(Icons.logout, color: AppTheme.lossRed),
-                        title: const Text('Sign Out',
-                            style: TextStyle(color: AppTheme.lossRed)),
+                        leading: const Icon(Icons.logout, color: AppTheme.lossRed),
+                        title: const Text('Sign Out', style: TextStyle(color: AppTheme.lossRed)),
                         onTap: () async {
-                          await ref
-                              .read(authStateProvider.notifier)
-                              .logout();
+                          await ref.read(authStateProvider.notifier).logout();
                           // router redirect fires automatically via AuthStatus
                         },
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.delete_forever_outlined,
-                            color: AppTheme.lossRed),
-                        title: const Text('Delete Account',
-                            style: TextStyle(color: AppTheme.lossRed)),
-                        subtitle: const Text(
-                            'Permanently purge profile and portfolios',
+                        leading: const Icon(Icons.delete_forever_outlined, color: AppTheme.lossRed),
+                        title:
+                            const Text('Delete Account', style: TextStyle(color: AppTheme.lossRed)),
+                        subtitle: const Text('Permanently purge profile and portfolios',
                             style: TextStyle(fontSize: 11)),
                         onTap: () => _showDeleteConfirmDialog(context),
                       ),
@@ -291,8 +271,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline,
-                    size: 48, color: AppTheme.lossRed),
+                const Icon(Icons.error_outline, size: 48, color: AppTheme.lossRed),
                 const SizedBox(height: 16),
                 const Text('Failed to load profile settings'),
                 const SizedBox(height: 16),
@@ -365,10 +344,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // Secure API key configuration input dialog
   void _showApiKeysDialog(BuildContext context) async {
     final storage = ref.read(secureStorageProvider);
-    final oaiController =
-        TextEditingController(text: await storage.read(key: 'openai_api_key'));
-    final antController = TextEditingController(
-        text: await storage.read(key: 'anthropic_api_key'));
+    final oaiController = TextEditingController(text: await storage.read(key: 'openai_api_key'));
+    final antController = TextEditingController(text: await storage.read(key: 'anthropic_api_key'));
 
     if (!context.mounted) return;
 
@@ -413,15 +390,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                await storage.write(
-                    key: 'openai_api_key', value: oaiController.text);
-                await storage.write(
-                    key: 'anthropic_api_key', value: antController.text);
+                await storage.write(key: 'openai_api_key', value: oaiController.text);
+                await storage.write(key: 'anthropic_api_key', value: antController.text);
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('API keys updated successfully')),
+                    const SnackBar(content: Text('API keys updated successfully')),
                   );
                 }
               },
@@ -460,8 +434,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
                     'ID: ${p.credentialId.substring(0, math.min(10, p.credentialId.length))}... (Created: ${p.createdAt.substring(0, 10)})',
-                    style:
-                        const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                    style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
                   ),
                 ),
               ),
@@ -504,8 +477,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 const Icon(Icons.fingerprint, size: 48, color: Colors.blue),
                 const SizedBox(height: 16),
-                Text(
-                    'Challenge received: ${data['challenge']?.substring(0, 12)}...'),
+                Text('Challenge received: ${data['challenge']?.substring(0, 12)}...'),
                 const SizedBox(height: 8),
                 const Text(
                   'Verify fingerprint or face recognition prompt on your device.',
@@ -577,22 +549,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           content: const Text(
               'Are you sure you want to disable TOTP multi-factor security? Logins will only require your password.'),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
             ElevatedButton(
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppTheme.lossRed),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.lossRed),
               onPressed: () async {
                 Navigator.pop(context);
-                final res =
-                    await ref.read(authRepositoryProvider).disableTotp();
+                final res = await ref.read(authRepositoryProvider).disableTotp();
                 res.when(
                   success: (msg) {
                     ref.invalidate(userProfileProvider);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(content: Text(msg)));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                     }
                   },
                   failure: (err, _) {
@@ -660,14 +627,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
             actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: () async {
                   Navigator.pop(context);
-                  final verifyRes =
-                      await repo.enableTotp(code: otpController.text);
+                  final verifyRes = await repo.enableTotp(code: otpController.text);
                   verifyRes.when(
                     success: (backupCodes) {
                       ref.invalidate(userProfileProvider);
@@ -725,9 +689,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               (c) => Text(
                 c,
                 style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    fontFamily: 'monospace'),
+                    fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'monospace'),
               ),
             ),
           ],
@@ -751,9 +713,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: const Text('Active Sessions'),
           content: const Text('No other active device sessions registered.'),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
           ],
         ),
       );
@@ -774,11 +734,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 final d = user.trustedDevices[index];
                 return ListTile(
                   title: Text(d.name.isNotEmpty ? d.name : 'Unknown Device'),
-                  subtitle: Text(
-                      'Logged in: ${d.registeredAt.toIso8601String().substring(0, 10)}'),
+                  subtitle: Text('Logged in: ${d.registeredAt.toIso8601String().substring(0, 10)}'),
                   trailing: IconButton(
-                    icon: const Icon(Icons.remove_circle_outline,
-                        color: AppTheme.lossRed),
+                    icon: const Icon(Icons.remove_circle_outline, color: AppTheme.lossRed),
                     onPressed: () async {
                       Navigator.pop(context);
                       final repo = ref.read(authRepositoryProvider);
@@ -795,8 +753,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content:
-                                      Text('Failed to revoke session: $err'),
+                                  content: Text('Failed to revoke session: $err'),
                                   backgroundColor: AppTheme.lossRed),
                             );
                           }
@@ -809,9 +766,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
           ],
         );
       },
@@ -840,17 +795,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppTheme.lossRed),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.lossRed),
               onPressed: () async {
                 Navigator.pop(context);
-                final res =
-                    await ref.read(authRepositoryProvider).deleteAccount();
+                final res = await ref.read(authRepositoryProvider).deleteAccount();
                 res.when(
                   success: (msg) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(content: Text(msg)));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                     }
                     // Clear auth state — router redirects to /login.
                     ref.read(authStateProvider.notifier).logout();

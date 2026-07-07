@@ -18,8 +18,7 @@ import 'package:wealthai/features/dashboard/screens/dashboard_screen.dart';
 // Helpers
 // ─────────────────────────────────────────────
 
-Portfolio _mockPortfolio({String id = 'p1', String name = 'Test Portfolio'}) =>
-    Portfolio(
+Portfolio _mockPortfolio({String id = 'p1', String name = 'Test Portfolio'}) => Portfolio(
       id: id,
       name: name,
       description: 'My test portfolio',
@@ -66,8 +65,7 @@ Widget _wrapDashboard({List<Override> overrides = const []}) {
 
 void main() {
   group('DashboardScreen', () {
-    testWidgets('shows shimmer/loading state while portfolios are loading',
-        (tester) async {
+    testWidgets('shows shimmer/loading state while portfolios are loading', (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -88,8 +86,7 @@ void main() {
 
       // Shimmer or CircularProgressIndicator should be visible during loading
       final hasShimmer = find.byType(Shimmer).evaluate().isNotEmpty;
-      final hasProgress =
-          find.byType(CircularProgressIndicator).evaluate().isNotEmpty;
+      final hasProgress = find.byType(CircularProgressIndicator).evaluate().isNotEmpty;
       expect(hasShimmer || hasProgress, isTrue,
           reason: 'Expected shimmer or progress indicator during loading');
     });
@@ -108,8 +105,7 @@ void main() {
             portfoliosProvider.overrideWith(
               (ref) => Stream.value([mockPortfolio]),
             ),
-            selectedPortfolioIdProvider
-                .overrideWith((ref) => 'p1'),
+            selectedPortfolioIdProvider.overrideWith((ref) => 'p1'),
             portfolioAnalyticsProvider.overrideWith(
               (ref) => Stream.value(mockAnalytics),
             ),
@@ -126,8 +122,7 @@ void main() {
       expect(find.textContaining('Test Portfolio'), findsWidgets);
     });
 
-    testWidgets('shows portfolio-related content when no portfolios exist',
-        (tester) async {
+    testWidgets('shows portfolio-related content when no portfolios exist', (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -152,12 +147,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Dashboard should show something about portfolios or create prompt
-      final hasPortfolioText = find
-              .textContaining('portfolio', findRichText: true)
-              .evaluate()
-              .isNotEmpty ||
-          find.textContaining('Portfolio').evaluate().isNotEmpty ||
-          find.textContaining('Create').evaluate().isNotEmpty;
+      final hasPortfolioText =
+          find.textContaining('portfolio', findRichText: true).evaluate().isNotEmpty ||
+              find.textContaining('Portfolio').evaluate().isNotEmpty ||
+              find.textContaining('Create').evaluate().isNotEmpty;
       expect(hasPortfolioText, isTrue);
     });
   });

@@ -107,14 +107,14 @@ ignore = [
     "B008",   # FastAPI Depends() in default args is idiomatic
     "N818",   # AppException kept for backwards compat
     "S105",   # 'bearer' is not a real password
-    "RET504", # unnecessary assignment before return — style
+    "RET504", # unnecessary assignment before return â€” style
     "TC002",  # avoid breaking test imports with TYPE_CHECKING guards
     "TC003",  # avoid breaking test imports with TYPE_CHECKING guards
     "DTZ011", # date.today() is acceptable in this domain
     "S311",   # non-crypto random usage acceptable for simulations
     "S110",   # try-except-pass used for optional cleanup
     "B023",   # loop variable capture in lambda is intentional
-    "SIM108", # ternary style — preference
+    "SIM108", # ternary style â€” preference
     "S104",   # binding to all interfaces is intentional in docker
     "S314",   # xml parsing used for non-adversarial RSS feeds
     "E501",   # line length checked by formatter instead
@@ -134,6 +134,9 @@ known-first-party = ["app"]
     "TC003",  # type-checking imports break pytest discovery
     "F841",   # unused variables in test setup
     "E402",   # imports after module-level code in conftest
+    "B017",   # pytest.raises(Exception) intentional in tests
+    "N806",   # MockParser uppercase variable names conventional
+    "S106",   # hardcoded password strings in test fixtures
 ]
 
 [tool.pytest.ini_options]

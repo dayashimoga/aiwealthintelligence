@@ -128,8 +128,7 @@ class ShellScaffold extends StatelessWidget {
               gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(10),
             ),
-            child:
-                const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Text(

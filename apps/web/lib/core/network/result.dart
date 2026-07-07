@@ -17,8 +17,7 @@ sealed class Result<T> {
   }) {
     return switch (this) {
       Success<T>(data: final data) => success(data),
-      Failure<T>(message: final msg, statusCode: final code) =>
-        failure(msg, code),
+      Failure<T>(message: final msg, statusCode: final code) => failure(msg, code),
     };
   }
 

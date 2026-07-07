@@ -171,7 +171,6 @@ async def sample_holding(
     }
 
 
-
 @pytest_asyncio.fixture
 async def auth_client(
     client: AsyncClient,

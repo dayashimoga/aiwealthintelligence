@@ -18,8 +18,7 @@ class PortfolioDetailScreen extends ConsumerStatefulWidget {
   final String portfolioId;
 
   @override
-  ConsumerState<PortfolioDetailScreen> createState() =>
-      _PortfolioDetailScreenState();
+  ConsumerState<PortfolioDetailScreen> createState() => _PortfolioDetailScreenState();
 }
 
 class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
@@ -82,8 +81,7 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                           child: const Text('Cancel')),
                       TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Delete',
-                              style: TextStyle(color: Colors.red))),
+                          child: const Text('Delete', style: TextStyle(color: Colors.red))),
                     ],
                   ),
                 );
@@ -96,8 +94,8 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                       context.pop();
                     },
                     failure: (err, _) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Delete failed: $err')));
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('Delete failed: $err')));
                     },
                   );
                 }
@@ -105,15 +103,13 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'edit', child: Text('Edit Portfolio')),
-              const PopupMenuItem(
-                  value: 'delete', child: Text('Delete Portfolio')),
+              const PopupMenuItem(value: 'delete', child: Text('Delete Portfolio')),
             ],
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            context.go('/portfolios/${widget.portfolioId}/add-holding'),
+        onPressed: () => context.go('/portfolios/${widget.portfolioId}/add-holding'),
         icon: const Icon(Icons.add),
         label: const Text('Add Holding'),
       ),
@@ -142,31 +138,26 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                         children: [
                           StatCard(
                             label: 'Total Value',
-                            value: _currencyFormatter
-                                .format(analytics.totalCurrentValue),
+                            value: _currencyFormatter.format(analytics.totalCurrentValue),
                             change: gainLossText,
                             changePositive: analytics.totalGainLoss >= 0,
                             icon: Icons.account_balance_wallet,
                           ),
                           StatCard(
                             label: 'Invested',
-                            value: _currencyFormatter
-                                .format(analytics.totalInvested),
+                            value: _currencyFormatter.format(analytics.totalInvested),
                             icon: Icons.savings,
                           ),
                           StatCard(
                             label: 'Diversification',
-                            value:
-                                '${analytics.diversificationScore.toStringAsFixed(0)}/100',
+                            value: '${analytics.diversificationScore.toStringAsFixed(0)}/100',
                             change: 'Concentration Score',
-                            changePositive:
-                                analytics.diversificationScore >= 70,
+                            changePositive: analytics.diversificationScore >= 70,
                             icon: Icons.pie_chart,
                           ),
                           StatCard(
                             label: 'AI Health',
-                            value:
-                                '${analytics.aiHealthScore.toStringAsFixed(0)}/100',
+                            value: '${analytics.aiHealthScore.toStringAsFixed(0)}/100',
                             change: 'AI Diagnostics',
                             changePositive: analytics.aiHealthScore >= 80,
                             icon: Icons.health_and_safety,
@@ -182,8 +173,7 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
 
               // Performance Overview — LineChart
               SliverPadding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
                 sliver: SliverToBoxAdapter(
                   child: analyticsAsync.when(
                     data: (analytics) {
@@ -201,59 +191,47 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
 
               // Sector Allocation Chart
               SliverPadding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
                 sliver: SliverToBoxAdapter(
                   child: analyticsAsync.when(
                     data: (analytics) {
-                      if (analytics == null ||
-                          analytics.sectorAllocation.isEmpty) {
+                      if (analytics == null || analytics.sectorAllocation.isEmpty) {
                         return const SizedBox.shrink();
                       }
                       return GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Sector Allocation',
-                                style: theme.textTheme.titleMedium),
+                            Text('Sector Allocation', style: theme.textTheme.titleMedium),
                             const SizedBox(height: AppTheme.spacingMd),
                             SizedBox(
                               height: 180,
                               child: BarChart(
                                 BarChartData(
                                   alignment: BarChartAlignment.spaceAround,
-                                  maxY: _getMaxAllocation(
-                                      analytics.sectorAllocation),
+                                  maxY: _getMaxAllocation(analytics.sectorAllocation),
                                   barTouchData: BarTouchData(enabled: true),
                                   titlesData: FlTitlesData(
-                                    leftTitles: const AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false)),
-                                    topTitles: const AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false)),
-                                    rightTitles: const AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false)),
+                                    leftTitles:
+                                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    topTitles:
+                                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    rightTitles:
+                                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                                     bottomTitles: AxisTitles(
                                       sideTitles: SideTitles(
                                         showTitles: true,
                                         getTitlesWidget: (value, meta) {
-                                          final sectors = analytics
-                                              .sectorAllocation.keys
-                                              .toList();
+                                          final sectors = analytics.sectorAllocation.keys.toList();
                                           if (value.toInt() < sectors.length) {
-                                            final label =
-                                                sectors[value.toInt()];
+                                            final label = sectors[value.toInt()];
                                             final cleanLabel = label.length > 8
                                                 ? '${label.substring(0, 7)}..'
                                                 : label;
                                             return Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 4),
+                                              padding: const EdgeInsets.only(top: 4),
                                               child: Text(cleanLabel,
-                                                  style: const TextStyle(
-                                                      fontSize: 9)),
+                                                  style: const TextStyle(fontSize: 9)),
                                             );
                                           }
                                           return const Text('');
@@ -263,8 +241,7 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                                   ),
                                   gridData: const FlGridData(show: false),
                                   borderData: FlBorderData(show: false),
-                                  barGroups: _buildBarGroups(
-                                      analytics.sectorAllocation),
+                                  barGroups: _buildBarGroups(analytics.sectorAllocation),
                                 ),
                               ),
                             ),
@@ -287,8 +264,7 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Holdings (${list.length})',
-                              style: theme.textTheme.titleMedium),
+                          Text('Holdings (${list.length})', style: theme.textTheme.titleMedium),
                         ],
                       );
                     },
@@ -306,24 +282,20 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                       child: Center(
                         child: Padding(
                           padding: EdgeInsets.all(32.0),
-                          child: Text(
-                              'No holdings in this portfolio. Tap FAB to add.'),
+                          child: Text('No holdings in this portfolio. Tap FAB to add.'),
                         ),
                       ),
                     );
                   }
                   return SliverPadding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacingMd),
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final holding = list[index];
                           return _holdingCard(context, holding, index)
                               .animate()
-                              .fadeIn(
-                                  delay:
-                                      Duration(milliseconds: 300 + index * 80))
+                              .fadeIn(delay: Duration(milliseconds: 300 + index * 80))
                               .slideX(begin: 0.03);
                         },
                         childCount: list.length,
@@ -349,8 +321,7 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
 
   double _getMaxAllocation(Map<String, double> allocation) {
     if (allocation.isEmpty) return 100;
-    final maxVal =
-        allocation.values.fold<double>(0, (max, val) => val > max ? val : max);
+    final maxVal = allocation.values.fold<double>(0, (max, val) => val > max ? val : max);
     return (maxVal + 10).clamp(0, 100);
   }
 
@@ -460,15 +431,12 @@ class _PortfolioDetailScreenState extends ConsumerState<PortfolioDetailScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      RecommendationChip(
-                          action: holding.gainLossPct > 10 ? 'hold' : 'buy'),
+                      RecommendationChip(action: holding.gainLossPct > 10 ? 'hold' : 'buy'),
                       const SizedBox(width: 6),
                       Text(
                         '${isPositive ? '+' : ''}${holding.gainLossPct.toStringAsFixed(1)}%',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isPositive
-                              ? AppTheme.profitGreen
-                              : AppTheme.lossRed,
+                          color: isPositive ? AppTheme.profitGreen : AppTheme.lossRed,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -495,8 +463,7 @@ class _PerformanceChart extends StatelessWidget {
     final theme = Theme.of(context);
     final totalReturnPct = analytics.totalGainLossPct;
     final isPositive = totalReturnPct >= 0;
-    final lineColor =
-        isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
+    final lineColor = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
 
     // Build a 6-point simulated monthly growth curve from 0 → totalReturnPct.
     // Uses a smooth S-curve so early months show slower growth (realistic).
@@ -515,14 +482,12 @@ class _PerformanceChart extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Performance Overview',
-                        style: theme.textTheme.titleMedium),
+                    Text('Performance Overview', style: theme.textTheme.titleMedium),
                     const SizedBox(height: 2),
                     Text(
                       'Portfolio return since inception',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color:
-                              theme.colorScheme.onSurface.withOpacity(0.55)),
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.55)),
                     ),
                   ],
                 ),
@@ -537,8 +502,7 @@ class _PerformanceChart extends StatelessWidget {
               const SizedBox(width: 8),
               _KpiChip(
                 label: 'CAGR',
-                value:
-                    '${cagr >= 0 ? '+' : ''}${cagr.toStringAsFixed(1)}%',
+                value: '${cagr >= 0 ? '+' : ''}${cagr.toStringAsFixed(1)}%',
                 positive: cagr >= 0,
               ),
             ],
@@ -575,25 +539,20 @@ class _PerformanceChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, _) {
-                        const months = [
-                          'M1', 'M2', 'M3', 'M4', 'M5', 'Now'
-                        ];
+                        const months = ['M1', 'M2', 'M3', 'M4', 'M5', 'Now'];
                         final i = value.toInt();
                         if (i < 0 || i >= months.length) {
                           return const Text('');
                         }
                         return Text(
                           months[i],
-                          style: theme.textTheme.labelSmall
-                              ?.copyWith(fontSize: 9),
+                          style: theme.textTheme.labelSmall?.copyWith(fontSize: 9),
                         );
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -650,9 +609,7 @@ class _PerformanceChart extends StatelessWidget {
     for (int i = 0; i < n; i++) {
       final t = i / (n - 1);
       // Sigmoid-like easing: slow start, fast middle, plateaus at end.
-      final eased = t < 0.5
-          ? 2 * t * t
-          : 1 - (-2 * t + 2) * (-2 * t + 2) / 2;
+      final eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) * (-2 * t + 2) / 2;
       spots.add(FlSpot(i.toDouble(), totalPct * eased));
     }
     return spots;

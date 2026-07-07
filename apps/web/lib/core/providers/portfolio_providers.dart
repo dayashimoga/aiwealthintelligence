@@ -17,8 +17,7 @@ final userProfileProvider = StreamProvider<User>((ref) async* {
   }
 
   final timestamp = HiveCacheManager.get('${cacheKey}_time') as int?;
-  final isFresh = timestamp != null &&
-      (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
+  final isFresh = timestamp != null && (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
 
   if (isFresh && cachedUser != null) return;
 
@@ -48,17 +47,14 @@ final portfoliosProvider = StreamProvider<List<Portfolio>>((ref) async* {
           .map((p) => Portfolio.fromJson(Map<String, dynamic>.from(p as Map)))
           .toList();
       yield cachedList;
-      if (cachedList.isNotEmpty &&
-          ref.read(selectedPortfolioIdProvider) == null) {
-        ref.read(selectedPortfolioIdProvider.notifier).state =
-            cachedList.first.id;
+      if (cachedList.isNotEmpty && ref.read(selectedPortfolioIdProvider) == null) {
+        ref.read(selectedPortfolioIdProvider.notifier).state = cachedList.first.id;
       }
     } catch (_) {}
   }
 
   final timestamp = HiveCacheManager.get('${cacheKey}_time') as int?;
-  final isFresh = timestamp != null &&
-      (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
+  final isFresh = timestamp != null && (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
 
   if (isFresh && cachedList != null) return;
 
@@ -103,16 +99,14 @@ final holdingsProvider = StreamProvider<List<Holding>>((ref) async* {
     try {
       final rawList = cached as Map<dynamic, dynamic>;
       final listHoldings = rawList['holdings'] as List;
-      cachedList = listHoldings
-          .map((h) => Holding.fromJson(Map<String, dynamic>.from(h as Map)))
-          .toList();
+      cachedList =
+          listHoldings.map((h) => Holding.fromJson(Map<String, dynamic>.from(h as Map))).toList();
       yield cachedList;
     } catch (_) {}
   }
 
   final timestamp = HiveCacheManager.get('${cacheKey}_time') as int?;
-  final isFresh = timestamp != null &&
-      (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
+  final isFresh = timestamp != null && (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
 
   if (isFresh && cachedList != null) return;
 
@@ -127,8 +121,7 @@ final holdingsProvider = StreamProvider<List<Holding>>((ref) async* {
 });
 
 /// Analytics provider for selected portfolio.
-final portfolioAnalyticsProvider =
-    StreamProvider<PortfolioAnalytics?>((ref) async* {
+final portfolioAnalyticsProvider = StreamProvider<PortfolioAnalytics?>((ref) async* {
   final portfolioId = ref.watch(selectedPortfolioIdProvider);
   if (portfolioId == null) {
     yield null;
@@ -140,15 +133,13 @@ final portfolioAnalyticsProvider =
   PortfolioAnalytics? cachedAnalytics;
   if (cached != null) {
     try {
-      cachedAnalytics =
-          PortfolioAnalytics.fromJson(Map<String, dynamic>.from(cached as Map));
+      cachedAnalytics = PortfolioAnalytics.fromJson(Map<String, dynamic>.from(cached as Map));
       yield cachedAnalytics;
     } catch (_) {}
   }
 
   final timestamp = HiveCacheManager.get('${cacheKey}_time') as int?;
-  final isFresh = timestamp != null &&
-      (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
+  final isFresh = timestamp != null && (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
 
   if (isFresh && cachedAnalytics != null) return;
 
@@ -205,15 +196,13 @@ final marketOverviewProvider = StreamProvider<MarketOverview>((ref) async* {
   MarketOverview? cachedOverview;
   if (cached != null) {
     try {
-      cachedOverview =
-          MarketOverview.fromJson(Map<String, dynamic>.from(cached as Map));
+      cachedOverview = MarketOverview.fromJson(Map<String, dynamic>.from(cached as Map));
       yield cachedOverview;
     } catch (_) {}
   }
 
   final timestamp = HiveCacheManager.get('${cacheKey}_time') as int?;
-  final isFresh = timestamp != null &&
-      (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
+  final isFresh = timestamp != null && (DateTime.now().millisecondsSinceEpoch - timestamp) < 120000;
 
   if (isFresh && cachedOverview != null) return;
 
@@ -241,8 +230,7 @@ final aiRecommendationProvider =
 });
 
 /// Notifications provider.
-final notificationsProvider =
-    FutureProvider<List<AppNotification>>((ref) async {
+final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async {
   final repo = ref.watch(notificationRepositoryProvider);
   final result = await repo.listNotifications();
   return result.when(

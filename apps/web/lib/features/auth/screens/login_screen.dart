@@ -83,19 +83,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() => _isLoading = false);
       res.when(
         success: (tokens) async {
-          final profileRes =
-              await ref.read(authRepositoryProvider).getProfile();
+          final profileRes = await ref.read(authRepositoryProvider).getProfile();
           profileRes.when(
             success: (user) {
               // Update global auth state — router redirect handles navigation.
               ref.read(authStateProvider.notifier).setAuthenticated(
-                onboarded: user.isOnboarded,
-              );
+                    onboarded: user.isOnboarded,
+                  );
             },
             failure: (err, _) {
               ref.read(authStateProvider.notifier).setAuthenticated(
-                onboarded: false,
-              );
+                    onboarded: false,
+                  );
             },
           );
         },
@@ -117,9 +116,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: theme.brightness == Brightness.dark
-              ? AppTheme.darkBgGradient
-              : null,
+          gradient: theme.brightness == Brightness.dark ? AppTheme.darkBgGradient : null,
         ),
         child: Center(
           child: SingleChildScrollView(
@@ -144,8 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.auto_awesome,
-                        color: Colors.white, size: 36),
+                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 36),
                   ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
                   const SizedBox(height: AppTheme.spacingLg),
 
@@ -204,8 +200,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               icon: Icon(_obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined),
-                              onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                             ),
                           ),
                           validator: (value) {
@@ -257,13 +252,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             const Expanded(child: Divider()),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacingMd),
+                              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
                               child: Text(
                                 'or continue with',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withAlpha(128),
+                                  color: theme.colorScheme.onSurface.withAlpha(128),
                                 ),
                               ),
                             ),
@@ -295,19 +288,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ).animate().fadeIn(delay: 600.ms),
 
                         // Biometric login button (shown only when available)
-                        if (_biometricsAvailable) ...
-                          [
-                            const SizedBox(height: AppTheme.spacingMd),
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton.icon(
-                                onPressed: _handleBiometricLogin,
-                                icon: const Icon(
-                                    Icons.fingerprint, size: 22),
-                                label: const Text('Use Biometrics'),
-                              ),
-                            ).animate().fadeIn(delay: 650.ms),
-                          ],
+                        if (_biometricsAvailable) ...[
+                          const SizedBox(height: AppTheme.spacingMd),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _handleBiometricLogin,
+                              icon: const Icon(Icons.fingerprint, size: 22),
+                              label: const Text('Use Biometrics'),
+                            ),
+                          ).animate().fadeIn(delay: 650.ms),
+                        ],
 
                         const SizedBox(height: AppTheme.spacingLg),
 

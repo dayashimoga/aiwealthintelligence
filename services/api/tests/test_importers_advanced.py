@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -135,9 +135,7 @@ class TestEmailCASImporter:
 
         with (
             patch("imaplib.IMAP4_SSL", return_value=mock_conn),
-            patch(
-                "app.infrastructure.importers.email_cas_importer.CASPDFParser"
-            ) as MockParser,
+            patch("app.infrastructure.importers.email_cas_importer.CASPDFParser") as MockParser,
         ):
             MockParser.return_value.parse.return_value = [mock_holding]
             importer = EmailCASImporter(
@@ -178,9 +176,7 @@ class TestEmailCASImporter:
 
         with (
             patch("imaplib.IMAP4_SSL", return_value=mock_conn),
-            patch(
-                "app.infrastructure.importers.email_cas_importer.CASPDFParser"
-            ) as MockParser,
+            patch("app.infrastructure.importers.email_cas_importer.CASPDFParser") as MockParser,
         ):
             MockParser.return_value.parse.side_effect = ValueError("corrupt PDF")
             importer = EmailCASImporter(
@@ -414,7 +410,7 @@ class TestImportRoutes:
         self, auth_client: Any, sample_portfolio: dict
     ) -> None:
         resp = await auth_client.post(
-            f'/api/v1/portfolios/{sample_portfolio["id"]}/import/email-scan',
+            f"/api/v1/portfolios/{sample_portfolio['id']}/import/email-scan",
             data={"since_date": "01-Jan-2024"},
         )
         assert resp.status_code == 400
@@ -427,7 +423,7 @@ class TestImportRoutes:
 
         files = {"file": ("holdings.csv", io.BytesIO(b"isin,units\nINF1,10"), "text/csv")}
         resp = await auth_client.post(
-            f'/api/v1/portfolios/{sample_portfolio["id"]}/import/cams-kfin',
+            f"/api/v1/portfolios/{sample_portfolio['id']}/import/cams-kfin",
             files=files,
         )
         assert resp.status_code in (400, 422)
@@ -439,14 +435,12 @@ class TestImportRoutes:
 
         files = {"file": ("empty.pdf", io.BytesIO(b""), "application/pdf")}
         resp = await auth_client.post(
-            f'/api/v1/portfolios/{sample_portfolio["id"]}/import/cams-kfin',
+            f"/api/v1/portfolios/{sample_portfolio['id']}/import/cams-kfin",
             files=files,
         )
         assert resp.status_code in (400, 422)
 
-    async def test_cams_kfin_import_invalid_portfolio(
-        self, auth_client: Any
-    ) -> None:
+    async def test_cams_kfin_import_invalid_portfolio(self, auth_client: Any) -> None:
         import io
 
         files = {"file": ("cas.pdf", io.BytesIO(b"%PDF-1.4 fake"), "application/pdf")}
@@ -456,8 +450,6 @@ class TestImportRoutes:
         )
         assert resp.status_code == 404
 
-    async def test_unauthenticated_email_config_returns_401(
-        self, client: Any
-    ) -> None:
+    async def test_unauthenticated_email_config_returns_401(self, client: Any) -> None:
         resp = await client.get("/api/v1/import/email-config")
         assert resp.status_code == 401

@@ -86,9 +86,7 @@ async def import_cams_kfin_pdf(
     user_id: Annotated[str, Depends(get_current_user_id)],
     session: Annotated[AsyncSession, Depends(get_db_session)],
     file: UploadFile = File(..., description="CAMS or KFintech CAS PDF statement"),
-    password: str | None = Form(
-        None, description="PDF password (usually PAN in UPPERCASE)"
-    ),
+    password: str | None = Form(None, description="PDF password (usually PAN in UPPERCASE)"),
 ) -> CAMSKFinImportResponse:
     """Upload and import a CAMS or KFintech Mutual Fund CAS PDF statement.
 
@@ -226,6 +224,7 @@ async def test_email_connection(
     import imaplib
 
     try:
+
         def _test_connect() -> str:
             conn = imaplib.IMAP4_SSL(settings.EMAIL_IMAP_HOST, settings.EMAIL_IMAP_PORT)
             conn.login(settings.EMAIL_ADDRESS, settings.EMAIL_PASSWORD)
@@ -319,9 +318,7 @@ async def import_from_email(
 
     for email_result in email_results:
         if email_result.get("error"):
-            all_errors.append(
-                f'{email_result["filename"]}: {email_result["error"]}'
-            )
+            all_errors.append(f"{email_result['filename']}: {email_result['error']}")
             sources.append(
                 {
                     "filename": email_result["filename"],
