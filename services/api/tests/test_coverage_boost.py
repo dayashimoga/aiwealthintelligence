@@ -606,7 +606,7 @@ class TestGoalRoutes:
             "/api/v1/goals",
             json={
                 "name": "Delete Me",
-                "goal_type": "wealth_creation",
+                "goal_type": "custom",
                 "target_amount": 100000.0,
             },
         )

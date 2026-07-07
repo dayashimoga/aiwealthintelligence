@@ -45,7 +45,7 @@ async def list_watchlists(
     """List all watchlists for the current user."""
     stmt = (
         select(WatchlistModel)
-        .where(WatchlistModel.user_id == current_user["sub"])
+        .where(WatchlistModel.user_id == current_user["id"])
         .order_by(WatchlistModel.created_at.desc())
     )
     result = await session.execute(stmt)
@@ -74,7 +74,7 @@ async def create_watchlist(
     """Create a new watchlist."""
     watchlist = WatchlistModel(
         id=str(uuid.uuid4()),
-        user_id=current_user["sub"],
+        user_id=current_user["id"],
         name=data.name,
         symbols=data.symbols,
         alerts=[],
@@ -100,7 +100,7 @@ async def add_symbol_to_watchlist(
     """Add a symbol to a watchlist with optional price alerts."""
     stmt = select(WatchlistModel).where(
         WatchlistModel.id == watchlist_id,
-        WatchlistModel.user_id == current_user["sub"],
+        WatchlistModel.user_id == current_user["id"],
     )
     result = await session.execute(stmt)
     watchlist = result.scalar_one_or_none()
@@ -142,7 +142,7 @@ async def remove_symbol_from_watchlist(
     """Remove a symbol from a watchlist."""
     stmt = select(WatchlistModel).where(
         WatchlistModel.id == watchlist_id,
-        WatchlistModel.user_id == current_user["sub"],
+        WatchlistModel.user_id == current_user["id"],
     )
     result = await session.execute(stmt)
     watchlist = result.scalar_one_or_none()
@@ -172,7 +172,7 @@ async def get_watchlist_intelligence(
     """
     stmt = select(WatchlistModel).where(
         WatchlistModel.id == watchlist_id,
-        WatchlistModel.user_id == current_user["sub"],
+        WatchlistModel.user_id == current_user["id"],
     )
     result = await session.execute(stmt)
     watchlist = result.scalar_one_or_none()
@@ -240,7 +240,7 @@ async def delete_watchlist(
     """Delete a watchlist."""
     stmt = select(WatchlistModel).where(
         WatchlistModel.id == watchlist_id,
-        WatchlistModel.user_id == current_user["sub"],
+        WatchlistModel.user_id == current_user["id"],
     )
     result = await session.execute(stmt)
     watchlist = result.scalar_one_or_none()

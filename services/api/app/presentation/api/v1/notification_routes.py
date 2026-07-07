@@ -25,11 +25,11 @@ async def list_notifications(
     """List notifications for the current user."""
     notifications = await notification_service.list_notifications(
         session,
-        user_id=current_user["sub"],
+        user_id=current_user["id"],
         unread_only=unread_only,
         limit=limit,
     )
-    unread_count = await notification_service.get_unread_count(session, user_id=current_user["sub"])
+    unread_count = await notification_service.get_unread_count(session, user_id=current_user["id"])
     return {
         "notifications": [
             {
@@ -57,7 +57,7 @@ async def mark_notification_read(
     """Mark a single notification as read."""
     success = await notification_service.mark_read(
         session,
-        user_id=current_user["sub"],
+        user_id=current_user["id"],
         notification_id=notification_id,
     )
     await session.commit()
@@ -70,7 +70,7 @@ async def mark_all_notifications_read(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Mark all notifications as read for the current user."""
-    count = await notification_service.mark_all_read(session, user_id=current_user["sub"])
+    count = await notification_service.mark_all_read(session, user_id=current_user["id"])
     await session.commit()
     return {"marked_read": count}
 
@@ -81,5 +81,5 @@ async def get_unread_count(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Get count of unread notifications."""
-    count = await notification_service.get_unread_count(session, user_id=current_user["sub"])
+    count = await notification_service.get_unread_count(session, user_id=current_user["id"])
     return {"unread_count": count}

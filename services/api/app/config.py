@@ -69,6 +69,14 @@ class Settings(BaseSettings):
     SMTP_FROM: str = "noreply@wealthai.com"
     SMTP_USE_TLS: bool = True
 
+    # Email CAS Auto-Import (IMAP)
+    EMAIL_IMAP_HOST: str = ""        # e.g. imap.gmail.com
+    EMAIL_IMAP_PORT: int = 993
+    EMAIL_ADDRESS: str = ""          # mailbox to poll
+    EMAIL_PASSWORD: str = ""         # app password / OAuth token
+    EMAIL_CAS_FOLDER: str = "INBOX"  # IMAP folder to scan
+    EMAIL_PDF_PASSWORD: str = ""     # CAS PDF decryption password (PAN-based)
+
     # Third Party Authentication
     GOOGLE_CLIENT_ID: str = ""
     APPLE_CLIENT_ID: str = ""

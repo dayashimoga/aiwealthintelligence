@@ -59,7 +59,12 @@ def _goal_to_dict(goal: GoalModel) -> dict[str, Any]:
     # Calculate months remaining
     months_remaining = None
     if goal.target_date:
-        delta = goal.target_date - datetime.now(UTC)
+        now = datetime.now(UTC)
+        target = goal.target_date
+        # SQLite stores datetimes as naive; make both naive for subtraction
+        if target.tzinfo is None:
+            now = datetime.utcnow()  # noqa: DTZ003
+        delta = target - now
         months_remaining = max(0, delta.days // 30)
 
     # Calculate required monthly SIP to reach goal
@@ -104,7 +109,7 @@ async def list_goals(
     """List all goals for the current user."""
     stmt = (
         select(GoalModel)
-        .where(GoalModel.user_id == current_user["sub"])
+        .where(GoalModel.user_id == current_user["id"])
         .order_by(GoalModel.created_at.desc())
     )
     if active_only:
@@ -130,7 +135,7 @@ async def create_goal(
 
     goal = GoalModel(
         id=str(uuid.uuid4()),
-        user_id=current_user["sub"],
+        user_id=current_user["id"],
         name=data.name,
         goal_type=data.goal_type,
         target_amount=data.target_amount,
@@ -158,7 +163,7 @@ async def update_goal(
     """Update a financial goal."""
     stmt = select(GoalModel).where(
         GoalModel.id == goal_id,
-        GoalModel.user_id == current_user["sub"],
+        GoalModel.user_id == current_user["id"],
     )
     result = await session.execute(stmt)
     goal = result.scalar_one_or_none()
@@ -189,7 +194,7 @@ async def delete_goal(
     """Delete a financial goal."""
     stmt = select(GoalModel).where(
         GoalModel.id == goal_id,
-        GoalModel.user_id == current_user["sub"],
+        GoalModel.user_id == current_user["id"],
     )
     result = await session.execute(stmt)
     goal = result.scalar_one_or_none()
