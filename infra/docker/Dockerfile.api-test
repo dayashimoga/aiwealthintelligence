@@ -1,0 +1,51 @@
+# ============================================================
+# WealthAI API — Test / CI Image
+# Based on the production image but with dev dependencies added.
+# Used for: pytest, ruff, mypy, bandit
+# ============================================================
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Build system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    libpoppler-cpp-dev \
+    poppler-utils \
+    libxml2-dev \
+    libxslt1-dev \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy full source and install with dev extras
+COPY services/api/ .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -e ".[dev]"
+
+# ============================================================
+# Final test stage
+# ============================================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Runtime deps for parsers
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpoppler-cpp2 \
+    poppler-utils \
+    libxml2 \
+    libxslt1.1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed packages
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy source for editing volume mount
+COPY services/api/ .
+
+CMD ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "--cov=app", "--cov-report=term-missing"]

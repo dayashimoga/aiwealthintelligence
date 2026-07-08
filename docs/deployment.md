@@ -1,115 +1,131 @@
-# Deployment Guide
+# WealthAI — Deployment Guide
 
-## Zero-Cost Deployment (Cloudflare Pages)
+## Architecture Overview (Zero-Cost)
 
-### Prerequisites
-- GitHub account with repository pushed
-- Cloudflare account (free tier)
-
-### Step 1: Set up Cloudflare Pages
-
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → Pages
-2. Click "Create a project" → "Connect to Git"
-3. Select your repository
-4. Configure build settings:
-   - **Build command**: `cd apps/web && flutter build web --release --web-renderer canvaskit`
-   - **Build output directory**: `apps/web/build/web`
-   - **Root directory**: `/`
-5. Add environment variables:
-   - `FLUTTER_VERSION`: `3.24.0`
-
-### Step 2: Configure GitHub Actions (Automated)
-
-Add these secrets to your GitHub repository:
-- `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
-- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
-
-The deploy workflow (`.github/workflows/deploy.yml`) will automatically:
-- Build Flutter Web on every push to `main`
-- Deploy to Cloudflare Pages
-- Create preview deployments for PRs
-
-### Step 3: Custom Domain (Optional)
-
-1. In Cloudflare Pages project settings
-2. Click "Custom domains" → Add domain
-3. Follow DNS configuration instructions
-
-## Backend Deployment
-
-### Option 1: Fly.io (Free Tier)
-
-```bash
-# Install flyctl
-curl -L https://fly.io/install.sh | sh
-
-# Login and deploy
-fly auth login
-fly launch --name wealthai-api
-fly deploy
+```
+GitHub Actions CI/CD
+    │
+    ├── Flutter Web Build → Cloudflare Pages (free)
+    ├── Android APK/AAB   → GitHub Actions Artifact
+    └── Docker API Image  → Render.com (free)
+                               │
+                               ├── PostgreSQL → Supabase (free 500MB)
+                               └── Redis      → Upstash (free 10k cmd/day)
 ```
 
-### Option 2: Railway
+**Monthly cost: $0** on free tiers.
 
-1. Connect GitHub repository
-2. Set root directory to `services/api`
-3. Configure environment variables from `.env.example`
-4. Deploy
+---
 
-### Option 3: Docker (Self-hosted)
+## Step 1: Database — Supabase (Free PostgreSQL)
 
-```bash
-# Build
-docker compose -f docker-compose.yml build
+1. Create account at [supabase.com](https://supabase.com)
+2. New Project → choose region closest to your users (India: `ap-south-1`)
+3. Go to Settings → Database → Connection string → **URI**
+4. Copy the Transaction Pooler connection string:
+   ```
+   postgresql+asyncpg://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres
+   ```
+5. Run migrations after deployment:
+   ```bash
+   docker run --rm \
+     -e DATABASE_URL="postgresql+asyncpg://..." \
+     wealthai-api:latest alembic upgrade head
+   ```
 
-# Deploy
-docker compose -f docker-compose.yml up -d
+---
 
-# Check health
-curl http://localhost:8000/api/v1/health
-```
+## Step 2: Redis — Upstash (Free)
 
-## Database Migration
+1. Create account at [upstash.com](https://upstash.com)
+2. Create Database → Redis → Region: `ap-south-1`
+3. Copy the Redis URL: `rediss://default:[PASSWORD]@[HOST].upstash.io:6379`
 
-```bash
-cd services/api
+---
 
-# Create initial migration
-alembic revision --autogenerate -m "Initial schema"
+## Step 3: API — Render.com (Free)
 
-# Apply migrations
-alembic upgrade head
+1. Create account at [render.com](https://render.com)
+2. New → **Blueprint** → Connect your GitHub repo
+3. Render detects `render.yaml` automatically
+4. Set these **Secret** environment variables in Render dashboard:
+   - `DATABASE_URL` — Supabase URL from Step 1
+   - `REDIS_URL` — Upstash URL from Step 2
+   - `AI_API_KEY` — Your OpenAI/Groq API key
+5. Deploy! Service URL: `https://wealthai-api.onrender.com`
 
-# Rollback
-alembic downgrade -1
-```
+> ⚠️ **Free tier spins down** after 15 min inactivity. Use [UptimeRobot](https://uptimerobot.com) (free) to ping `/api/v1/health` every 14 min to keep it warm.
 
-## Environment Variables
+---
 
-See `.env.example` for all configuration options. Critical variables:
+## Step 4: Cloudflare Pages (Flutter Web)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `APP_SECRET_KEY` | Yes | 32+ char random string |
-| `JWT_SECRET_KEY` | Yes | 32+ char random string |
-| `DATABASE_URL` | Yes | Database connection string |
-| `AI_API_KEY` | For AI | AI provider API key |
-| `AI_PROVIDER` | No | `openai`, `groq`, `ollama` |
+Auto-deploys on every push to `main` via GitHub Actions.
+
+**One-time setup:**
+1. Create the CF Pages project (once):
+   ```bash
+   npx wrangler pages project create wealthai
+   ```
+2. Set `API_BASE_URL` as a GitHub repository variable:
+   - GitHub repo → Settings → Variables → Actions → `API_BASE_URL` = `https://wealthai-api.onrender.com`
+3. Push to `main` → automatic build & deploy.
+
+---
+
+## Step 5: Android APK/AAB
+
+### Debug APK (immediate, no setup)
+GitHub Actions builds APK automatically on push to `main`.
+Download: GitHub → Actions → Latest run → Artifacts → `android-apk`
+
+### Release APK (Play Store)
+
+1. Generate keystore:
+   ```bash
+   keytool -genkey -v -keystore wealthai-release.jks \
+     -keyalg RSA -keysize 2048 -validity 10000 -alias wealthai
+   ```
+2. Base64-encode and add as GitHub secret `KEYSTORE_BASE64`
+3. Add: `KEYSTORE_PASS`, `KEY_ALIAS`, `KEY_PASS` secrets
+4. CI signs automatically when these secrets exist
+
+Play Store App ID: **`com.wealthai.app`**
+
+---
+
+## Step 6: Environment Variables (Production)
+
+| Variable | Required | Value |
+|----------|----------|-------|
+| `DATABASE_URL` | ✅ | Supabase asyncpg URL |
+| `REDIS_URL` | ✅ | Upstash rediss:// URL |
+| `JWT_SECRET_KEY` | ✅ | Auto-generated by Render |
+| `AI_API_KEY` | ✅ | OpenAI or Groq key |
+| `CORS_ORIGINS` | ✅ | `https://wealthai.pages.dev` |
+| `AI_MODEL` | 🟡 | `gpt-4o-mini` |
+
+---
 
 ## Monitoring
 
-### Health Check
 ```bash
-curl http://localhost:8000/api/v1/health
+# Health check
+curl https://wealthai-api.onrender.com/api/v1/health
+
+# Expected
+{"status":"healthy","version":"0.1.0"}
 ```
 
-### Prometheus Metrics
-Access at: http://localhost:9090 (with observability profile)
+---
 
-### Grafana Dashboards
-Access at: http://localhost:3001 (admin/admin)
+## Cost Summary
 
-```bash
-# Start with observability stack
-docker compose --profile observability up -d
-```
+| Service | Free Tier | Status |
+|---------|-----------|--------|
+| Cloudflare Pages | Unlimited builds | ✅ |
+| Render Web Service | 750 hrs/month | ✅ (spins down) |
+| Supabase PostgreSQL | 500MB | ✅ |
+| Upstash Redis | 10k cmds/day | ✅ |
+| GitHub Actions | 2,000 min/month | ✅ |
+| **Total** | **$0/month** | |

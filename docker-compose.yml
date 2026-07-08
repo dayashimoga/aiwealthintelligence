@@ -26,7 +26,7 @@ services:
       - api-data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -81,11 +81,30 @@ services:
     container_name: wealthai-flutter
     volumes:
       - ./apps/web:/app
-      - flutter-pub-cache:/opt/flutter/.pub-cache
+      - flutter-pub-cache:/opt/pub-cache
     working_dir: /app
     profiles:
       - build
     entrypoint: ["flutter"]
+
+  # ========================
+  # API Tests (no external deps)
+  # ========================
+  api-test:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api-test
+    working_dir: /app
+    volumes:
+      - ./services/api:/app
+    profiles:
+      - test
+    environment:
+      APP_ENV: "development"
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      JWT_SECRET_KEY: "test-secret-for-docker-tests"
+      AI_API_KEY: "test-key"
+      REDIS_URL: ""
 
   # ========================
   # Prometheus

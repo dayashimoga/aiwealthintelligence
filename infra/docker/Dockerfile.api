@@ -1,50 +1,73 @@
+# ============================================================
+# WealthAI API — Production Dockerfile
+# Multi-stage build: builder → production
+# ============================================================
 FROM python:3.11-slim AS builder
 
-WORKDIR /app
+WORKDIR /build
 
-# Install system dependencies
+# Install system build dependencies
+# pdfplumber/pdfminer need poppler; lxml needs libxml2/libxslt
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gcc \
+    g++ \
+    libpoppler-cpp-dev \
+    poppler-utils \
+    libxml2-dev \
+    libxslt1-dev \
+    libffi-dev \
+    libssl-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files
-COPY services/api/pyproject.toml ./
-COPY services/api/README.md ./
+# Copy the FULL source tree so pip install -e "." can resolve the package
+COPY services/api/ .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -e "."
+# Install all Python dependencies (including the app itself)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -e "."
 
-# Production stage
+# ============================================================
+# Production stage — slim runtime image
+# ============================================================
 FROM python:3.11-slim AS production
 
 WORKDIR /app
+
+# Runtime system deps
+# Debian Trixie (python:3.11-slim): use libpoppler-cpp2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpoppler-cpp2 \
+    poppler-utils \
+    libxml2 \
+    libxslt1.1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser
 
-# Copy installed packages from builder
+# Copy installed Python packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy application code
+# Copy application source
 COPY services/api/app ./app
 COPY services/api/alembic ./alembic
 COPY services/api/alembic.ini ./alembic.ini
 COPY services/api/pyproject.toml ./pyproject.toml
 
-# Create data directory
+# Create data directory with correct ownership
 RUN mkdir -p /app/data && chown -R appuser:appgroup /app
 
-# Switch to non-root user
 USER appuser
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()"
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=20s \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
 
-# Expose port
 EXPOSE 8000
 
-# Run with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Use 2 workers in production (tune with WEB_CONCURRENCY env var)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--loop", "uvloop"]

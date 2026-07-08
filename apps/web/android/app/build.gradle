@@ -5,36 +5,80 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// ──────────────────────────────────────────────────────────
+// Keystore signing — reads from environment variables so CI
+// can sign without committing credentials to the repo.
+//
+// For local debug builds these values can be left empty
+// (the signingConfigs.debug fallback is used automatically).
+//
+// Required env vars for release signing:
+//   KEYSTORE_PATH   — absolute path to .jks / .keystore file
+//   KEYSTORE_PASS   — store password
+//   KEY_ALIAS       — key alias inside keystore
+//   KEY_PASS        — key password
+// ──────────────────────────────────────────────────────────
+def keystorePath    = System.getenv("KEYSTORE_PATH")   ?: ""
+def keystorePass    = System.getenv("KEYSTORE_PASS")   ?: ""
+def keyAlias        = System.getenv("KEY_ALIAS")       ?: ""
+def keyPass         = System.getenv("KEY_PASS")        ?: ""
+def hasReleaseKeys  = keystorePath?.trim() as boolean
+
 android {
-    namespace = "com.example.web"
-    compileSdk = 34
-    ndkVersion = flutter.ndkVersion
+    namespace = "com.wealthai.app"
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "17"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.web"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        applicationId = "com.wealthai.app"
+        // flutter_secure_storage requires >= 23
+        // local_auth biometrics requires >= 23
+        minSdk = 23
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Enable multidex for large dependency trees
+        multiDexEnabled = true
+    }
+
+    signingConfigs {
+        release {
+            if (hasReleaseKeys) {
+                storeFile     file(keystorePath)
+                storePassword keystorePass
+                keyAlias      keyAlias
+                keyPassword   keyPass
+            }
+        }
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        debug {
+            debuggable = true
+            minifyEnabled = false
             signingConfig = signingConfigs.debug
+        }
+        release {
+            // Use release keystore if env vars are set, otherwise fall back to debug
+            signingConfig = hasReleaseKeys ? signingConfigs.release : signingConfigs.debug
+
+            // Enable R8 (ProGuard successor) for size reduction and obfuscation
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

@@ -1,10 +1,17 @@
-# Cloudflare Pages configuration for WealthAI Flutter Web deployment.
+# ============================================================
+# WealthAI — Cloudflare Pages Configuration
 #
-# Environment variables can be set in the Cloudflare Pages dashboard under:
-#   Settings > Environment variables
+# This file configures the Cloudflare Pages project for the
+# Flutter web build. Headers and routing rules are handled via
+# the _headers and _redirects files in the web build output.
 #
-# CI/CD: see .github/workflows/deploy.yml (deploy-web job uses wrangler-action@v3)
+# Secrets / env vars: set in Cloudflare dashboard →
+#   Pages project → Settings → Environment variables
+# ============================================================
 
 name = "wealthai"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-01-01"
+
+# The directory Cloudflare Pages reads for deployment.
+# Must match: flutter build web → output goes to build/web
 pages_build_output_dir = "apps/web/build/web"

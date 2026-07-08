@@ -91,11 +91,59 @@ This file lists the sequentially ordered tasks for all development phases of the
 - [x] Update docker-compose.yml with API service + Flutter builder
 - [x] Remove continue-on-error from critical CI steps
 - [x] Create backend automation script (venv setup/teardown)
-- [ ] Map Cloudflare pages builds and Android bundle compiles in CI scripts
+- [x] Fix Dockerfile.api COPY order (pip install now works correctly)
+- [x] Upgrade Dockerfile.flutter to Flutter 3.27.4 + Android SDK 35 + Java 17
+- [x] Fix CI/deploy flutter-version to 3.27.4 (matches pubspec SDK >=3.4.0)
+- [x] Fix wrangler.toml for valid Cloudflare Pages config
+- [ ] Map Cloudflare pages builds and Android bundle compiles in CI scripts (pending CF secrets)
+- [ ] Configure Cloudflare Pages secrets in GitHub (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
 
 ## Phase 14: Smart Imports (Future Integrations)
 - [x] CAS PDF parser framework
 - [x] Broker CSV parser framework (Groww, Zerodha, Upstox, Angel, ICICI, Kotak)
 - [x] Account Aggregator consent framework
-- [ ] Email CAS auto-import (future: user authorizes mailbox)
-- [ ] CAMS & KFin mutual fund import API integration
+- [x] Email CAS auto-import (user provides IMAP credentials)
+- [ ] CAMS & KFin mutual fund import API integration (official API access pending)
+
+## Phase 15: Android Production Readiness
+- [x] Fix applicationId: com.example.web → com.wealthai.app
+- [x] Fix minSdk = 23 (flutter_secure_storage + local_auth requirement)
+- [x] Set compileSdk/targetSdk = 35
+- [x] Set Java 17 compile options
+- [x] Pin NDK to 27.0.12077973
+- [x] Enable ProGuard/R8 for release builds
+- [x] Add proguard-rules.pro for Flutter + plugins
+- [x] Add network security config (HTTPS-only enforcement)
+- [x] Add required permissions (biometric, camera, notifications, file)
+- [x] Add deep link scheme: wealthai://app
+- [x] Configure env-var-based release keystore signing
+- [ ] Generate production keystore and store as CI secrets
+- [ ] Submit to Play Store internal testing track
+
+## Phase 16: Authentication Completions
+- [ ] Wire Google Sign-In (firebase_auth + google_sign_in packages + google-services.json)
+- [ ] Wire Apple Sign-In (sign_in_with_apple + Apple Developer entitlements)
+- [ ] Passkeys (platform credential API) — full end-to-end implementation
+
+## Phase 17: Production Database & Deployment
+- [ ] Set up managed PostgreSQL (Supabase/Neon/Railway recommended)
+- [ ] Set up managed Redis (Upstash recommended for serverless)
+- [ ] Configure production .env with real DATABASE_URL and REDIS_URL
+- [ ] Run Alembic migrations on production database
+- [ ] Deploy API to Railway/Fly.io/Render
+
+## Phase 18: Push Notifications
+- [ ] Set up Firebase Cloud Messaging (FCM) for Android
+- [ ] Integrate flutter_local_notifications + firebase_messaging
+- [ ] Wire price alert notification triggers from backend scheduler
+- [ ] Wire SIP reminder notification triggers
+- [ ] Wire rebalancing notification triggers
+
+## Phase 19: Testing Expansion (≥80% Coverage)
+- [ ] Add market routes integration tests
+- [ ] Add copilot routes integration tests
+- [ ] Add watchlist/goal/notification route tests
+- [ ] Flutter: add portfolio screen widget tests
+- [ ] Flutter: add import flow widget tests
+- [ ] Flutter: add E2E integration tests (register → import → view)
+

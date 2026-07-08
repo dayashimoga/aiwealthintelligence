@@ -1,0 +1,58 @@
+# render.yaml
+# Deploy WealthAI API to Render.com free tier
+# Free tier: 512MB RAM, 0.1 CPU, spins down after 15min inactivity
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: wealthai-api
+    runtime: docker
+    # Build from the project root so COPY services/api/ works
+    rootDir: .
+    dockerfilePath: ./infra/docker/Dockerfile.api
+    plan: free
+
+    # Health check — Render needs this to confirm deployment success
+    healthCheckPath: /api/v1/health
+
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_HOST
+        value: "0.0.0.0"
+      - key: APP_PORT
+        value: "8000"
+
+      # Database — set to your Supabase / Neon / Railway PostgreSQL URL
+      - key: DATABASE_URL
+        sync: false  # Set in Render dashboard → Environment → Secret Files
+
+      # Redis — set to your Upstash Redis URL
+      - key: REDIS_URL
+        sync: false
+
+      # JWT — generate with: python -c "import secrets; print(secrets.token_hex(32))"
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+      # AI Provider (OpenAI, Groq, Ollama)
+      - key: AI_PROVIDER
+        value: openai
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: gpt-4o-mini
+
+      # CORS — your Cloudflare Pages URL
+      - key: CORS_ORIGINS
+        value: "https://wealthai.pages.dev,https://wealthai.app"
+
+      # Rate limiting
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "60"
+
+      # Observability
+      - key: APP_LOG_LEVEL
+        value: INFO

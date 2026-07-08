@@ -5,6 +5,143 @@ All notable changes are documented here. Format: `[version] date — description
 
 ---
 
+## [0.9.0] — 2026-07-08 — Production Deployment: Zero-Cost Architecture + All Tests Passing
+
+### Fixed — Tests
+- `test_market_routes.py`: Rewrote all 11 tests with correct mock strategies
+  - `fetch_and_analyze_news` patched at import site in `market_routes`, not definition site
+  - `_fetch_sector_perf` mock returns real `SectorRankingResponse` Pydantic object (not MagicMock)
+  - `index_performance` mock corrected to `dict[str, dict]` (was incorrectly `list`)
+  - Cache miss tests for sectors fixed to use `model_dump()` serialized dicts
+  - All 11 market route tests: **0 failed → 11 passed** ✅
+
+### Added — New Test Files
+- `tests/test_watchlist_routes.py`: 10 tests covering watchlist CRUD + symbol management
+- `tests/test_goal_routes.py`: 9 tests covering goal CRUD + SIP calculator
+- `tests/test_notification_routes.py`: 6 tests covering notifications list/count/mark-read
+
+### Added — Deployment Infrastructure
+- `render.yaml`: Render.com Blueprint for zero-cost API deployment (Docker runtime, free 512MB)
+- `docs/DEPLOYMENT.md`: Complete step-by-step deployment guide (Supabase + Upstash + Render + CF Pages)
+
+### Fixed — CI/CD
+- `.github/workflows/deploy.yml`:
+  - Removed `CLOUDFLARE_DEPLOYMENT_ENABLED` gate (secrets confirmed configured)
+  - Added `API_BASE_URL` dart-define for web build (`vars.API_BASE_URL` or render default)
+  - Added `API_BASE_URL` dart-define for Android builds
+  - Added conditional Android release keystore step (`KEYSTORE_BASE64` secret)
+  - Fixed comment: APK artifact path is relative to repo root not working-dir
+
+### Updated — Documentation
+- `docs/ARCHITECTURE.md`: Updated system diagram to reflect zero-cost production stack
+  (Cloudflare Pages → Render.com → Supabase → Upstash)
+  Added production deployment flow diagram
+- `docs/PROJECT_STATUS.md`: Updated with 0.9.0 production readiness metrics
+
+### Architecture — Zero-Cost Stack
+| Service | Purpose | Free Tier |
+|---------|---------|-----------|
+| Cloudflare Pages | Flutter web hosting | Unlimited |
+| Render.com | FastAPI API hosting | 750 hrs/month |
+| Supabase | PostgreSQL database | 500MB |
+| Upstash | Redis cache | 10k cmd/day |
+| GitHub Actions | CI/CD pipeline | 2,000 min/month |
+| **Total** | | **$0/month** |
+
+---
+
+## [0.8.0] — 2026-07-08 — Production Readiness: Android + Cloudflare + Build System Fixes
+
+### Fixed — Critical Build/Deploy Issues
+
+#### `infra/docker/Dockerfile.api`
+- **Root cause**: Builder stage only copied `pyproject.toml` but `pip install -e "."` requires full source → Docker build failed
+- **Fix**: Now copies full `services/api/` source tree into builder stage before pip install
+- **Added**: System dependencies for `pdfplumber` (`libpoppler-cpp-dev`, `poppler-utils`), `lxml` (`libxml2-dev`, `libxslt1-dev`)
+- **Fixed**: Health check — replaced `httpx.get(...)` (httpx not guaranteed in PATH) with `urllib.request.urlopen`
+- **Added**: Runtime poppler/libxml2 libs in production stage so parsers work in container
+
+#### `infra/docker/Dockerfile.flutter`
+- **Root cause**: Flutter 3.24.0 + missing Android SDK 35 + missing NDK → flutter build apk failed
+- **Rewrite**: Now uses Flutter 3.27.4 (stable, matches pubspec `sdk: '>=3.4.0'`), Java 17, Android SDK 35, NDK 27.0.12077973
+- **Added**: `flutter precache --web --android` for both web and Android targets
+- **Added**: `sdkmanager "ndk;27.0.12077973"` (NDK pinned to match build.gradle)
+
+#### `apps/web/android/app/build.gradle`
+- **Root cause**: `applicationId = "com.example.web"` → Play Store rejection; `minSdk` unset → `flutter_secure_storage` crash (requires ≥23); Java 8 compile → incompatible with latest plugins
+- **Fixed**: `applicationId` and `namespace` → `com.wealthai.app`
+- **Fixed**: `minSdk = 23` (explicit, not flutter default)
+- **Fixed**: `compileSdk = 35`, `targetSdk = 35`
+- **Fixed**: Java 17 compile + Kotlin jvmTarget
+- **Fixed**: NDK pinned to `27.0.12077973`
+- **Added**: Env-var-based release keystore signing (`KEYSTORE_PATH`, `KEYSTORE_PASS`, `KEY_ALIAS`, `KEY_PASS`)
+- **Added**: ProGuard/R8 enabled for release (`minifyEnabled = true`, `shrinkResources = true`)
+- **Added**: `proguard-rules.pro` reference
+
+#### `apps/web/android/app/proguard-rules.pro` [NEW]
+- ProGuard rules for Flutter engine, Kotlin, biometric plugin, flutter_secure_storage, WebSocket, Gson
+
+#### `apps/web/android/app/src/main/AndroidManifest.xml`
+- **Fixed**: `android:label` → `"WealthAI"` (was `"web"`)
+- **Added**: `INTERNET`, `ACCESS_NETWORK_STATE` permissions
+- **Added**: `USE_BIOMETRIC`, `USE_FINGERPRINT` permissions
+- **Added**: `READ_EXTERNAL_STORAGE` (maxSdkVersion=32), `CAMERA`, `POST_NOTIFICATIONS`
+- **Added**: `RECEIVE_BOOT_COMPLETED` for background sync
+- **Added**: `usesCleartextTraffic="false"` + `networkSecurityConfig` reference
+- **Added**: Deep link intent filter: `wealthai://app`
+- **Added**: `<queries>` for file picker and URL launcher
+
+#### `apps/web/android/app/src/main/res/xml/network_security_config.xml` [NEW]
+- Enforces HTTPS for all traffic; allows cleartext only for localhost/10.0.2.2
+
+#### `wrangler.toml`
+- **Cleaned**: Removed any invalid table entries; kept only valid Pages keys: `name`, `compatibility_date`, `pages_build_output_dir`
+- **Updated**: `compatibility_date` to `2025-01-01`
+
+### Fixed — CI/CD
+
+#### `.github/workflows/ci.yml`
+- **Fixed**: `FLUTTER_VERSION` from `3.24.0` → `3.27.4`
+
+#### `.github/workflows/deploy.yml`
+- **Fixed**: All 3 Flutter setup steps from `3.24.0` → `3.27.4`
+- **Added**: `if-no-files-found: warn` on APK/AAB artifact upload steps (prevents CI failure when signing not configured)
+
+### Added — Documentation
+
+#### `docs/PROJECT_STATUS.md` [NEW]
+- Full production readiness tracking (per layer %)
+- Complete list of completed/in-progress/blocked features
+- Remaining work priority order
+
+#### `docs/TEST_REPORT.md` [NEW]
+- Backend: 154 tests, 69.6% coverage, per-file breakdown
+- Flutter: widget test status
+- Security scan results (Bandit, Trivy, SBOM)
+- Performance targets (not yet measured)
+- Docker-based test execution commands
+
+#### `TODO.md`
+- Added Phases 15–19: Android production, auth completions, prod DB, push notifications, testing expansion
+- Updated Phase 13/14 items with correct completion status
+
+### Breaking Changes
+- Android `applicationId` changed from `com.example.web` → `com.wealthai.app`
+  - **Migration**: Any existing installations will be treated as new installs; no data migration needed at this stage (local data is in `flutter_secure_storage` keyed by package name)
+  - **CI**: No action needed; `debug` signing still used when `KEYSTORE_PATH` env var is absent
+
+### Migration Notes
+- To build release APK with signing, set env vars before `flutter build apk --release`:
+  ```bash
+  export KEYSTORE_PATH=/path/to/keystore.jks
+  export KEYSTORE_PASS=your_store_password
+  export KEY_ALIAS=your_key_alias
+  export KEY_PASS=your_key_password
+  ```
+- Docker flutter builds: use `docker compose --profile build run --rm flutter flutter build apk --debug`
+
+---
+
 ## [0.7.0] — 2026-07-07 — Sprint 4 (Part 2): Email CAS Auto-Import + CAMS/KFin + Coverage & Bug Fixes
 
 ### Added

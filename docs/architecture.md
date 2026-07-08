@@ -3,32 +3,66 @@
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      WealthAI Platform                           │
-├─────────────────┬───────────────────────┬───────────────────────┤
-│  Flutter App    │   FastAPI Backend      │   Infrastructure      │
-│  (iOS/Android/  │   (Python 3.11+)      │                       │
-│   Web/Desktop)  │                        │                       │
-├─────────────────┼───────────────────────┼───────────────────────┤
-│ Presentation    │ Presentation Layer     │ PostgreSQL (prod)     │
-│  - Screens      │  - FastAPI routes      │ SQLite (dev/test)     │
-│  - Riverpod     │  - Pydantic schemas    │ Redis (cache)         │
-│    providers    │  - Middleware          │ yFinance (prices)     │
-│  - GoRouter     │                        │ OpenAI (GPT-4o)       │
-├─────────────────┼───────────────────────┼───────────────────────┤
-│ Domain          │ Domain Layer           │ APScheduler           │
-│  - Models       │  - Entities            │  (background sync)    │
-│  - Repositories │  - Repository ABCs     │                       │
-│  - Network      │  - Domain events       │                       │
-├─────────────────┼───────────────────────┼───────────────────────┤
-│ Data            │ Infrastructure Layer   │ Docker                │
-│  - Repositories │  - SQLAlchemy repos    │  Dockerfile.api       │
-│    (Dio HTTP)   │  - Redis cache         │  Dockerfile.android   │
-│  - Hive cache   │  - AI providers        │  Dockerfile.flutter   │
-│  - Secure store │  - Market data         │                       │
-│                 │  - Importers           │                       │
-└─────────────────┴───────────────────────┴───────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         WealthAI Platform                                 │
+├─────────────────────┬─────────────────────┬──────────────────────────────┤
+│   Flutter Clients   │   FastAPI Backend    │   Zero-Cost Infrastructure   │
+│                     │   (Python 3.11+)     │                              │
+├─────────────────────┼─────────────────────┼──────────────────────────────┤
+│ Android App (APK)   │ Presentation Layer  │ Cloudflare Pages (web host)  │
+│ Web PWA (CF Pages)  │  - FastAPI routes   │ Render.com (API host, free)  │
+│ iOS (future)        │  - Pydantic schemas │ Supabase PostgreSQL (free)   │
+│                     │  - Middleware       │ Upstash Redis (free)         │
+├─────────────────────┼─────────────────────┼──────────────────────────────┤
+│ Presentation        │ Domain Layer        │ yFinance (market data)       │
+│  - Screens          │  - Entities         │ OpenAI / Groq (AI copilot)   │
+│  - Riverpod         │  - Repository ABCs  │ RSS feeds (market news)      │
+│  - GoRouter         │  - Domain events    │ APScheduler (background)     │
+├─────────────────────┼─────────────────────┼──────────────────────────────┤
+│ Domain              │ Infrastructure      │ GitHub Actions (CI/CD free)  │
+│  - Models           │  - SQLAlchemy repos │  Build → Test → Deploy       │
+│  - Repositories     │  - Redis cache      │  Android APK/AAB artifacts   │
+│  - Network (Dio)    │  - AI providers     │  Cloudflare Pages deploy     │
+│                     │  - Market data      │  Docker builds               │
+├─────────────────────┼─────────────────────┼──────────────────────────────┤
+│ Data                │ Importers           │ Docker (local dev)           │
+│  - Hive cache       │  - CAS PDF parser   │  Dockerfile.api (prod)       │
+│  - Secure storage   │  - CAMS/KFin parser │  Dockerfile.api-test (CI)    │
+│  - flutter_secure   │  - Broker CSV       │  Dockerfile.flutter (build)  │
+│    _storage         │  - Email IMAP       │  docker-compose.yml          │
+└─────────────────────┴─────────────────────┴──────────────────────────────┘
 ```
+
+## Production Deployment
+
+```
+Developer → git push main
+                │
+                ▼
+        GitHub Actions
+        ┌──────────────────────────────────────┐
+        │  1. backend-ci    (pytest, ruff)      │
+        │  2. flutter-ci    (analyze, test)     │
+        │  3. docker-build  (Trivy scan, SBOM)  │
+        │  4. deploy-web    → Cloudflare Pages  │
+        │  5. build-android → APK/AAB artifact  │
+        └──────────────────────────────────────┘
+                │
+    ┌───────────┴───────────────┐
+    ▼                           ▼
+Cloudflare Pages           Render.com
+(Flutter Web PWA)          (FastAPI API)
+    │                           │
+    │                    ┌──────┴──────┐
+    │                    ▼             ▼
+    │              Supabase       Upstash
+    │              PostgreSQL     Redis
+    │              (500MB free)   (10k/day)
+    │
+    └── HTTPS → API_BASE_URL (dart-define)
+              → https://wealthai-api.onrender.com
+```
+
 
 ## Flutter App Architecture
 
