@@ -23,6 +23,28 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
 
+def _normalize_db_url(url: str) -> str:
+    """Ensure the database URL uses the correct async dialect.
+
+    Normalises the following common cases so the user can paste any standard
+    connection string from Supabase, Neon, Railway, or a local .env:
+
+      postgres://...        → postgresql+asyncpg://...
+      postgresql://...      → postgresql+asyncpg://...
+      sqlite:///...         → sqlite+aiosqlite:///...
+
+    Already-correct dialects (postgresql+asyncpg, sqlite+aiosqlite, etc.)
+    are returned unchanged.
+    """
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("sqlite:///"):
+        return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+    return url
+
+
 class DatabaseSessionManager:
     """Manages database engine and session lifecycle.
 
@@ -66,6 +88,13 @@ class DatabaseSessionManager:
                 database_url += "?check_same_thread=False"
             else:
                 database_url += "&check_same_thread=False"
+
+        # Normalize database URL dialect.
+        # Supabase and most PaaS providers give standard postgresql:// or postgres://
+        # URLs. SQLAlchemy requires the async dialect to be explicit; otherwise it
+        # falls back to psycopg2 (sync) which is not installed. We rewrite the scheme
+        # here so the app starts correctly regardless of what the user pastes in.
+        database_url = _normalize_db_url(database_url)
 
         self._engine = create_async_engine(database_url, **engine_kwargs)
         engine = self._engine
